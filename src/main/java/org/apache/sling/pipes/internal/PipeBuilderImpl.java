@@ -23,6 +23,9 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.pipes.*;
+import org.apache.sling.pipes.internal.slingQuery.ChildrenPipe;
+import org.apache.sling.pipes.internal.slingQuery.ParentPipe;
+import org.apache.sling.pipes.internal.slingQuery.ParentsPipe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -159,6 +162,11 @@ public class PipeBuilderImpl implements PipeBuilder {
     @Override
     public PipeBuilder parent() {
         return pipe(ParentPipe.RESOURCE_TYPE);
+    }
+
+    @Override
+    public PipeBuilder parents(String expr) throws IllegalAccessException {
+        return pipe(ParentsPipe.RESOURCE_TYPE).expr(expr);
     }
 
     @Override

@@ -14,29 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.pipes.internal;
-
-import java.util.Collections;
-import java.util.Iterator;
+package org.apache.sling.pipes.internal.slingQuery;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.Plumber;
+import org.apache.sling.query.SlingQuery;
+
+import static org.apache.sling.query.SlingQuery.$;
 
 /**
- * very simple pipe, returning parent resource of input resource
+ * returns sling query parents resources of input resource
  */
-public class ParentPipe extends BasePipe {
+public class ParentsPipe extends AbstractExpressionSlingQueryPipe {
+    public static final String RESOURCE_TYPE = RT_PREFIX + "parents";
 
-    public static final String RESOURCE_TYPE = RT_PREFIX + "parent";
-
-    public ParentPipe(Plumber plumber, Resource resource) throws Exception {
+    public ParentsPipe(Plumber plumber, Resource resource) throws Exception {
         super(plumber, resource);
     }
 
     @Override
-    public Iterator<Resource> getOutput() {
-        Resource resource = getInput();
-        return Collections.singleton(resource.getParent()).iterator();
+    protected SlingQuery getQuery(Resource resource, String expression) {
+        return $(resource).parents(expression);
     }
 }

@@ -126,6 +126,13 @@ public interface PipeBuilder {
      */
     PipeBuilder parent();
 
+    /**
+     * attach a parents pipe to the current context
+     * @param expr expression
+     * @return updated instance of PipeBuilder
+     * @throws IllegalAccessException in case it's called with wrong # of arguments
+     */
+    PipeBuilder parents(String expr) throws IllegalAccessException;
 
     /**
      * attach a reference pipe to the current context

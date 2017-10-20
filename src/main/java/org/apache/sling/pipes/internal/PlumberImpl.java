@@ -53,6 +53,9 @@ import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.apache.sling.pipes.*;
+import org.apache.sling.pipes.internal.slingQuery.ChildrenPipe;
+import org.apache.sling.pipes.internal.slingQuery.ParentPipe;
+import org.apache.sling.pipes.internal.slingQuery.ParentsPipe;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -113,13 +116,14 @@ public class PlumberImpl implements Plumber, JobConsumer {
         registerPipe(XPathPipe.RESOURCE_TYPE, XPathPipe.class);
         registerPipe(ReferencePipe.RESOURCE_TYPE, ReferencePipe.class);
         registerPipe(RemovePipe.RESOURCE_TYPE, RemovePipe.class);
-        registerPipe(ParentPipe.RESOURCE_TYPE, ParentPipe.class);
+        registerPipe(ParentsPipe.RESOURCE_TYPE, ParentsPipe.class);
         registerPipe(MovePipe.RESOURCE_TYPE, MovePipe.class);
         registerPipe(PathPipe.RESOURCE_TYPE, PathPipe.class);
         registerPipe(FilterPipe.RESOURCE_TYPE, FilterPipe.class);
         registerPipe(NotPipe.RESOURCE_TYPE, NotPipe.class);
         registerPipe(TraversePipe.RESOURCE_TYPE, TraversePipe.class);
         registerPipe(CsvPipe.RESOURCE_TYPE, CsvPipe.class);
+        registerPipe(ParentPipe.RESOURCE_TYPE, ParentPipe.class);
     }
 
     @Reference(policy= ReferencePolicy.DYNAMIC, cardinality= ReferenceCardinality.OPTIONAL)

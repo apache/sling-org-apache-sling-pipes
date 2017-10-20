@@ -14,43 +14,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.pipes.internal;
-
-import static org.apache.sling.query.SlingQuery.$;
-
-import java.util.Iterator;
+package org.apache.sling.pipes.internal.slingQuery;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.Plumber;
 import org.apache.sling.query.SlingQuery;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import java.util.Iterator;
 
 /**
- * this pipe uses SlingQuery to filters children (filter defined in expr property) of
- * a resource (defined in the path property)
+ * deals with common sling query pipe code
  */
-public class ChildrenPipe extends BasePipe {
-    private static Logger logger = LoggerFactory.getLogger(ChildrenPipe.class);
-
-    public final static String RESOURCE_TYPE = RT_PREFIX + "children";
-
-    public ChildrenPipe(Plumber plumber, Resource resource) throws Exception {
+public abstract class AbstractSlingQueryPipe extends BasePipe {
+    public AbstractSlingQueryPipe(Plumber plumber, Resource resource) throws Exception {
         super(plumber, resource);
     }
-
     @Override
     public boolean modifiesContent() {
         return false;
     }
 
+    /**
+     * generates a sling query object out of a resource
+     * @param resource input resource
+     * @return SlingQuery object
+     */
+    protected abstract SlingQuery getQuery(Resource resource);
+
+    /**
+     * generate outputs out of input resource and abstract query
+     * @return output's resource iterator, empty in case input is null
+     */
     public Iterator<Resource> getOutput() {
         Resource resource = getInput();
         if (resource != null) {
-            String queryExpression = getExpr();
-            SlingQuery query = $(resource).children(getExpr());
-            logger.info("[sling query][children]: executing $({}).children({})", resource.getPath(), queryExpression);
+            SlingQuery query = getQuery(resource);
             return query.iterator();
         }
         return EMPTY_ITERATOR;
