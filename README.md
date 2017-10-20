@@ -47,10 +47,10 @@ a pipe configuration is a jcr node, with:
 rather dummy pipe, outputs what is in input (so what is configured in path). Handy for doing some test mostly, and giving basic functionalities to others that inherit from it
 * `sling:resourceType` is `slingPipes/base`
 
-#### SlingQuery Pipe
+#### children Pipe
 executes $(getInput()).children(expression)
-* `sling:resourceType` is `slingPipes/slingQuery`
-* `expr` mandatory property, contains slingQuery expression through which getInput()'s children will be computed to getOutput()
+* `sling:resourceType` is `slingPipes/children`
+* `expr` mandatory property, contains children expression through which getInput()'s children will be computed to getOutput()
 
 #### JsonPipe
 feeds bindings with remote json
@@ -110,7 +110,7 @@ execute the pipe referenced in path property
 
 #### Write Pipe
 writes given properties to current input
-* `sling:resourceType` is `slingPipes/slingQuery`
+* `sling:resourceType` is `slingPipes/children`
 * `conf` node tree that will be copied to the current input of the pipe, each node's properties 
 names and value will be written to the input resource. Input resource will be outputed. 
 
@@ -201,7 +201,7 @@ if parameter dryRun is set to true, and the executed pipe is supposed to modify 
 
 ## sample configurations 
 
-### slingQuery | write
+### children | write
 this pipe parse all profile nodes, and 
 ```
 {
@@ -210,7 +210,7 @@ this pipe parse all profile nodes, and
   "jcr:description":"prefix all full names of profile with "Mr" or "Ms" depending on gender",
   "conf":{
     "profile": {
-        "sling:resourceType":"slingPipes/slingQuery",
+        "sling:resourceType":"slingPipes/children",
         "expr":"nt:unstructured#profile",
         "path":"/home/users"
     },
@@ -225,7 +225,7 @@ this pipe parse all profile nodes, and
 }
 ```
 
-### slingQuery | multiProperty | authorizable | write
+### children | multiProperty | authorizable | write
 ```
 {
   "jcr:primaryType": "sling:Folder",
@@ -239,7 +239,7 @@ this pipe parse all profile nodes, and
       "jcr:description": "outputs all badge component resources",
       "expr": "[sling:resourceType=myApp/components/badge]",
       "path": "/etc/badges/badges-admin/jcr:content",
-      "sling:resourceType": "slingPipes/slingQuery"
+      "sling:resourceType": "slingPipes/children"
       },
     "profile": {
       "jcr:primaryType": "sling:Folder",
@@ -343,5 +343,5 @@ some other samples are in https://github.com/npeltier/sling-pipes/tree/master/sr
 # Compatibility
 For running this tool on a sling instance you need:
 - java 8 (Nashorn is used for expression)
-- slingQuery (3.0.0) (used in SlingQueryPipe)
+- children (3.0.0) (used in childrenPipe)
 - jackrabbit api (2.7.5+) (used in AuthorizablePipe)

@@ -116,8 +116,8 @@ public class PipeBuilderImpl implements PipeBuilder {
     }
 
     @Override
-    public PipeBuilder $(String expr) {
-        return pipeWithExpr(SlingQueryPipe.RESOURCE_TYPE, expr);
+    public PipeBuilder children(String expr) {
+        return pipeWithExpr(ChildrenPipe.RESOURCE_TYPE, expr);
     }
 
     @Override

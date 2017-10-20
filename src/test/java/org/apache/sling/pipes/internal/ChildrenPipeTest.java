@@ -26,13 +26,13 @@ import org.junit.Test;
 /**
  * test the sling query pipe
  */
-public class SlingQueryPipeTest extends AbstractPipeTest {
+public class ChildrenPipeTest extends AbstractPipeTest {
 
     @Before
     public void setup() throws PersistenceException {
         super.setup();
         context.load().json("/users.json", "/content/users");
-        context.load().json("/slingQuery.json", PATH_PIPE);
+        context.load().json("/children.json", PATH_PIPE);
     }
 
     @Test

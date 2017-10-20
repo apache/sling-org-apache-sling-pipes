@@ -31,12 +31,12 @@ import org.slf4j.LoggerFactory;
  * this pipe uses SlingQuery to filters children (filter defined in expr property) of
  * a resource (defined in the path property)
  */
-public class SlingQueryPipe extends BasePipe {
-    private static Logger logger = LoggerFactory.getLogger(SlingQueryPipe.class);
+public class ChildrenPipe extends BasePipe {
+    private static Logger logger = LoggerFactory.getLogger(ChildrenPipe.class);
 
-    public final static String RESOURCE_TYPE = RT_PREFIX + "slingQuery";
+    public final static String RESOURCE_TYPE = RT_PREFIX + "children";
 
-    public SlingQueryPipe(Plumber plumber, Resource resource) throws Exception {
+    public ChildrenPipe(Plumber plumber, Resource resource) throws Exception {
         super(plumber, resource);
     }
 
@@ -50,7 +50,7 @@ public class SlingQueryPipe extends BasePipe {
         if (resource != null) {
             String queryExpression = getExpr();
             SlingQuery query = $(resource).children(getExpr());
-            logger.info("[sling query]: executing $({}).children({})", resource.getPath(), queryExpression);
+            logger.info("[sling query][children]: executing $({}).children({})", resource.getPath(), queryExpression);
             return query.iterator();
         }
         return EMPTY_ITERATOR;

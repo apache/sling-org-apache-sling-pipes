@@ -74,11 +74,11 @@ public interface PipeBuilder {
     PipeBuilder xpath(String expr);
 
     /**
-     * attach a sling query pipe to the current context
+     * attach a sling query children pipe to the current context
      * @param expr sling query expression
      * @return updated instance of PipeBuilder
      */
-    PipeBuilder $(String expr);
+    PipeBuilder children(String expr);
 
     /**
      * attach a rm pipe to the current context

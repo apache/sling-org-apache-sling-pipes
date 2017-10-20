@@ -105,7 +105,7 @@ public class PlumberImpl implements Plumber, JobConsumer {
         registry = new HashMap<>();
         registerPipe(BasePipe.RESOURCE_TYPE, BasePipe.class);
         registerPipe(ContainerPipe.RESOURCE_TYPE, ContainerPipe.class);
-        registerPipe(SlingQueryPipe.RESOURCE_TYPE, SlingQueryPipe.class);
+        registerPipe(ChildrenPipe.RESOURCE_TYPE, ChildrenPipe.class);
         registerPipe(WritePipe.RESOURCE_TYPE, WritePipe.class);
         registerPipe(JsonPipe.RESOURCE_TYPE, JsonPipe.class);
         registerPipe(MultiPropertyPipe.RESOURCE_TYPE, MultiPropertyPipe.class);

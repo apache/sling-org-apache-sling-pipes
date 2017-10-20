@@ -67,10 +67,10 @@ public class PipeBuilderTest extends AbstractPipeTest {
         PipeBuilder defaultNames = plumber.newPipe(context.resourceResolver());
         Set<String> paths = defaultNames
                 .echo(PATH_FRUITS)
-                .$("nt:unstructured")
+                .children("nt:unstructured")
                 .grep("slingPipesFilter_test","${two.worm}")
-                .$("nt:unstructured#isnota")
-                .$("nt:unstructured").name("thing")
+                .children("nt:unstructured#isnota")
+                .children("nt:unstructured").name("thing")
                 .write("jcr:path", "${path.thing}").run();
         assertEquals("There should be only one resource", 2, paths.size());
         String pea = "/content/fruits/apple/isnota/pea";

@@ -52,7 +52,7 @@ import org.slf4j.LoggerFactory;
                 ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES + "=" + ContainerPipe.RESOURCE_TYPE,
                 ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES + "=" + AuthorizablePipe.RESOURCE_TYPE,
                 ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES + "=" + WritePipe.RESOURCE_TYPE,
-                ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES + "=" + SlingQueryPipe.RESOURCE_TYPE,
+                ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES + "=" + ChildrenPipe.RESOURCE_TYPE,
                 ServletResolverConstants.SLING_SERVLET_METHODS + "=GET",
                 ServletResolverConstants.SLING_SERVLET_METHODS + "=POST",
                 ServletResolverConstants.SLING_SERVLET_EXTENSIONS + "=json"
