@@ -26,6 +26,7 @@ import org.apache.sling.pipes.*;
 import org.apache.sling.pipes.internal.slingQuery.ChildrenPipe;
 import org.apache.sling.pipes.internal.slingQuery.ParentPipe;
 import org.apache.sling.pipes.internal.slingQuery.ParentsPipe;
+import org.apache.sling.pipes.internal.slingQuery.SiblingsPipe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -165,18 +166,23 @@ public class PipeBuilderImpl implements PipeBuilder {
     }
 
     @Override
-    public PipeBuilder parents(String expr) throws IllegalAccessException {
-        return pipe(ParentsPipe.RESOURCE_TYPE).expr(expr);
+    public PipeBuilder parents(String expr) {
+        return pipeWithExpr(ParentsPipe.RESOURCE_TYPE, expr);
     }
 
     @Override
-    public PipeBuilder ref(String expr) throws IllegalAccessException {
-        return pipe(ReferencePipe.RESOURCE_TYPE).expr(expr);
+    public PipeBuilder siblings(String expr) {
+        return pipeWithExpr(SiblingsPipe.RESOURCE_TYPE, expr);
     }
 
     @Override
-    public PipeBuilder not(String expr) throws IllegalAccessException {
-        return pipe(NotPipe.RESOURCE_TYPE).expr(expr);
+    public PipeBuilder ref(String expr) {
+        return pipeWithExpr(ReferencePipe.RESOURCE_TYPE, expr);
+    }
+
+    @Override
+    public PipeBuilder not(String expr) {
+        return pipeWithExpr(NotPipe.RESOURCE_TYPE, expr);
     }
 
     @Override

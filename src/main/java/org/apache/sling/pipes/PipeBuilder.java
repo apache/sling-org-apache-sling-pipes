@@ -81,6 +81,13 @@ public interface PipeBuilder {
     PipeBuilder children(String expr);
 
     /**
+     * attach a sling query siblings pipe to the current context
+     * @param expr sling query expression
+     * @return updated instance of PipeBuilder
+     */
+    PipeBuilder siblings(String expr);
+
+    /**
      * attach a rm pipe to the current context
      * @return updated instance of PipeBuilder
      */
@@ -130,26 +137,23 @@ public interface PipeBuilder {
      * attach a parents pipe to the current context
      * @param expr expression
      * @return updated instance of PipeBuilder
-     * @throws IllegalAccessException in case it's called with wrong # of arguments
      */
-    PipeBuilder parents(String expr) throws IllegalAccessException;
+    PipeBuilder parents(String expr);
 
     /**
      * attach a reference pipe to the current context
      * @param expr reference
      * @return updated instance of PipeBuilder
-     * @throws IllegalAccessException in case it's called with wrong # of arguments
      */
-    PipeBuilder ref(String expr)throws IllegalAccessException;
+    PipeBuilder ref(String expr);
 
 
     /**
      * attach a not pipe to the current context
      * @param expr reference
      * @return updated instance of PipeBuilder
-     * @throws IllegalAccessException in case it's called with wrong # of arguments
      */
-    PipeBuilder not(String expr)throws IllegalAccessException;
+    PipeBuilder not(String expr);
 
     /**
      * parameterized current pipe in the context

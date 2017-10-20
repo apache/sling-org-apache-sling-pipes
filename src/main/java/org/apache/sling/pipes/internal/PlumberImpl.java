@@ -56,6 +56,7 @@ import org.apache.sling.pipes.*;
 import org.apache.sling.pipes.internal.slingQuery.ChildrenPipe;
 import org.apache.sling.pipes.internal.slingQuery.ParentPipe;
 import org.apache.sling.pipes.internal.slingQuery.ParentsPipe;
+import org.apache.sling.pipes.internal.slingQuery.SiblingsPipe;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -124,6 +125,7 @@ public class PlumberImpl implements Plumber, JobConsumer {
         registerPipe(TraversePipe.RESOURCE_TYPE, TraversePipe.class);
         registerPipe(CsvPipe.RESOURCE_TYPE, CsvPipe.class);
         registerPipe(ParentPipe.RESOURCE_TYPE, ParentPipe.class);
+        registerPipe(SiblingsPipe.RESOURCE_TYPE, SiblingsPipe.class);
     }
 
     @Reference(policy= ReferencePolicy.DYNAMIC, cardinality= ReferenceCardinality.OPTIONAL)

@@ -72,7 +72,7 @@ public class PipeBuilderTest extends AbstractPipeTest {
                 .children("nt:unstructured#isnota")
                 .children("nt:unstructured").name("thing")
                 .write("jcr:path", "${path.thing}").run();
-        assertEquals("There should be only one resource", 2, paths.size());
+        assertEquals("There should be 3 resources", 3, paths.size());
         String pea = "/content/fruits/apple/isnota/pea";
         String carrot = "/content/fruits/apple/isnota/carrot";
         assertTrue("the paths should contain " + pea, paths.contains(pea));

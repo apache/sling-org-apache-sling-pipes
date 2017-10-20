@@ -16,6 +16,10 @@
           "jcr:primaryType":"nt:unstructured"
         }
       },
+      "plum":{
+        "jcr:primaryType":"nt:unstructured",
+        "jcr:title":"Plum"
+      },
       "carrot":{
         "jcr:primaryType":"nt:unstructured",
         "andtheircolorisdifferent":{
