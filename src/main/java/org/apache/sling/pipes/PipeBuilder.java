@@ -128,17 +128,24 @@ public interface PipeBuilder {
     PipeBuilder traverse();
 
     /**
-     * attach a parent pipe to the current context
+     * attach a sling query parent pipe to the current context
      * @return updated instance of PipeBuilder
      */
     PipeBuilder parent();
 
     /**
-     * attach a parents pipe to the current context
+     * attach a sling query parents pipe to the current context
      * @param expr expression
      * @return updated instance of PipeBuilder
      */
     PipeBuilder parents(String expr);
+
+    /**
+     * attach a sling query closest pipe to the current context
+     * @param expr expression
+     * @return updated instance of PipeBuilder
+     */
+    PipeBuilder closest(String expr);
 
     /**
      * attach a reference pipe to the current context
