@@ -16,21 +16,21 @@
  */
 package org.apache.sling.pipes.internal.slingQuery;
 
-import org.apache.sling.pipes.AbstractPipeTest;
-import org.junit.Test;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.pipes.Plumber;
+import org.apache.sling.query.SlingQuery;
 
-import java.util.Set;
+import static org.apache.sling.query.SlingQuery.$;
 
-import static org.junit.Assert.*;
+public class FindPipe extends AbstractExpressionSlingQueryPipe {
+    public static final String RESOURCE_TYPE = RT_PREFIX + "find";
 
-public class ClosestPipeTest extends AbstractPipeTest {
+    public FindPipe(Plumber plumber, Resource resource) throws Exception {
+        super(plumber, resource);
+    }
 
-    @Test
-    public void testClosest() throws Exception {
-        Set<String> outputs = plumber.newPipe(context.resourceResolver())
-                .echo(SAME_COLOR)
-                .closest("[color=green]").run();
-        assertEquals("there should be 1 output", 1, outputs.size());
-        assertTrue("there should be pea", outputs.contains(PATH_PEA));
+    @Override
+    protected SlingQuery getQuery(Resource resource, String expression) {
+        return $(resource).find(expression);
     }
 }

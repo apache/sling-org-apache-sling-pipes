@@ -148,6 +148,13 @@ public interface PipeBuilder {
     PipeBuilder closest(String expr);
 
     /**
+     * attach a sling query find pipe to the current context
+     * @param expr expression
+     * @return updated instance of PipeBuilder
+     */
+    PipeBuilder $(String expr);
+
+    /**
      * attach a reference pipe to the current context
      * @param expr reference
      * @return updated instance of PipeBuilder

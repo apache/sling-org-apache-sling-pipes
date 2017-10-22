@@ -76,8 +76,10 @@ public class PipeBuilderIT extends PipesTestSupport {
                 plumber.newPipe(resolver).mkdir(path).write("xpathTestStatus", "testing").run();
             }
             final String query = String.format("/jcr:root%s//element(*,nt:base)[@xpathTestStatus]", ROOT);
-            final Set<String> results = plumber.newPipe(resolver).xpath(query).run();
+            Set<String> results = plumber.newPipe(resolver).xpath(query).run();
             assertEquals("xpath query should return as many items as we wrote", NB_ITEMS, results.size());
+            results = plumber.newPipe(resolver).echo(ROOT).$("nt:base[xpathTestStatus=testing]").run();
+            assertEquals("sling query should return as many items as we wrote", NB_ITEMS, results.size());
         }
     }
 

@@ -55,6 +55,7 @@ import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.apache.sling.pipes.*;
 import org.apache.sling.pipes.internal.slingQuery.ChildrenPipe;
 import org.apache.sling.pipes.internal.slingQuery.ClosestPipe;
+import org.apache.sling.pipes.internal.slingQuery.FindPipe;
 import org.apache.sling.pipes.internal.slingQuery.ParentPipe;
 import org.apache.sling.pipes.internal.slingQuery.ParentsPipe;
 import org.apache.sling.pipes.internal.slingQuery.SiblingsPipe;
@@ -128,6 +129,7 @@ public class PlumberImpl implements Plumber, JobConsumer {
         registerPipe(ParentPipe.RESOURCE_TYPE, ParentPipe.class);
         registerPipe(SiblingsPipe.RESOURCE_TYPE, SiblingsPipe.class);
         registerPipe(ClosestPipe.RESOURCE_TYPE, ClosestPipe.class);
+        registerPipe(FindPipe.RESOURCE_TYPE, FindPipe.class);
     }
 
     @Reference(policy= ReferencePolicy.DYNAMIC, cardinality= ReferenceCardinality.OPTIONAL)

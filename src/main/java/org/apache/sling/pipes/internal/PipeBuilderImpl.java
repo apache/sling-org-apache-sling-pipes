@@ -25,6 +25,7 @@ import org.apache.sling.event.jobs.Job;
 import org.apache.sling.pipes.*;
 import org.apache.sling.pipes.internal.slingQuery.ChildrenPipe;
 import org.apache.sling.pipes.internal.slingQuery.ClosestPipe;
+import org.apache.sling.pipes.internal.slingQuery.FindPipe;
 import org.apache.sling.pipes.internal.slingQuery.ParentPipe;
 import org.apache.sling.pipes.internal.slingQuery.ParentsPipe;
 import org.apache.sling.pipes.internal.slingQuery.SiblingsPipe;
@@ -179,6 +180,11 @@ public class PipeBuilderImpl implements PipeBuilder {
     @Override
     public PipeBuilder closest(String expr) {
         return pipeWithExpr(ClosestPipe.RESOURCE_TYPE, expr);
+    }
+
+    @Override
+    public PipeBuilder $(String expr) {
+        return pipeWithExpr(FindPipe.RESOURCE_TYPE, expr);
     }
 
     @Override
