@@ -86,6 +86,9 @@ public class PlumberImpl implements Plumber, JobConsumer {
         @AttributeDefinition(description="Number of iterations after which plumber should saves a pipe execution")
         int bufferSize() default PlumberImpl.DEFAULT_BUFFER_SIZE;
 
+        @AttributeDefinition(description="Number of milliseconds of sleep after each persistence")
+        long sleep() default 0L;
+
         @AttributeDefinition(description="Name of service user, with appropriate rights, that will be used for async execution")
         String serviceUser();
 
@@ -97,7 +100,7 @@ public class PlumberImpl implements Plumber, JobConsumer {
 
     public static final String SLING_EVENT_TOPIC = "org/apache/sling/pipes/topic";
 
-    private int bufferSize;
+    private Configuration configuration;
 
     private Map serviceUser;
 
@@ -105,7 +108,7 @@ public class PlumberImpl implements Plumber, JobConsumer {
 
     @Activate
     public void activate(Configuration configuration){
-        bufferSize = configuration.bufferSize();
+        this.configuration = configuration;
         serviceUser = Collections.singletonMap(SUBSERVICE, configuration.serviceUser());
         allowedUsers = Arrays.asList(configuration.authorizedUsers());
         registry = new HashMap<>();
@@ -229,10 +232,14 @@ public class PlumberImpl implements Plumber, JobConsumer {
      */
     protected void persist(ResourceResolver resolver, Pipe pipe, Set<String> paths, Resource currentResource) throws Exception {
         if  (pipe.modifiesContent() && resolver.hasChanges() && !pipe.isDryRun()){
-            if (currentResource == null || paths.size() % bufferSize == 0){
+            if (currentResource == null || paths.size() % configuration.bufferSize() == 0){
                 log.info("[{}] saving changes...", pipe.getName());
                 writeStatus(pipe, currentResource == null ? STATUS_FINISHED : currentResource.getPath());
                 resolver.commit();
+                if (configuration.sleep() > 0){
+                    log.debug("sleeping for {}ms", configuration.sleep());
+                    Thread.sleep(configuration.sleep());
+                }
             }
             if (currentResource == null && distributor != null && StringUtils.isNotBlank(pipe.getDistributionAgent())) {
                 log.info("a distribution agent is configured, will try to distribute the changes");
