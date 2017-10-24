@@ -57,7 +57,7 @@ public class FilterPipe extends BasePipe {
         for (String key : filter.keySet()){
             if (! IGNORED_PROPERTIES.contains(key) && !key.startsWith(PREFIX_FILTER)){
                 Pattern pattern = Pattern.compile(filter.get(key, String.class));
-                if (!pattern.matcher(current.get(key, String.class)).matches()){
+                if (!pattern.matcher(current.get(key, String.class)).find()){
                     return false;
                 }
             }

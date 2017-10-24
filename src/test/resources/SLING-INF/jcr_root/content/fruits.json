@@ -5,6 +5,7 @@
     "jcr:primaryType":"nt:unstructured",
     "sling:resourceType":"/apps/pipes-it/fruit",
     "jcr:title":"Apple",
+    "jcr:description":"This is an <a href='https://en.wikipedia.org/wiki/Apple'>apple</a>",
     "color":"green",
     "worm": true,
     "isnota":{

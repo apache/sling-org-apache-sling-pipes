@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Iterator;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.ModifiableValueMap;
@@ -101,6 +102,19 @@ public class FilterPipeTest extends AbstractPipeTest {
         Pipe pipe = plumber.getPipe(resource);
         Iterator<Resource> resourceIterator = pipe.getOutput();
         assertFalse("output has no resource...", resourceIterator.hasNext());
+    }
+
+    @Test
+    public void testPropertyRegexp() throws Exception {
+        Set<String> outputs = plumber.newPipe(context.resourceResolver())
+            .echo(PATH_APPLE)
+            .grep("jcr:description","https://en.wikipedia.org").run();
+        assertEquals("there should be an item", 1, outputs.size());
+        outputs = plumber.newPipe(context.resourceResolver())
+                .echo(PATH_APPLE)
+                .grep("jcr:description",".*https://en.wikipedia.org.*").run();
+        assertEquals("there should be an item", 1, outputs.size());
+
     }
 
 }
