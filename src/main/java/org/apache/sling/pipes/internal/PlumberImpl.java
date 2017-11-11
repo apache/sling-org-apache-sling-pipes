@@ -28,11 +28,9 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.jcr.RepositoryException;
 
@@ -52,7 +50,15 @@ import org.apache.sling.distribution.SimpleDistributionRequest;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
-import org.apache.sling.pipes.*;
+import org.apache.sling.pipes.BasePipe;
+import org.apache.sling.pipes.ContainerPipe;
+import org.apache.sling.pipes.ExecutionResult;
+import org.apache.sling.pipes.OutputWriter;
+import org.apache.sling.pipes.Pipe;
+import org.apache.sling.pipes.PipeBindings;
+import org.apache.sling.pipes.PipeBuilder;
+import org.apache.sling.pipes.Plumber;
+import org.apache.sling.pipes.ReferencePipe;
 import org.apache.sling.pipes.internal.slingQuery.ChildrenPipe;
 import org.apache.sling.pipes.internal.slingQuery.ClosestPipe;
 import org.apache.sling.pipes.internal.slingQuery.FindPipe;
@@ -174,7 +180,7 @@ public class PlumberImpl implements Plumber, JobConsumer {
     }
 
     @Override
-    public Set<String> execute(ResourceResolver resolver, String path, Map additionalBindings, OutputWriter writer, boolean save) throws Exception {
+    public ExecutionResult execute(ResourceResolver resolver, String path, Map additionalBindings, OutputWriter writer, boolean save) throws Exception {
         Resource pipeResource = resolver.getResource(path);
         Pipe pipe = getPipe(pipeResource);
         if (pipe == null) {
@@ -187,7 +193,7 @@ public class PlumberImpl implements Plumber, JobConsumer {
     }
 
     @Override
-    public Set<String> execute(ResourceResolver resolver, Pipe pipe, Map additionalBindings, OutputWriter writer, boolean save) throws Exception {
+    public ExecutionResult execute(ResourceResolver resolver, Pipe pipe, Map additionalBindings, OutputWriter writer, boolean save) throws Exception {
         try {
             if (additionalBindings != null && pipe instanceof ContainerPipe){
                 pipe.getBindings().addBindings(additionalBindings);
@@ -200,22 +206,21 @@ public class PlumberImpl implements Plumber, JobConsumer {
             writeStatus(pipe, STATUS_STARTED);
             resolver.commit();
 
-            Set<String> set = new HashSet<>();
+            ExecutionResult result = new ExecutionResult(writer);
             for (Iterator<Resource> it = pipe.getOutput(); it.hasNext();){
                 Resource resource = it.next();
                 if (resource != null) {
                     log.debug("[{}] retrieved {}", pipe.getName(), resource.getPath());
-                    writer.write(resource);
-                    set.add(resource.getPath());
-                    persist(resolver, pipe, set, resource);
+                    result.addResultItem(resource);
+                    persist(resolver, pipe, result, resource);
                 }
             }
             if (save && pipe.modifiesContent()) {
-                persist(resolver, pipe, set, null);
+                persist(resolver, pipe, result, null);
             }
             log.info("[{}] done executing.", pipe.getName());
             writer.ends();
-            return set;
+            return result;
         } finally {
             writeStatus(pipe, STATUS_FINISHED);
             resolver.commit();
@@ -226,26 +231,30 @@ public class PlumberImpl implements Plumber, JobConsumer {
      * Persists pipe change if big enough, or ended, and eventually distribute changes
      * @param resolver resolver to use
      * @param pipe pipe at the origin of the changes,
-     * @param paths paths that have been changed,
+     * @param result execution result object,
      * @param currentResource if running, null if ended
      * @throws PersistenceException in case save fails
      */
-    protected void persist(ResourceResolver resolver, Pipe pipe, Set<String> paths, Resource currentResource) throws Exception {
+    protected void persist(ResourceResolver resolver, Pipe pipe, ExecutionResult result, Resource currentResource) throws Exception {
         if  (pipe.modifiesContent() && resolver.hasChanges() && !pipe.isDryRun()){
-            if (currentResource == null || paths.size() % configuration.bufferSize() == 0){
+            if (currentResource == null || result.size() % configuration.bufferSize() == 0){
                 log.info("[{}] saving changes...", pipe.getName());
                 writeStatus(pipe, currentResource == null ? STATUS_FINISHED : currentResource.getPath());
                 resolver.commit();
+                if (currentResource == null && distributor != null && StringUtils.isNotBlank(pipe.getDistributionAgent())) {
+                    log.info("a distribution agent is configured, will try to distribute the changes");
+                    DistributionRequest request = new SimpleDistributionRequest(DistributionRequestType.ADD, true, result.getCurrentPathSet().toArray(new String[result.getCurrentPathSet().size()]));
+                    DistributionResponse response = distributor.distribute(pipe.getDistributionAgent(), resolver, request);
+                    log.info("distribution response : {}", response);
+                }
+                if (result.size() > configuration.bufferSize()){
+                    //avoid too big foot print
+                    result.emptyCurrentSet();
+                }
                 if (configuration.sleep() > 0){
                     log.debug("sleeping for {}ms", configuration.sleep());
                     Thread.sleep(configuration.sleep());
                 }
-            }
-            if (currentResource == null && distributor != null && StringUtils.isNotBlank(pipe.getDistributionAgent())) {
-                log.info("a distribution agent is configured, will try to distribute the changes");
-                DistributionRequest request = new SimpleDistributionRequest(DistributionRequestType.ADD, true, paths.toArray(new String[paths.size()]));
-                DistributionResponse response = distributor.distribute(pipe.getDistributionAgent(), resolver, request);
-                log.info("distribution response : {}", response);
             }
         }
     }

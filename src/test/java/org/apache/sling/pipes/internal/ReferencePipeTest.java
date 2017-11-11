@@ -16,9 +16,6 @@
  */
 package org.apache.sling.pipes.internal;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.pipes.AbstractPipeTest;
 import org.apache.sling.pipes.Pipe;
@@ -26,9 +23,12 @@ import org.apache.sling.pipes.ReferencePipe;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * testing references
@@ -68,10 +68,10 @@ public class ReferencePipeTest  extends AbstractPipeTest {
         Map bindings = new HashMap();
         bindings.put("fruit", newFruit);
         Pipe pipe = plumber.newPipe(context.resourceResolver()).echo(PATH_FRUITS + "/${fruit}").build();
-        Set<String> paths = plumber.newPipe(context.resourceResolver())
+        Collection<String> paths = plumber.newPipe(context.resourceResolver())
                 .pipe(ReferencePipe.RESOURCE_TYPE)
                 .expr(pipe.getResource().getPath())
-                .run(bindings);
+                .run(bindings).getCurrentPathSet();
         assertTrue("paths should contain new path", paths.contains(newPath));
     }
 }

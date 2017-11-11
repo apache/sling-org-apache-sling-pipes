@@ -16,17 +16,40 @@
  */
 package org.apache.sling.pipes.internal;
 
+import java.io.Writer;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.json.JsonValue;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.pipes.BasePipe;
+import org.apache.sling.pipes.Pipe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * same thing as CustomWriter, but uses a JSON object passed as writer parameter
+ * writes current resource, dubbing a eventual parameter or given child resource "writer" property/value pairs, allowing
+ * expressions
  */
-public class CustomJsonWriter extends CustomWriter {
+public class CustomJsonWriter extends DefaultJsonWriter {
+    Logger log = LoggerFactory.getLogger(CustomJsonWriter.class);
 
-    private static final Logger log = LoggerFactory.getLogger(CustomJsonWriter.class);
+    public static final String PATH_KEY = "path";
+
+    public static final String PARAM_WRITER = "writer";
+
+    Map<String, Object> customOutputs;
+
+    CustomJsonWriter() {
+    }
+
+    CustomJsonWriter(Writer writer) {
+        super(writer);
+    }
 
     @Override
     public boolean handleRequest(SlingHttpServletRequest request) {
@@ -38,7 +61,38 @@ public class CustomJsonWriter extends CustomWriter {
             } catch(Exception e){
                 log.error("requested json writer can't be parsed", e);
             }
+        } else {
+            Resource resource = request.getResource().getChild(PARAM_WRITER);
+            return resource != null;
         }
         return false;
+    }
+
+    @Override
+    public void setPipe(Pipe pipe) {
+        super.setPipe(pipe);
+        if (customOutputs == null){
+            customOutputs = new HashMap<>();
+            customOutputs.putAll(pipe.getResource().getChild(PARAM_WRITER).adaptTo(ValueMap.class));
+            for (String ignoredKey : BasePipe.IGNORED_PROPERTIES) {
+                customOutputs.remove(ignoredKey);
+            }
+        }
+    }
+
+    @Override
+    public void writeItem(Resource resource) {
+        jsonWriter.writeStartObject();
+        jsonWriter.write(PATH_KEY,resource.getPath());
+        for (Map.Entry<String, Object> entry : customOutputs.entrySet()){
+            Object o = pipe.getBindings().instantiateObject((String)entry.getValue());
+            if ( o instanceof JsonValue ) {
+                jsonWriter.write(entry.getKey(),(JsonValue) o);
+            }
+            else {
+                jsonWriter.write(entry.getKey(), o.toString());
+            }
+        }
+        jsonWriter.writeEnd();
     }
 }

@@ -17,9 +17,9 @@
 package org.apache.sling.pipes.internal;
 
 import java.io.IOException;
+import java.io.Writer;
 
 import javax.json.Json;
-import javax.json.JsonException;
 import javax.json.stream.JsonGenerator;
 
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -28,11 +28,18 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.OutputWriter;
 
 /**
- * default output writer with size and output resources' path
+ * default output writer, that outputs JSON with size and output resources' path
  */
-public class DefaultOutputWriter extends OutputWriter {
+public class DefaultJsonWriter extends OutputWriter {
 
-    protected JsonGenerator writer;
+    protected JsonGenerator jsonWriter;
+
+    DefaultJsonWriter(){
+    }
+
+    DefaultJsonWriter(Writer writer){
+        setWriter(writer);
+    }
 
     @Override
     public boolean handleRequest(SlingHttpServletRequest request) {
@@ -40,24 +47,28 @@ public class DefaultOutputWriter extends OutputWriter {
     }
 
     @Override
-    protected void initInternal(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException, JsonException {
+    protected void initResponse(SlingHttpServletResponse response){
         response.setCharacterEncoding("utf-8");
         response.setContentType("application/json");
-        writer = Json.createGenerator(response.getWriter());
-        writer.writeStartObject();
-        writer.writeStartArray(KEY_ITEMS);
     }
 
     @Override
-    public void writeItem(Resource resource) throws JsonException {
-        writer.write(resource.getPath());
+    public void starts() {
+        jsonWriter = Json.createGenerator(writer);
+        jsonWriter.writeStartObject();
+        jsonWriter.writeStartArray(KEY_ITEMS);
     }
 
     @Override
-    public void ends() throws JsonException {
-        writer.writeEnd();
-        writer.write(KEY_SIZE,size);
-        writer.writeEnd();
-        writer.flush();
+    public void writeItem(Resource resource) {
+        jsonWriter.write(resource.getPath());
+    }
+
+    @Override
+    public void ends() {
+        jsonWriter.writeEnd();
+        jsonWriter.write(KEY_SIZE,size);
+        jsonWriter.writeEnd();
+        jsonWriter.flush();
     }
 }

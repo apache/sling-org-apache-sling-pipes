@@ -16,14 +16,22 @@
  */
 package org.apache.sling.pipes;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.pipes.internal.JsonUtil;
 import org.junit.Test;
 
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
+import java.util.stream.Collectors;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class PipeBuilderTest extends AbstractPipeTest {
     @Test
@@ -39,8 +47,8 @@ public class PipeBuilderTest extends AbstractPipeTest {
     public void run() throws Exception {
         String lemonPath = "/content/fruits/lemon";
         PipeBuilder lemonBuilder = plumber.newPipe(context.resourceResolver());
-        Set<String> paths = lemonBuilder.mkdir(lemonPath).run();
-        assertTrue("returned set should contain lemon path", paths.contains(lemonPath));
+        ExecutionResult result = lemonBuilder.mkdir(lemonPath).run();
+        assertTrue("returned set should contain lemon path", result.getCurrentPathSet().contains(lemonPath));
         assertNotNull("there should be a lemon created", context.resourceResolver().getResource(lemonPath));
     }
 
@@ -65,16 +73,18 @@ public class PipeBuilderTest extends AbstractPipeTest {
     @Test
     public void bindings() throws Exception {
         PipeBuilder defaultNames = plumber.newPipe(context.resourceResolver());
-        Set<String> paths = defaultNames
+        ExecutionResult result = defaultNames
                 .echo(PATH_FRUITS)
                 .children("nt:unstructured")
                 .grep("slingPipesFilter_test","${two.worm}")
                 .children("nt:unstructured#isnota")
                 .children("nt:unstructured").name("thing")
-                .write("jcr:path", "${path.thing}").run();
-        assertEquals("There should be 3 resources", 3, paths.size());
+                .write("jcr:path", "${path.thing}")
+                .run();
+        assertEquals("There should be 3 resources", 3, result.size());
         String pea = "/content/fruits/apple/isnota/pea";
         String carrot = "/content/fruits/apple/isnota/carrot";
+        Collection<String> paths = result.getCurrentPathSet();
         assertTrue("the paths should contain " + pea, paths.contains(pea));
         assertTrue("the paths should contain " + carrot, paths.contains(carrot));
         for (String path : paths){
@@ -87,9 +97,28 @@ public class PipeBuilderTest extends AbstractPipeTest {
     public void additionalBindings() throws Exception {
         Map bindings = new HashMap<>();
         bindings.put("testedPath", PATH_FRUITS);
-        Set<String> paths = plumber.newPipe(context.resourceResolver()).echo("${testedPath}").run(bindings);
+        ExecutionResult result = plumber.newPipe(context.resourceResolver()).echo("${testedPath}").run(bindings);
+        Collection<String> paths = result.getCurrentPathSet();
         assertTrue("paths should contain implemented testedPath after run(bindings) is executed", paths.contains(PATH_FRUITS));
-        paths = plumber.newPipe(context.resourceResolver()).echo("${testedPath}").runWith("testedPath", PATH_FRUITS);
+        paths = plumber.newPipe(context.resourceResolver())
+                .echo("${testedPath}").runWith("testedPath", PATH_FRUITS)
+                .getCurrentPathSet();
         assertTrue("paths should contain implemented testedPath after runWith is executed", paths.contains(PATH_FRUITS));
+    }
+
+    @Test
+    public void testOutputs() throws Exception {
+        ExecutionResult result = plumber.newPipe(context.resourceResolver())
+                                        .echo(PATH_APPLE + "/isnota")
+                                        .children("").name("vegetable")
+                                        .outputs("name","Good ${vegetable['jcr:title']}")
+                                        .run();
+        JsonObject object = JsonUtil.parseObject(result.toString());
+        Collection<String> names = object.getJsonArray("items").getValuesAs(JsonObject.class)
+                .stream()
+                    .map(o -> o.getString("name"))
+                    .collect(Collectors.toList());
+        Collection<String> expected = Arrays.asList(new String[] {"Good Pea", "Good Carrot", "Good Plum"});
+        assertTrue("all transformed items should be here", CollectionUtils.intersection(names, expected).size() == 3);
     }
 }

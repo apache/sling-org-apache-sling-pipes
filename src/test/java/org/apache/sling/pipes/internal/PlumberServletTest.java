@@ -152,7 +152,7 @@ public class PlumberServletTest extends AbstractPipeTest {
         for (int i = 0; i < array.size(); i++) {
             JsonObject object = array.getJsonObject(i);
             assertNotNull("there should be an object returned at each time", object);
-            String path = object.getString(CustomWriter.PATH_KEY);
+            String path = object.getString(CustomJsonWriter.PATH_KEY);
             assertNotNull("the string path should be returned for each item, containing the path of the resource");
             String pathLength = object.getString(pathLengthParam);
             assertNotNull("there should be a pathLength param, as specified in the writer", pathLength);
@@ -205,7 +205,7 @@ public class PlumberServletTest extends AbstractPipeTest {
         when(request.getResource()).thenReturn(resource);
         when(request.getParameter(PlumberServlet.PARAM_PATH)).thenReturn(pathParam);
         when(request.getParameter(PlumberServlet.PARAM_BINDINGS)).thenReturn(bindings);
-        when(request.getParameter(CustomWriter.PARAM_WRITER)).thenReturn(writer);
+        when(request.getParameter(CustomJsonWriter.PARAM_WRITER)).thenReturn(writer);
         when(request.getParameter(BasePipe.DRYRUN_KEY)).thenReturn(dryRun);
         when(request.getParameter(OutputWriter.PARAM_SIZE)).thenReturn(size);
         return request;

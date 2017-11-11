@@ -16,13 +16,6 @@
  */
 package org.apache.sling.pipes.internal;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import java.util.Iterator;
-import java.util.Set;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
@@ -31,6 +24,13 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.pipes.AbstractPipeTest;
 import org.apache.sling.pipes.Pipe;
 import org.junit.Test;
+
+import java.util.Collection;
+import java.util.Iterator;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * testing different kind of filters
@@ -106,15 +106,13 @@ public class FilterPipeTest extends AbstractPipeTest {
 
     @Test
     public void testPropertyRegexp() throws Exception {
-        Set<String> outputs = plumber.newPipe(context.resourceResolver())
+        Collection<String> outputs = plumber.newPipe(context.resourceResolver())
             .echo(PATH_APPLE)
-            .grep("jcr:description","https://en.wikipedia.org").run();
+            .grep("jcr:description","https://en.wikipedia.org").run().getCurrentPathSet();
         assertEquals("there should be an item", 1, outputs.size());
         outputs = plumber.newPipe(context.resourceResolver())
                 .echo(PATH_APPLE)
-                .grep("jcr:description",".*https://en.wikipedia.org.*").run();
+                .grep("jcr:description",".*https://en.wikipedia.org.*").run().getCurrentPathSet();
         assertEquals("there should be an item", 1, outputs.size());
-
     }
-
 }

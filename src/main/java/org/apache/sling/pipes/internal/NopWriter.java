@@ -30,7 +30,12 @@ public class NopWriter extends OutputWriter {
     }
 
     @Override
-    protected void initInternal(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException {
+    protected void initResponse(SlingHttpServletResponse response) {
+        //nop
+    }
+
+    @Override
+    public void starts() {
         //nop
     }
 

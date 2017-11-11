@@ -20,6 +20,7 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.event.jobs.Job;
 import org.osgi.annotation.versioning.ProviderType;
 
+import javax.json.Json;
 import java.util.Map;
 import java.util.Set;
 
@@ -209,6 +210,14 @@ public interface PipeBuilder {
      */
     PipeBuilder conf(Object... properties) throws IllegalAccessException;
 
+
+    /**
+     * add outputs passed key
+     * @param keys properties of the outputs resource to output
+     * @return current instance of PipeBuilder
+     */
+    PipeBuilder outputs(String ... keys);
+
     /**
      * builds a configured pipe. The configuration will be placed in a balanced tree under <code>/var/pipes</code>
      * @return Created (not executed) Pipe instance.
@@ -229,7 +238,7 @@ public interface PipeBuilder {
      * @return set of resource path, output of the pipe execution
      * @throws Exception exceptions thrown by the build or the pipe execution itself
      */
-    Set<String> run() throws Exception;
+    ExecutionResult run() throws Exception;
 
     /**
      * allow execution of a pipe, with more parameter
@@ -237,7 +246,7 @@ public interface PipeBuilder {
      * @return set of resource path, output of the pipe execution
      * @throws Exception in case something goes wrong with pipe execution
      */
-    Set<String> run(Map bindings) throws Exception;
+    ExecutionResult run(Map bindings) throws Exception;
 
     /**
      * allow execution of a pipe, with more parameter
@@ -245,7 +254,7 @@ public interface PipeBuilder {
      * @return set of resource path, output of the pipe execution
      * @throws Exception in case something goes wrong with pipe execution
      */
-    Set<String> runWith(Object... bindings) throws Exception;
+    ExecutionResult runWith(Object... bindings) throws Exception;
 
     /**
      * run a pipe asynchronously

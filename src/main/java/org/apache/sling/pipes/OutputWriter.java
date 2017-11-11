@@ -17,15 +17,14 @@
 package org.apache.sling.pipes;
 
 import java.io.IOException;
-
-import javax.json.JsonException;
+import java.io.Writer;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 
 /**
- * defines how pipe's output get written to a servlet response
+ * defines how pipe's output get written to a servlet response or output stream
  */
 public abstract class OutputWriter {
 
@@ -37,11 +36,13 @@ public abstract class OutputWriter {
 
     public static final int NB_MAX = 10;
 
-    protected int size;
+    protected long size;
 
-    protected int max = NB_MAX;
+    protected long max = NB_MAX;
 
     protected Pipe pipe;
+
+    protected Writer writer;
 
     /**
      *
@@ -55,31 +56,51 @@ public abstract class OutputWriter {
      * @param request request from which writer will output
      * @param response response on which writer will output
      * @throws IOException error handling streams
-     * @throws JsonException in case invalid json is written
      */
-    public void init(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException, JsonException {
-        max = request.getParameter(PARAM_SIZE) != null ? Integer.parseInt(request.getParameter(PARAM_SIZE)) : NB_MAX;
-        if (max < 0) {
-            max = Integer.MAX_VALUE;
+    public void init(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException {
+        if (request.getParameter(PARAM_SIZE) != null) {
+            setMax(Integer.parseInt(request.getParameter(PARAM_SIZE)));
         }
-        initInternal(request, response);
+        setWriter(response.getWriter());
+        initResponse(response);
+        starts();
     }
 
     /**
-     * Init the writer, writes beginning of the output
-     * @param request request from which writer will output
-     * @param response response on which writer will output
-     * @throws IOException error handling streams
-     * @throws JsonException in case invalid json is written
+     * Specifically init the response
+     * @param response response on which to write
      */
-    protected abstract void initInternal(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException, JsonException;
+    protected abstract void initResponse(SlingHttpServletResponse response);
+
+    /**
+     * Init the writer, writes beginning of the output
+     */
+    public abstract void starts();
+
+    /**
+     * Setter for max (will put to max if value is negative)
+     * @param max positive max value to set
+     */
+    public void setMax(int max) {
+        this.max = max;
+        if (max < 0) {
+            this.max = Integer.MAX_VALUE;
+        }
+    }
+
+    /**
+     * Set the writer
+     * @param writer writer on which to write output
+     */
+    public void setWriter(Writer writer) {
+        this.writer = writer;
+    }
 
     /**
      * Write a given resource
      * @param resource resource that will be written
-     * @throws JsonException in case write fails
      */
-    public void write(Resource resource) throws JsonException {
+    public void write(Resource resource) {
         if (size++ < max) {
             writeItem(resource);
         }
@@ -88,16 +109,14 @@ public abstract class OutputWriter {
     /**
      * Write a given resource
      * @param resource resource that will be written
-     * @throws JsonException in case write fails
      */
-    protected abstract void writeItem(Resource resource) throws JsonException;
+    protected abstract void writeItem(Resource resource);
 
     /**
      * writes the end of the output
-     * @throws JsonException in case invalid json is written
      */
 
-    public abstract void ends() throws JsonException;
+    public abstract void ends();
 
     /**
      * Setter
@@ -105,5 +124,10 @@ public abstract class OutputWriter {
      */
     public void setPipe(Pipe pipe) {
         this.pipe = pipe;
+    }
+
+    @Override
+    public String toString() {
+        return writer.toString();
     }
 }

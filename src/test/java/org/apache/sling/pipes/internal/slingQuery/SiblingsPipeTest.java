@@ -19,17 +19,18 @@ package org.apache.sling.pipes.internal.slingQuery;
 import org.apache.sling.pipes.AbstractPipeTest;
 import org.junit.Test;
 
-import java.util.Set;
+import java.util.Collection;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class SiblingsPipeTest extends AbstractPipeTest{
 
     @Test
     public void testSiblings() throws Exception {
-        Set<String> outputs = plumber.newPipe(context.resourceResolver())
+        Collection<String> outputs = plumber.newPipe(context.resourceResolver())
                 .echo(PATH_CARROT)
-                .siblings("[color=green]").run();
+                .siblings("[color=green]").run().getCurrentPathSet();
         assertEquals("there should be 1 outputs", 1, outputs.size());
         assertTrue("there should be pea", outputs.contains(PATH_PEA));
     }

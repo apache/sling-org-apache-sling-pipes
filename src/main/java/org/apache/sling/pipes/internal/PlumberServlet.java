@@ -21,7 +21,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.json.JsonException;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
@@ -154,10 +153,9 @@ public class PlumberServlet extends SlingAllMethodsServlet {
      * @param response response writers will point to
      * @return instance of the created writer
      * @throws IOException bad handling of I/O streams,
-     * @throws JsonException bad handling of json output
      */
-    OutputWriter getWriter(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException, JsonException {
-        OutputWriter[] candidates = new OutputWriter[]{new CustomJsonWriter(), new CustomWriter(), new DefaultOutputWriter()};
+    OutputWriter getWriter(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException {
+        OutputWriter[] candidates = new OutputWriter[]{new CustomJsonWriter(), new DefaultJsonWriter()};
         for (OutputWriter candidate : candidates) {
             if (candidate.handleRequest(request)) {
                 candidate.init(request, response);

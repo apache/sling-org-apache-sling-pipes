@@ -32,6 +32,8 @@ import org.apache.sling.pipes.internal.slingQuery.SiblingsPipe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.json.Json;
+import java.io.StringWriter;
 import java.util.*;
 
 import static org.apache.sling.jcr.resource.JcrResourceConstants.NT_SLING_FOLDER;
@@ -49,6 +51,8 @@ public class PipeBuilderImpl implements PipeBuilder {
     public static final String[] DEFAULT_NAMES = new String[]{"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"};
 
     List<Step> steps;
+
+    Map outputs;
 
     Step containerStep = new Step(ContainerPipe.RESOURCE_TYPE);
 
@@ -289,6 +293,13 @@ public class PipeBuilderImpl implements PipeBuilder {
     }
 
     @Override
+    public PipeBuilder outputs(String... keys) {
+        outputs = new HashMap();
+        writeToMap(outputs, keys);
+        return this;
+    }
+
+    @Override
     public Pipe build() throws PersistenceException {
         return build(buildRandomPipePath());
     }
@@ -313,6 +324,9 @@ public class PipeBuilderImpl implements PipeBuilder {
     @Override
     public Pipe build(String path) throws PersistenceException {
         Resource pipeResource = persistStep(path, NT_SLING_FOLDER, containerStep);
+        if (outputs != null){
+            ResourceUtil.getOrCreateResource(resolver, path + "/" + CustomJsonWriter.PARAM_WRITER, outputs, NT_SLING_FOLDER, false);
+        }
         int index = 0;
         for (Step step : steps){
             String name = StringUtils.isNotBlank(step.name) ? step.name : DEFAULT_NAMES.length > index ? DEFAULT_NAMES[index] : Integer.toString(index);
@@ -325,12 +339,12 @@ public class PipeBuilderImpl implements PipeBuilder {
     }
 
     @Override
-    public Set<String> run() throws Exception {
+    public ExecutionResult run() throws Exception {
         return run(null);
     }
 
     @Override
-    public Set<String> runWith(Object... bindings) throws Exception {
+    public ExecutionResult runWith(Object... bindings) throws Exception {
         checkArguments(bindings);
         Map bindingsMap = new HashMap();
         writeToMap(bindingsMap, bindings);
@@ -338,9 +352,12 @@ public class PipeBuilderImpl implements PipeBuilder {
     }
 
     @Override
-    public Set<String> run(Map bindings) throws Exception {
+    public ExecutionResult run(Map bindings) throws Exception {
+        StringWriter stringWriter = new StringWriter();
+        DefaultJsonWriter writer = outputs != null ? new CustomJsonWriter(stringWriter) : new DefaultJsonWriter(stringWriter);
+        writer.starts();
         Pipe pipe = this.build();
-        return plumber.execute(resolver, pipe, bindings,  new NopWriter() , true);
+        return plumber.execute(resolver, pipe, bindings,  writer , true);
     }
 
     @Override

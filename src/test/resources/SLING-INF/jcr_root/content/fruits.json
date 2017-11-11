@@ -12,6 +12,7 @@
       "jcr:primaryType":"nt:unstructured",
       "pea":{
         "jcr:primaryType":"nt:unstructured",
+        "jcr:title":"Pea",
         "color":"green",
         "buttheyhavesamecolor":{
           "jcr:primaryType":"nt:unstructured"
@@ -23,6 +24,7 @@
       },
       "carrot":{
         "jcr:primaryType":"nt:unstructured",
+        "jcr:title":"Carrot",
         "andtheircolorisdifferent":{
           "jcr:primaryType":"nt:unstructured"
         }

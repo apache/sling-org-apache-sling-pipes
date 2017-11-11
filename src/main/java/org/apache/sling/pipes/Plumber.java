@@ -17,11 +17,9 @@
 package org.apache.sling.pipes;
 
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.event.jobs.Job;
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -57,9 +55,9 @@ public interface Plumber {
      * @param writer output of the pipe
      * @param save in case that pipe writes anything, wether the plumber should save changes or not
      * @throws Exception in case execution fails
-     * @return set of paths of output resources
+     * @return instance of <code>ExecutionResult</code>
      */
-    Set<String> execute(ResourceResolver resolver, String path, Map bindings, OutputWriter writer, boolean save) throws Exception;
+    ExecutionResult execute(ResourceResolver resolver, String path, Map bindings, OutputWriter writer, boolean save) throws Exception;
 
     /**
      * Executes a given pipe
@@ -69,9 +67,9 @@ public interface Plumber {
      * @param writer output of the pipe
      * @param save in case that pipe writes anything, wether the plumber should save changes or not
      * @throws Exception in case execution fails
-     * @return set of paths of output resources
+     * @return instance of <code>ExecutionResult</code>
      */
-    Set<String> execute(ResourceResolver resolver, Pipe pipe, Map bindings, OutputWriter writer, boolean save) throws Exception;
+    ExecutionResult execute(ResourceResolver resolver, Pipe pipe, Map bindings, OutputWriter writer, boolean save) throws Exception;
 
     /**
      * Registers
