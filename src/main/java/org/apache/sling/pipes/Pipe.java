@@ -16,10 +16,10 @@
  */
 package org.apache.sling.pipes;
 
-import java.util.Iterator;
-
 import org.apache.sling.api.resource.Resource;
 import org.osgi.annotation.versioning.ConsumerType;
+
+import java.util.Iterator;
 
 /**
  * Pipe interface

@@ -16,11 +16,11 @@
  */
 package org.apache.sling.pipes.internal.slingQuery;
 
-import static org.apache.sling.query.SlingQuery.$;
-
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.Plumber;
 import org.apache.sling.query.SlingQuery;
+
+import static org.apache.sling.query.SlingQuery.$;
 /**
  * this pipe uses SlingQuery to filters children (filter defined in expr property) of
  * a resource (defined in the path property)

@@ -16,16 +16,14 @@
  */
 package org.apache.sling.pipes.internal;
 
-import java.io.IOException;
-import java.io.Writer;
-
-import javax.json.Json;
-import javax.json.stream.JsonGenerator;
-
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.OutputWriter;
+
+import javax.json.Json;
+import javax.json.stream.JsonGenerator;
+import java.io.Writer;
 
 /**
  * default output writer, that outputs JSON with size and output resources' path

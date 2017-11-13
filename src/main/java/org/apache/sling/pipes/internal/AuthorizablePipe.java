@@ -16,13 +16,6 @@
  */
 package org.apache.sling.pipes.internal;
 
-import java.util.Collections;
-import java.util.Iterator;
-
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonArrayBuilder;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
@@ -34,6 +27,12 @@ import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.Plumber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonArrayBuilder;
+import java.util.Collections;
+import java.util.Iterator;
 
 /**
  * pipe that outputs an authorizable resource based on the id set in expr

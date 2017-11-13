@@ -16,9 +16,6 @@
  */
 package org.apache.sling.pipes.internal;
 
-import java.util.Collections;
-import java.util.Iterator;
-
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
@@ -26,6 +23,9 @@ import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.Plumber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Collections;
+import java.util.Iterator;
 
 import static org.apache.sling.jcr.resource.JcrResourceConstants.NT_SLING_FOLDER;
 

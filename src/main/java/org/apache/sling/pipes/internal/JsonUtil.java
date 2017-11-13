@@ -16,12 +16,7 @@
  */
 package org.apache.sling.pipes.internal;
 
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.util.AbstractMap;
-import java.util.Map.Entry;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import org.apache.sling.jcr.contentparser.impl.JsonTicksConverter;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -34,8 +29,12 @@ import javax.json.JsonString;
 import javax.json.JsonStructure;
 import javax.json.JsonValue;
 import javax.json.JsonValue.ValueType;
-
-import org.apache.sling.jcr.contentparser.impl.JsonTicksConverter;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.util.AbstractMap;
+import java.util.Map.Entry;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class JsonUtil {
     public static JsonStructure parse(String input) throws JsonException {

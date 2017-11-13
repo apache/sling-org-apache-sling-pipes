@@ -16,12 +16,12 @@
  */
 package org.apache.sling.pipes;
 
-import java.io.IOException;
-import java.io.Writer;
-
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
+
+import java.io.IOException;
+import java.io.Writer;
 
 /**
  * defines how pipe's output get written to a servlet response or output stream

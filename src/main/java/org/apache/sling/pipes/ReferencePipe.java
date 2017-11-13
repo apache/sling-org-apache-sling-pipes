@@ -16,9 +16,9 @@
  */
 package org.apache.sling.pipes;
 
-import java.util.Iterator;
-
 import org.apache.sling.api.resource.Resource;
+
+import java.util.Iterator;
 
 /**
  * executes a pipe referred in the configuration

@@ -16,24 +16,6 @@
  */
 package org.apache.sling.pipes.internal;
 
-import static org.apache.sling.api.resource.ResourceResolverFactory.SUBSERVICE;
-import static org.apache.sling.pipes.BasePipe.PN_STATUS;
-import static org.apache.sling.pipes.BasePipe.PN_STATUS_MODIFIED;
-import static org.apache.sling.pipes.BasePipe.STATUS_FINISHED;
-import static org.apache.sling.pipes.BasePipe.STATUS_STARTED;
-
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import javax.jcr.RepositoryException;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.LoginException;
@@ -75,6 +57,23 @@ import org.osgi.service.metatype.annotations.Designate;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.jcr.RepositoryException;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import static org.apache.sling.api.resource.ResourceResolverFactory.SUBSERVICE;
+import static org.apache.sling.pipes.BasePipe.PN_STATUS;
+import static org.apache.sling.pipes.BasePipe.PN_STATUS_MODIFIED;
+import static org.apache.sling.pipes.BasePipe.STATUS_FINISHED;
+import static org.apache.sling.pipes.BasePipe.STATUS_STARTED;
 
 /**
  * implements plumber interface, registers default pipes, and provides execution facilities

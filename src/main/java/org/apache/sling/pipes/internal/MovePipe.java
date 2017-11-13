@@ -16,20 +16,19 @@
  */
 package org.apache.sling.pipes.internal;
 
-import java.util.Collections;
-import java.util.Iterator;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.pipes.BasePipe;
+import org.apache.sling.pipes.Plumber;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.pipes.BasePipe;
-import org.apache.sling.pipes.Plumber;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.Collections;
+import java.util.Iterator;
 
 /**
  * Does a JCR Move of a node, returns the resource corresponding to the moved node

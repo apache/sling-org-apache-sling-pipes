@@ -16,12 +16,12 @@
  */
 package org.apache.sling.pipes;
 
-import java.util.Map;
-
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.event.jobs.Job;
 import org.osgi.annotation.versioning.ProviderType;
+
+import java.util.Map;
 
 /**
  * Plumber is an osgi service aiming to make pipes available to the sling system, in order to

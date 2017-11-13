@@ -17,7 +17,6 @@
 package org.apache.sling.pipes.internal;
 
 import org.apache.commons.collections.IteratorUtils;
-
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.pipes.BasePipe;
