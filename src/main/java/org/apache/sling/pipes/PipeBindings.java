@@ -74,8 +74,16 @@ public class PipeBindings {
      * public constructor, built from pipe's resource
      * @param resource pipe's configuration resource
      */
-    public PipeBindings(Resource resource){
-        engine.setContext(scriptContext);
+    public PipeBindings(Resource resource) throws Exception {
+    	//In some contexts the nashorn engine cannot be obtained. Do fallback to system classloader.
+    	if(engine == null){
+    		engine = new ScriptEngineManager(null).getEngineByName("nashorn");
+    		//Check if nashorn can still not be instantiated
+    		if(engine == null){
+    			throw new Exception("Can not instantiate nashorn scriptengine. Check JVM version & capabilities.");
+    		}
+    	}
+    	engine.setContext(scriptContext);
         //add path bindings where path.MyPipe will give MyPipe current resource path
         getBindings().put(PATH_BINDING, pathBindings);
 

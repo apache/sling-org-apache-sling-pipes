@@ -45,13 +45,13 @@ public class PipeBindingsTest extends AbstractPipeTest {
         context.load().json("/container.json", PATH_PIPE);
     }
 
-    private PipeBindings getDummyTreeBinding(){
+    private PipeBindings getDummyTreeBinding() throws Exception{
         Resource resource = context.resourceResolver().getResource(PATH_PIPE + "/" + ContainerPipeTest.NN_DUMMYTREE);
         return new PipeBindings(resource);
     }
 
     @Test
-    public void testEvaluateSimpleString() throws ScriptException {
+    public void testEvaluateSimpleString() throws Exception {
         PipeBindings bindings = getDummyTreeBinding();
         String simple = "simple string";
         String evaluated = (String)bindings.evaluate(simple);
@@ -59,7 +59,7 @@ public class PipeBindingsTest extends AbstractPipeTest {
     }
 
     @Test
-    public void computeEcma5Expression() {
+    public void computeEcma5Expression() throws Exception {
         PipeBindings bindings = getDummyTreeBinding();
         Map<String,String> expressions = new HashMap<>();
         expressions.put("blah ${blah} blah", "'blah ' + blah + ' blah'");
