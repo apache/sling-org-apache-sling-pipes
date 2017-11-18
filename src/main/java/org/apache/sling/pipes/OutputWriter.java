@@ -16,17 +16,24 @@
  */
 package org.apache.sling.pipes;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.pipes.internal.JsonUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * defines how pipe's output get written to a servlet response or output stream
  */
 public abstract class OutputWriter {
+    Logger log = LoggerFactory.getLogger(CustomOutputWriter.class);
 
     public static final String KEY_SIZE = "size";
 
@@ -44,6 +51,13 @@ public abstract class OutputWriter {
 
     protected Writer writer;
 
+    public static final String PATH_KEY = "path";
+
+    public static final String PARAM_WRITER = "writer";
+
+    protected Map<String, Object> customOutputs;
+
+
     /**
      *
      * @param request current request
@@ -60,6 +74,14 @@ public abstract class OutputWriter {
     public void init(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException {
         if (request.getParameter(PARAM_SIZE) != null) {
             setMax(Integer.parseInt(request.getParameter(PARAM_SIZE)));
+        }
+        String writerParam = request.getParameter(PARAM_WRITER);
+        if (StringUtils.isNotBlank(writerParam)){
+            try {
+                customOutputs = JsonUtil.unbox(JsonUtil.parseObject(writerParam));
+            } catch(Exception e){
+                log.error("requested attributes can't be parsed", e);
+            }
         }
         setWriter(response.getWriter());
         initResponse(response);
@@ -88,7 +110,7 @@ public abstract class OutputWriter {
         }
     }
 
-    /**
+    /**x
      * Set the writer
      * @param writer writer on which to write output
      */
@@ -124,6 +146,14 @@ public abstract class OutputWriter {
      */
     public void setPipe(Pipe pipe) {
         this.pipe = pipe;
+        Resource outputs = pipe.getResource().getChild(PARAM_WRITER);
+        if (customOutputs == null && outputs != null ){
+            customOutputs = new HashMap<>();
+            customOutputs.putAll(outputs.getValueMap());
+            for (String ignoredKey : BasePipe.IGNORED_PROPERTIES) {
+                customOutputs.remove(ignoredKey);
+            }
+        }
     }
 
     @Override

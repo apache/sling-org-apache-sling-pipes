@@ -17,7 +17,7 @@
 package org.apache.sling.pipes.it;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.sling.pipes.internal.DefaultJsonWriter;
+import org.apache.sling.pipes.internal.JsonWriter;
 import org.apache.sling.pipes.internal.JsonUtil;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -44,7 +44,7 @@ public class PlumberServletIT extends PipesTestSupport {
 
     @Test
     @Ignore
-    public void testListComponent() throws IOException {
+    public void testListComponentJson() throws IOException {
         final String urlString = String.format("http://localhost:%s/etc/pipes-it/another-list.json", httpPort());
         LOGGER.info("fetching {}", urlString);
         URL url = new URL(urlString);
@@ -53,9 +53,10 @@ public class PlumberServletIT extends PipesTestSupport {
         String response = writer.toString();
         LOGGER.info("retrieved following response {}", response);
         JsonObject main = JsonUtil.parseObject(response);
-        assertTrue("there should be an items key", main.containsKey(DefaultJsonWriter.KEY_ITEMS));
-        assertTrue("there should be a size key", main.containsKey(DefaultJsonWriter.KEY_SIZE));
-        assertEquals("there should be 2 elements", 2, main.getInt(DefaultJsonWriter.KEY_SIZE));
+        assertTrue("there should be an items key", main.containsKey(JsonWriter.KEY_ITEMS));
+        assertTrue("there should be a size key", main.containsKey(JsonWriter.KEY_SIZE));
+        assertEquals("there should be 2 elements", 2, main.getInt(JsonWriter.KEY_SIZE));
     }
+
 }
 

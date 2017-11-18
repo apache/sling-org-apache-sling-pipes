@@ -54,7 +54,8 @@ import java.util.Map;
                 ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES + "=" + ChildrenPipe.RESOURCE_TYPE,
                 ServletResolverConstants.SLING_SERVLET_METHODS + "=GET",
                 ServletResolverConstants.SLING_SERVLET_METHODS + "=POST",
-                ServletResolverConstants.SLING_SERVLET_EXTENSIONS + "=json"
+                ServletResolverConstants.SLING_SERVLET_EXTENSIONS + "=json",
+                ServletResolverConstants.SLING_SERVLET_EXTENSIONS + "=csv"
         })
 public class PlumberServlet extends SlingAllMethodsServlet {
     Logger log = LoggerFactory.getLogger(this.getClass());
@@ -154,7 +155,7 @@ public class PlumberServlet extends SlingAllMethodsServlet {
      * @throws IOException bad handling of I/O streams,
      */
     OutputWriter getWriter(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException {
-        OutputWriter[] candidates = new OutputWriter[]{new CustomJsonWriter(), new DefaultJsonWriter()};
+        OutputWriter[] candidates = new OutputWriter[]{new CsvWriter(), new JsonWriter()};
         for (OutputWriter candidate : candidates) {
             if (candidate.handleRequest(request)) {
                 candidate.init(request, response);

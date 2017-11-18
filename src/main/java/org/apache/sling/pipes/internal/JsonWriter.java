@@ -19,29 +19,33 @@ package org.apache.sling.pipes.internal;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.pipes.OutputWriter;
+import org.apache.sling.pipes.CustomOutputWriter;
 
 import javax.json.Json;
+import javax.json.JsonValue;
 import javax.json.stream.JsonGenerator;
 import java.io.Writer;
+import java.util.Map;
 
 /**
  * default output writer, that outputs JSON with size and output resources' path
  */
-public class DefaultJsonWriter extends OutputWriter {
+public class JsonWriter extends CustomOutputWriter {
 
     protected JsonGenerator jsonWriter;
 
-    DefaultJsonWriter(){
+    public static final String JSON_EXTENSION = "json";
+
+    JsonWriter(){
     }
 
-    DefaultJsonWriter(Writer writer){
+    JsonWriter(Writer writer){
         setWriter(writer);
     }
 
     @Override
     public boolean handleRequest(SlingHttpServletRequest request) {
-        return true;
+        return request.getRequestPathInfo().getExtension().equals(JSON_EXTENSION);
     }
 
     @Override
@@ -59,7 +63,21 @@ public class DefaultJsonWriter extends OutputWriter {
 
     @Override
     public void writeItem(Resource resource) {
-        jsonWriter.write(resource.getPath());
+        if (customOutputs == null) {
+            jsonWriter.write(resource.getPath());
+        } else {
+            jsonWriter.writeStartObject();
+            jsonWriter.write(PATH_KEY, resource.getPath());
+            for (Map.Entry<String, Object> entry : customOutputs.entrySet()) {
+                Object o = pipe.getBindings().instantiateObject((String) entry.getValue());
+                if (o instanceof JsonValue) {
+                    jsonWriter.write(entry.getKey(), (JsonValue) o);
+                } else {
+                    jsonWriter.write(entry.getKey(), o.toString());
+                }
+            }
+            jsonWriter.writeEnd();
+        }
     }
 
     @Override

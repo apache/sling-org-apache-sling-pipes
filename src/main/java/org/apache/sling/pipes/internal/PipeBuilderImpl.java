@@ -24,6 +24,7 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.ContainerPipe;
+import org.apache.sling.pipes.CustomOutputWriter;
 import org.apache.sling.pipes.ExecutionResult;
 import org.apache.sling.pipes.Pipe;
 import org.apache.sling.pipes.PipeBuilder;
@@ -335,7 +336,7 @@ public class PipeBuilderImpl implements PipeBuilder {
     public Pipe build(String path) throws PersistenceException {
         Resource pipeResource = persistStep(path, NT_SLING_FOLDER, containerStep);
         if (outputs != null){
-            ResourceUtil.getOrCreateResource(resolver, path + "/" + CustomJsonWriter.PARAM_WRITER, outputs, NT_SLING_FOLDER, false);
+            ResourceUtil.getOrCreateResource(resolver, path + "/" + CustomOutputWriter.PARAM_WRITER, outputs, NT_SLING_FOLDER, false);
         }
         int index = 0;
         for (Step step : steps){
@@ -364,7 +365,7 @@ public class PipeBuilderImpl implements PipeBuilder {
     @Override
     public ExecutionResult run(Map bindings) throws Exception {
         StringWriter stringWriter = new StringWriter();
-        DefaultJsonWriter writer = outputs != null ? new CustomJsonWriter(stringWriter) : new DefaultJsonWriter(stringWriter);
+        JsonWriter writer = new JsonWriter(stringWriter);
         writer.starts();
         Pipe pipe = this.build();
         return plumber.execute(resolver, pipe, bindings,  writer , true);
