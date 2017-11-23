@@ -21,7 +21,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -45,8 +44,6 @@ public class ContainerPipe extends BasePipe {
 
     List<Pipe> pipeList = new ArrayList<>();
 
-    List<Pipe> reversePipeList = new ArrayList<>();
-
     long sleep = 0L;
     /**
      * Constructor
@@ -67,10 +64,8 @@ public class ContainerPipe extends BasePipe {
                 pipe.setBindings(bindings);
                 pipes.put(pipe.getName(), pipe);
                 pipeList.add(pipe);
-                reversePipeList.add(pipe);
             }
         }
-        Collections.reverse(reversePipeList);
     }
 
     @Override
@@ -125,7 +120,7 @@ public class ContainerPipe extends BasePipe {
      * @return pipe in the last position of the container's pipes
      */
     public Pipe getLastPipe() {
-        return reversePipeList.iterator().next();
+        return pipeList.get(pipeList.size() - 1);
     }
 
     /**
