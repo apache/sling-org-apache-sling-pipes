@@ -70,7 +70,10 @@ public class PathPipe extends BasePipe {
         String expression = getExpr();
         try {
             String path = expression.startsWith(SLASH) ? expression : getInput().getPath() + SLASH + expression;
-            output = Collections.singleton(ResourceUtil.getOrCreateResource(resolver, path, resourceType, intermediateType, autosave)).iterator();
+            logger.info("creating path {}", path);
+            if (!isDryRun()) {
+                output = Collections.singleton(ResourceUtil.getOrCreateResource(resolver, path, resourceType, intermediateType, autosave)).iterator();
+            }
         } catch (PersistenceException e){
             logger.error ("Not able to create path {}", expression, e);
         }
