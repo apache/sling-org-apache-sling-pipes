@@ -364,8 +364,7 @@ public class PipeBuilderImpl implements PipeBuilder {
 
     @Override
     public ExecutionResult run(Map bindings) throws Exception {
-        StringWriter stringWriter = new StringWriter();
-        JsonWriter writer = new JsonWriter(stringWriter);
+        JsonWriter writer = new JsonWriter();
         writer.starts();
         Pipe pipe = this.build();
         return plumber.execute(resolver, pipe, bindings,  writer , true);

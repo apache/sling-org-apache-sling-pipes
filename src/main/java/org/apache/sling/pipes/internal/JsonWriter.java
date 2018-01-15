@@ -24,6 +24,7 @@ import org.apache.sling.pipes.CustomOutputWriter;
 import javax.json.Json;
 import javax.json.JsonValue;
 import javax.json.stream.JsonGenerator;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Map;
 
@@ -37,6 +38,7 @@ public class JsonWriter extends CustomOutputWriter {
     public static final String JSON_EXTENSION = "json";
 
     JsonWriter(){
+        setWriter(new StringWriter());
     }
 
     JsonWriter(Writer writer){

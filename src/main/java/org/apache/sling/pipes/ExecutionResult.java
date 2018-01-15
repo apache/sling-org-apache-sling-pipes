@@ -18,6 +18,12 @@ package org.apache.sling.pipes;
 
 import org.apache.sling.api.resource.Resource;
 
+import javax.management.openmbean.CompositeData;
+import javax.management.openmbean.CompositeDataSupport;
+import javax.management.openmbean.CompositeType;
+import javax.management.openmbean.OpenDataException;
+import javax.management.openmbean.OpenType;
+import javax.management.openmbean.SimpleType;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -27,6 +33,22 @@ import java.util.Set;
  */
 public class ExecutionResult {
 
+    private static final String[] JMX_NAMES = new String[] {"size", "output"};
+
+    private static final CompositeType COMPOSITE_TYPE = getType();
+
+    static CompositeType getType() {
+        try {
+            return new CompositeType(ExecutionResult.class.getName(),
+                    "Execution of pipe, with size, and output as pipe configuration defined it",
+                    JMX_NAMES,
+                    new String[] {"total size", "output as string"},
+                    new OpenType[]{SimpleType.LONG, SimpleType.STRING});
+        } catch (OpenDataException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
     /**
      * *not* meant to hold the all the paths, just a set that is emptied each time
      * it's persisted.
@@ -34,6 +56,8 @@ public class ExecutionResult {
     Set<String> currentPathSet;
 
     OutputWriter writer;
+
+    CompositeData data;
 
     /**
      * Constructor
@@ -79,5 +103,16 @@ public class ExecutionResult {
     @Override
     public String toString() {
         return writer.toString();
+    }
+
+    /**
+     * @return Composite data view of that result. With size of the execution, and string output (can be json, csv, ...)
+     * @throws OpenDataException in case something went wrong building up the composite data
+     */
+    public CompositeData asCompositeData() throws OpenDataException {
+        if (data == null) {
+            data = new CompositeDataSupport(COMPOSITE_TYPE, JMX_NAMES, new Object[]{size(), toString()});
+        }
+        return data;
     }
 }

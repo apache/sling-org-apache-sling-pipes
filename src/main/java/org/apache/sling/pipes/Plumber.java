@@ -48,6 +48,14 @@ public interface Plumber {
     Job executeAsync(ResourceResolver resolver, String path, Map bindings);
 
     /**
+     * executes in a background thread
+     * @param path path of the pipe to execute
+     * @param bindings additional bindings to use when executing
+     * @return Job if registered, null otherwise
+     */
+    Job executeAsync(String path, Map bindings);
+
+    /**
      * Executes a pipe at a certain path
      * @param resolver resource resolver with which pipe will be executed
      * @param path path of a valid pipe configuration

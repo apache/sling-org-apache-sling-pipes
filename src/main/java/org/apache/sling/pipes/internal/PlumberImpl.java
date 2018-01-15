@@ -16,6 +16,7 @@
  */
 package org.apache.sling.pipes.internal;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.LoginException;
@@ -40,6 +41,7 @@ import org.apache.sling.pipes.Pipe;
 import org.apache.sling.pipes.PipeBindings;
 import org.apache.sling.pipes.PipeBuilder;
 import org.apache.sling.pipes.Plumber;
+import org.apache.sling.pipes.PlumberMXBean;
 import org.apache.sling.pipes.ReferencePipe;
 import org.apache.sling.pipes.internal.slingQuery.ChildrenPipe;
 import org.apache.sling.pipes.internal.slingQuery.ClosestPipe;
@@ -49,6 +51,7 @@ import org.apache.sling.pipes.internal.slingQuery.ParentsPipe;
 import org.apache.sling.pipes.internal.slingQuery.SiblingsPipe;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
@@ -59,8 +62,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.query.Query;
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+import java.lang.management.ManagementFactory;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -82,9 +91,14 @@ import static org.apache.sling.pipes.BasePipe.STATUS_STARTED;
         JobConsumer.PROPERTY_TOPICS +"="+PlumberImpl.SLING_EVENT_TOPIC
 })
 @Designate(ocd = PlumberImpl.Configuration.class)
-public class PlumberImpl implements Plumber, JobConsumer {
+public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     public static final int DEFAULT_BUFFER_SIZE = 1000;
+
+    protected final static String PN_MONITORED = "monitored";
+    protected final static String MONITORED_PIPES_QUERY = String.format("//element(*,nt:base)[@sling:resourceType='%s' and @%s]", ContainerPipe.RESOURCE_TYPE, PN_MONITORED);
+
+    protected final static String MBEAN_NAME_FORMAT = "org.apache.sling.pipes:name=%s";
 
     @ObjectClassDefinition(name="Apache Sling Pipes : Plumber configuration")
     public @interface Configuration {
@@ -110,6 +124,8 @@ public class PlumberImpl implements Plumber, JobConsumer {
     private Map serviceUser;
 
     private List<String> allowedUsers;
+
+    private Map<String, PipeMonitor> monitoredPipes;
 
     @Activate
     public void activate(Configuration configuration){
@@ -138,6 +154,38 @@ public class PlumberImpl implements Plumber, JobConsumer {
         registerPipe(SiblingsPipe.RESOURCE_TYPE, SiblingsPipe.class);
         registerPipe(ClosestPipe.RESOURCE_TYPE, ClosestPipe.class);
         registerPipe(FindPipe.RESOURCE_TYPE, FindPipe.class);
+        toggleJmxRegistration(this, PlumberMXBean.class.getName(), true);
+        refreshMonitoredPipes();
+    }
+
+    @Deactivate
+    public void deactivate(){
+        toggleJmxRegistration(null, PlumberMXBean.class.getName(), false);
+        if (monitoredPipes != null){
+            for (String path : monitoredPipes.keySet()){
+                toggleJmxRegistration(null, path, false);
+            }
+        }
+    }
+
+    /**
+     * Toggle some mbean registration
+     * @param name partial name that will be used for registration
+     * @param register true to register, false to unregister
+     */
+    private void toggleJmxRegistration(Object instance, String name, boolean register){
+        try {
+            MBeanServer server = ManagementFactory.getPlatformMBeanServer();
+            ObjectName oName = ObjectName.getInstance(String.format(MBEAN_NAME_FORMAT, name));
+            if (register && !server.isRegistered(oName)) {
+                server.registerMBean(instance, oName);
+            }
+            if (!register && server.isRegistered(oName)){
+                server.unregisterMBean(oName);
+            }
+        } catch (Exception e) {
+            log.error("unable to toggle mbean {} registration", name, e);
+        }
     }
 
     @Reference(policy= ReferencePolicy.DYNAMIC, cardinality= ReferenceCardinality.OPTIONAL)
@@ -167,15 +215,20 @@ public class PlumberImpl implements Plumber, JobConsumer {
     @Override
     public Job executeAsync(ResourceResolver resolver, String path, Map bindings) {
         if (allowedUsers.contains(resolver.getUserID())) {
-            if (StringUtils.isBlank((String)serviceUser.get(SUBSERVICE))) {
-                log.error("please configure plumber service user");
-            }
-            final Map props = new HashMap();
-            props.put(SlingConstants.PROPERTY_PATH, path);
-            props.put(PipeBindings.NN_ADDITIONALBINDINGS, bindings);
-            return jobManager.addJob(SLING_EVENT_TOPIC, props);
+            return executeAsync(path, bindings);
         }
         return null;
+    }
+
+    @Override
+    public Job executeAsync(String path, Map bindings) {
+        if (StringUtils.isBlank((String)serviceUser.get(SUBSERVICE))) {
+            log.error("please configure plumber service user");
+        }
+        final Map props = new HashMap();
+        props.put(SlingConstants.PROPERTY_PATH, path);
+        props.put(PipeBindings.NN_ADDITIONALBINDINGS, bindings);
+        return jobManager.addJob(SLING_EVENT_TOPIC, props);
     }
 
     @Override
@@ -193,18 +246,24 @@ public class PlumberImpl implements Plumber, JobConsumer {
 
     @Override
     public ExecutionResult execute(ResourceResolver resolver, Pipe pipe, Map additionalBindings, OutputWriter writer, boolean save) throws Exception {
+        boolean success = false;
+        PipeMonitor monitor = null;
         try {
+            log.info("[{}] execution starts, save ({})", pipe, save);
             if (additionalBindings != null && pipe instanceof ContainerPipe){
                 pipe.getBindings().addBindings(additionalBindings);
             }
-            log.info("[{}] execution starts, save ({})", pipe, save);
+            Resource confResource = pipe.getResource();
             writer.setPipe(pipe);
-            if (isRunning(pipe.getResource())){
+            if (isRunning(confResource)){
                 throw new RuntimeException("Pipe is already running");
             }
+            monitor = monitoredPipes.get(confResource.getPath());
             writeStatus(pipe, STATUS_STARTED);
             resolver.commit();
-
+            if (monitor != null){
+                monitor.starts();
+            }
             ExecutionResult result = new ExecutionResult(writer);
             for (Iterator<Resource> it = pipe.getOutput(); it.hasNext();){
                 Resource resource = it.next();
@@ -217,12 +276,20 @@ public class PlumberImpl implements Plumber, JobConsumer {
             if (save && pipe.modifiesContent()) {
                 persist(resolver, pipe, result, null);
             }
-            log.info("[{}] done executing.", pipe.getName());
             writer.ends();
+            if (monitor != null){
+                monitor.ends();
+                monitor.setLastResult(result);
+            }
+            success = true;
             return result;
         } finally {
             writeStatus(pipe, STATUS_FINISHED);
             resolver.commit();
+            log.info("[{}] done executing.", pipe.getName());
+            if (!success && monitor != null){
+                monitor.failed();
+            }
         }
     }
 
@@ -312,7 +379,9 @@ public class PlumberImpl implements Plumber, JobConsumer {
         try(ResourceResolver resolver = factory.getServiceResourceResolver(serviceUser)){
             String path = (String)job.getProperty(SlingConstants.PROPERTY_PATH);
             Map bindings = (Map)job.getProperty(PipeBindings.NN_ADDITIONALBINDINGS);
-            execute(resolver, path, bindings, new NopWriter(), true);
+            OutputWriter writer = new JsonWriter();
+            writer.starts();
+            execute(resolver, path, bindings, writer, true);
             return JobResult.OK;
         } catch (LoginException e) {
             log.error("unable to retrieve resolver for executing scheduled pipe", e);
@@ -320,5 +389,37 @@ public class PlumberImpl implements Plumber, JobConsumer {
             log.error("failed to execute the pipe", e);
         }
         return JobResult.FAILED;
+    }
+
+    @Override
+    public void refreshMonitoredPipes() {
+        Map<String, PipeMonitor> map = new HashMap<>();
+        getMonitoredPipes().stream().forEach(bean -> map.put(bean.getPath(), bean));
+        if (monitoredPipes != null) {
+            Collection<String> shouldBeRemoved = CollectionUtils.subtract(monitoredPipes.keySet(), map.keySet());
+            for (String path : shouldBeRemoved){
+                toggleJmxRegistration(null, path, false);
+            }
+        }
+        monitoredPipes = map;
+        for (String path : monitoredPipes.keySet()){
+            toggleJmxRegistration(monitoredPipes.get(path), path, true);
+        }
+    }
+
+    protected Collection<PipeMonitor> getMonitoredPipes() {
+        Collection<PipeMonitor> beans = new ArrayList<>();
+        if (serviceUser != null) {
+            try (ResourceResolver resolver = factory.getServiceResourceResolver(serviceUser)) {
+                for (Iterator<Resource> resourceIterator = resolver.findResources(MONITORED_PIPES_QUERY, Query.XPATH); resourceIterator.hasNext(); ) {
+                    beans.add(new org.apache.sling.pipes.internal.PipeMonitor(this, getPipe(resourceIterator.next())));
+                }
+            } catch (LoginException e) {
+                log.error("unable to retrieve resolver for collecting exposed pipes", e);
+            } catch (Exception e) {
+                log.error("failed to execute the pipe", e);
+            }
+        }
+        return beans;
     }
 }
