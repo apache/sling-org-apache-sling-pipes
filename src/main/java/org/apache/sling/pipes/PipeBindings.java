@@ -44,38 +44,52 @@ import java.util.regex.Pattern;
  * Execution bindings of a pipe, and all expression related
  */
 public class PipeBindings {
+    /**
+     * interface mapping a javascript date
+     */
+    public interface JsDate {
+        long getTime();
+        int getTimezoneOffset();
+    }
+
     private static final Logger log = LoggerFactory.getLogger(PipeBindings.class);
 
+    public static final String NASHORNSCRIPTENGINE = "nashorn";
+    
     public static final String NN_ADDITIONALBINDINGS = "additionalBindings";
 
     public static final String PN_ADDITIONALSCRIPTS = "additionalScripts";
-
-    ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
-
-    ScriptContext scriptContext = new SimpleScriptContext();
 
     /**
      * add ${path.pipeName} binding allowing to retrieve pipeName's current resource path
      */
     public static final String PATH_BINDING = "path";
-    Map<String, String> pathBindings = new HashMap<>();
 
     /**
      * add ${name.pipeName} binding allowing to retrieve pipeName's current resource name
      */
     public static final String NAME_BINDING = "name";
+    
+    private static final Pattern INJECTED_SCRIPT = Pattern.compile("\\$\\{(([^\\{^\\}]*(\\{[0-9,]+\\})?)*)\\}");
+
+    ScriptEngine engine;
+    
+    ScriptContext scriptContext = new SimpleScriptContext();
+
+    Map<String, String> pathBindings = new HashMap<>();
+
     Map<String, String> nameBindings = new HashMap<>();
 
     Map<String, Resource> outputResources = new HashMap<>();
-
-    private static final Pattern INJECTED_SCRIPT = Pattern.compile("\\$\\{(([^\\{^\\}]*(\\{[0-9,]+\\})?)*)\\}");
 
     /**
      * public constructor, built from pipe's resource
      * @param resource pipe's configuration resource
      */
-    public PipeBindings(Resource resource){
-        engine.setContext(scriptContext);
+    public PipeBindings(Resource resource) throws ScriptException {
+    	//Setup script engines
+    	initializeScriptEngine();
+    	
         //add path bindings where path.MyPipe will give MyPipe current resource path
         getBindings().put(PATH_BINDING, pathBindings);
 
@@ -101,6 +115,25 @@ public class PipeBindings {
                 }
             }
         }
+    }
+
+    /**
+     * add a binding
+     * @param name binding's name
+     * @param value binding's value
+     */
+    public void addBinding(String name, Object value){
+        log.debug("Adding binding {}={}", name, value);
+        getBindings().put(name, value);
+    }
+
+    /**
+     * adds additional bindings (global variables to use in child pipes expressions)
+     * @param bindings key/values bindings to add to the existing bindings
+     */
+    public void addBindings(Map bindings) {
+        log.info("Adding bindings {}", bindings);
+        getBindings().putAll(bindings);
     }
 
     /**
@@ -134,73 +167,6 @@ public class PipeBindings {
         } finally {
             IOUtils.closeQuietly(is);
         }
-    }
-
-    /**
-     * adds additional bindings (global variables to use in child pipes expressions)
-     * @param bindings key/values bindings to add to the existing bindings
-     */
-    public void addBindings(Map bindings) {
-        log.info("Adding bindings {}", bindings);
-        getBindings().putAll(bindings);
-    }
-
-    /**
-     * copy bindings
-     * @param original original bindings to copy
-     */
-    public void copyBindings(PipeBindings original){
-        getBindings().putAll(original.getBindings());
-    }
-
-    /**
-     * Update current resource of a given pipe, and appropriate binding
-     * @param pipe pipe we'll extract the output binding from
-     * @param resource current resource in the pipe execution
-     */
-    public void updateBindings(Pipe pipe, Resource resource) {
-        outputResources.put(pipe.getName(), resource);
-        updateStaticBindings(pipe.getName(), resource);
-        addBinding(pipe.getName(), pipe.getOutputBinding());
-    }
-
-    /**
-     * Update all the static bindings related to a given resource
-     * @param name name under which static bindings should be recorded
-     * @param resource resource from which static bindings will be built
-     */
-    public void updateStaticBindings(String name, Resource resource){
-        if (resource != null) {
-            pathBindings.put(name, resource.getPath());
-            nameBindings.put(name, resource.getName());
-        }
-    }
-
-    /**
-     * add a binding
-     * @param name binding's name
-     * @param value binding's value
-     */
-    public void addBinding(String name, Object value){
-        log.debug("Adding binding {}={}", name, value);
-        getBindings().put(name, value);
-    }
-
-    /**
-     * check if a given bindings is defined or not
-     * @param name name of the binding
-     * @return true if <code>name</code> is registered
-     */
-    public boolean isBindingDefined(String name){
-        return getBindings().containsKey(name);
-    }
-
-    /**
-     * return registered bindings
-     * @return bindings
-     */
-    public Bindings getBindings() {
-        return scriptContext.getBindings(ScriptContext.ENGINE_SCOPE);
     }
 
     /**
@@ -238,6 +204,14 @@ public class PipeBindings {
     }
 
     /**
+     * copy bindings
+     * @param original original bindings to copy
+     */
+    public void copyBindings(PipeBindings original){
+        getBindings().putAll(original.getBindings());
+    }
+
+    /**
      * evaluate a given expression
      * @param expr ecma like expression
      * @return object that is the result of the expression
@@ -250,6 +224,41 @@ public class PipeBindings {
             return engine.eval(computed, scriptContext);
         }
         return expr;
+    }
+
+    /**
+     * return registered bindings
+     * @return bindings
+     */
+    public Bindings getBindings() {
+        return scriptContext.getBindings(ScriptContext.ENGINE_SCOPE);
+    }
+    
+    /**
+     * return Pipe <code>name</code>'s output binding
+     * @param name name of the pipe
+     * @return resource corresponding to that pipe output
+     */
+    public Resource getExecutedResource(String name) {
+        return outputResources.get(name);
+    }
+
+    /**
+     * Initialize the ScriptEngine.
+     * In some contexts the nashorn engine cannot be obtained from thread's class loader. Do fallback to system classloader.
+     * @throws ScriptException
+     */
+    private void initializeScriptEngine() throws ScriptException{
+    	engine = new ScriptEngineManager().getEngineByName(PipeBindings.NASHORNSCRIPTENGINE);
+    	if(engine == null){
+        	//Fallback to system classloader
+    		engine = new ScriptEngineManager(null).getEngineByName(PipeBindings.NASHORNSCRIPTENGINE);
+    		//Check if nashorn can still not be instantiated
+    		if(engine == null){
+    			throw new ScriptException("Can not instantiate nashorn scriptengine. Check JVM version & capabilities.");
+    		}
+    	}
+    	engine.setContext(scriptContext);
     }
 
     /**
@@ -294,19 +303,34 @@ public class PipeBindings {
     }
 
     /**
-     * return Pipe <code>name</code>'s output binding
-     * @param name name of the pipe
-     * @return resource corresponding to that pipe output
+     * check if a given bindings is defined or not
+     * @param name name of the binding
+     * @return true if <code>name</code> is registered
      */
-    public Resource getExecutedResource(String name) {
-        return outputResources.get(name);
+    public boolean isBindingDefined(String name){
+        return getBindings().containsKey(name);
     }
 
     /**
-     * interface mapping a javascript date
+     * Update current resource of a given pipe, and appropriate binding
+     * @param pipe pipe we'll extract the output binding from
+     * @param resource current resource in the pipe execution
      */
-    public interface JsDate {
-        long getTime();
-        int getTimezoneOffset();
+    public void updateBindings(Pipe pipe, Resource resource) {
+        outputResources.put(pipe.getName(), resource);
+        updateStaticBindings(pipe.getName(), resource);
+        addBinding(pipe.getName(), pipe.getOutputBinding());
+    }
+
+    /**
+     * Update all the static bindings related to a given resource
+     * @param name name under which static bindings should be recorded
+     * @param resource resource from which static bindings will be built
+     */
+    public void updateStaticBindings(String name, Resource resource){
+        if (resource != null) {
+            pathBindings.put(name, resource.getPath());
+            nameBindings.put(name, resource.getName());
+        }
     }
 }
