@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -38,8 +39,8 @@ public class PipeBuilderTest extends AbstractPipeTest {
     public void simpleBuild() throws Exception {
         PipeBuilder rmBuilder = plumber.newPipe(context.resourceResolver());
         Pipe rmPipe = rmBuilder.echo(PATH_APPLE).rm().build();
-        assertNotNull(" a pipe should be built", rmPipe);
-        //we rebuild pipe out of created pipe path, execute it, and test correct output (= correct pipe built)
+        assertNotNull(" a basePipe should be built", rmPipe);
+        //we rebuild basePipe out of created basePipe path, execute it, and test correct output (= correct basePipe built)
         testOneResource(rmPipe.getResource().getPath(), PATH_FRUITS);
     }
 
@@ -50,6 +51,16 @@ public class PipeBuilderTest extends AbstractPipeTest {
         ExecutionResult result = lemonBuilder.mkdir(lemonPath).run();
         assertTrue("returned set should contain lemon path", result.getCurrentPathSet().contains(lemonPath));
         assertNotNull("there should be a lemon created", context.resourceResolver().getResource(lemonPath));
+    }
+
+    @Test
+    public void dryRun() throws Exception {
+        String lemonPath = "/content/fruits/lemon";
+        PipeBuilder lemonBuilder = plumber.newPipe(context.resourceResolver());
+        ExecutionResult result = lemonBuilder.mkdir(lemonPath).runWith("dryRun", true);
+        assertFalse("returned set should not contain lemon path with dryRun=true(boolean)", result.getCurrentPathSet().contains(lemonPath));
+        ExecutionResult textResult = lemonBuilder.mkdir(lemonPath).runWith("dryRun", "true");
+        assertFalse("returned set should not contain lemon path with dryRun=true(text)", textResult.getCurrentPathSet().contains(lemonPath));
     }
 
     @Test

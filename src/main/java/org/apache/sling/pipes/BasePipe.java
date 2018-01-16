@@ -43,7 +43,7 @@ public class BasePipe implements Pipe {
     public static final String PN_STATUS_MODIFIED = "statusModified";
     public static final String STATUS_STARTED = "started";
     public static final String STATUS_FINISHED = "finished";
-    protected static final String DRYRUN_EXPR = "${" + DRYRUN_KEY + "}";
+    protected static final String DRYRUN_EXPR = String.format("${%s}", DRYRUN_KEY);
 
     protected ResourceResolver resolver;
     protected ValueMap properties;
@@ -55,7 +55,6 @@ public class BasePipe implements Pipe {
 
     // used by pipes using complex JCR configurations
     public static final List<String> IGNORED_PROPERTIES = Arrays.asList(new String[]{"jcr:lastModified", "jcr:primaryType", "jcr:created", "jcr:createdBy"});
-
 
     protected Boolean dryRunObject;
 
@@ -97,11 +96,18 @@ public class BasePipe implements Pipe {
     @Override
     public boolean isDryRun() {
         if (dryRunObject == null) {
+            dryRunObject = false;
             Object run =  bindings.isBindingDefined(DRYRUN_KEY) ? bindings.instantiateObject(DRYRUN_EXPR) : false;
-            dryRunObject =  run != null && run instanceof Boolean ? (Boolean)run : false;
+            if (run != null) {
+                dryRunObject = true;
+                if (run instanceof Boolean){
+                    dryRunObject = (Boolean)run;
+                } else if (run instanceof String && String.format("%s", Boolean.FALSE).equals(run)){
+                    dryRunObject = false;
+                }
+            }
         }
-        boolean dryRun = dryRunObject != null ? dryRunObject : false;
-        return dryRun;
+        return dryRunObject;
     }
 
     @Override
@@ -169,7 +175,6 @@ public class BasePipe implements Pipe {
         }
         return resource;
     }
-
 
     @Override
     public Object getOutputBinding() {
