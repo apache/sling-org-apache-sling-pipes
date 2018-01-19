@@ -19,7 +19,6 @@ package org.apache.sling.pipes.it;
 import org.apache.commons.io.IOUtils;
 import org.apache.sling.pipes.internal.JsonWriter;
 import org.apache.sling.pipes.internal.JsonUtil;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
@@ -43,7 +42,6 @@ public class PlumberServletIT extends PipesTestSupport {
     private static final Logger LOGGER = LoggerFactory.getLogger(PipeModelIT.class);
 
     @Test
-    @Ignore
     public void testListComponentJson() throws IOException {
         final String urlString = String.format("http://localhost:%s/etc/pipes-it/another-list.json", httpPort());
         LOGGER.info("fetching {}", urlString);
