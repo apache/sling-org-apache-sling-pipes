@@ -20,36 +20,38 @@ package org.apache.sling.pipes.it;
 
 import javax.inject.Inject;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.pipes.Plumber;
-import org.apache.sling.testing.paxexam.SlingOptions;
-import org.apache.sling.testing.paxexam.TestSupport;
 import org.apache.sling.auth.core.AuthenticationSupport;
-
+import org.apache.sling.pipes.Plumber;
+import org.apache.sling.resource.presence.ResourcePresence;
+import org.apache.sling.testing.paxexam.TestSupport;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.ProbeBuilder;
 import org.ops4j.pax.exam.TestProbeBuilder;
-import org.ops4j.pax.exam.util.PathUtils;
+import org.ops4j.pax.exam.util.Filter;
 
 import static org.apache.sling.testing.paxexam.SlingOptions.slingCommonsHtml;
-import static org.apache.sling.testing.paxexam.SlingOptions.slingExtensionDistribution;
-import static org.apache.sling.testing.paxexam.SlingOptions.slingExtensionEvent;
-import static org.apache.sling.testing.paxexam.SlingOptions.slingExtensionQuery;
-import static org.apache.sling.testing.paxexam.SlingOptions.slingLaunchpadOakTar;
+import static org.apache.sling.testing.paxexam.SlingOptions.slingDistribution;
+import static org.apache.sling.testing.paxexam.SlingOptions.slingEvent;
+import static org.apache.sling.testing.paxexam.SlingOptions.slingQuery;
+import static org.apache.sling.testing.paxexam.SlingOptions.slingQuickstartOakTar;
+import static org.apache.sling.testing.paxexam.SlingOptions.slingResourcePresence;
 import static org.apache.sling.testing.paxexam.SlingOptions.slingScriptingSightly;
 import static org.ops4j.pax.exam.CoreOptions.composite;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
-import static org.ops4j.pax.exam.CoreOptions.systemPackages;
-import static org.ops4j.pax.exam.CoreOptions.systemProperty;
+import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.factoryConfiguration;
 import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
 
 public abstract class PipesTestSupport extends TestSupport {
 
     protected static final String NN_TEST = "test";
+
+    protected static final String ADMIN_CREDENTIALS = "admin:admin";
 
     @Inject
     protected Plumber plumber;
@@ -62,6 +64,10 @@ public abstract class PipesTestSupport extends TestSupport {
 
     final protected int httpPort = findFreePort();
 
+    @Inject
+    @Filter(value = "(path=/etc/pipes-it)")
+    private ResourcePresence resourcePresence;
+
     @Configuration
     public Option[] configuration() {
         return new Option[]{
@@ -69,12 +75,29 @@ public abstract class PipesTestSupport extends TestSupport {
             launchpad(),
             // Sling Pipes
             testBundle("bundle.filename"),
+            factoryConfiguration("org.apache.sling.resource.presence.internal.ResourcePresenter")
+                .put("path", "/etc/pipes-it")
+                .asOption(),
+            factoryConfiguration("org.apache.sling.jcr.repoinit.RepositoryInitializer")
+                .put("scripts", new String[]{"create service user sling-pipes\n\n  set ACL for sling-pipes\n\n    allow   jcr:all     on /\n\n  end"})
+                .asOption(),
+            factoryConfiguration("org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended")
+                .put("user.mapping", new String[]{"org.apache.sling.pipes=sling-pipes"})
+                .asOption(),
             // testing
+            slingResourcePresence(),
             newConfiguration("org.apache.sling.jcr.base.internal.LoginAdminWhitelist")
                 .put("whitelist.bundles.regexp", "^PAXEXAM.*$")
                 .asOption(),
+            mavenBundle().groupId("com.google.code.gson").artifactId("gson").versionAsInProject(),
+            mavenBundle().groupId("org.jsoup").artifactId("jsoup").versionAsInProject(),
+            mavenBundle().groupId("org.apache.servicemix.bundles").artifactId("org.apache.servicemix.bundles.hamcrest").versionAsInProject(),
             junitBundles()
         };
+    }
+
+    protected String basicAuthorizationHeader(final String credentials) {
+        return "Basic ".concat(new String(Base64.encodeBase64(credentials.getBytes())));
     }
 
     protected void mkdir(ResourceResolver resolver, String path) throws Exception {
@@ -83,49 +106,24 @@ public abstract class PipesTestSupport extends TestSupport {
 
     protected Option launchpad() {
         final String workingDirectory = workingDirectory();
-        SlingOptions.versionResolver.setVersion("org.apache.sling", "org.apache.sling.xss", "1.0.18");
         return composite(
-            slingLaunchpadOakTar(workingDirectory, httpPort),
-            slingExtensionEvent(),
-            slingExtensionDistribution(),
-            slingExtensionQuery(),
+            slingQuickstartOakTar(workingDirectory, httpPort),
+            slingEvent(),
+            slingDistribution(),
+            slingQuery(),
             slingCommonsHtml(),
-            mavenBundle().groupId("javax.mail").artifactId("mail").version("1.5.0-b01"),
-            slingScriptingSightly(),
-            // TODO remove johnzon bundle (should be part of sling in upcoming release of org.apache.sling.testing.paxexam)
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.commons.johnzon").versionAsInProject(),
-            // TODO required by Jackrabbit Vault (Sling Distribution)
-            mavenBundle().groupId("org.jsoup").artifactId("jsoup").versionAsInProject(),
-            mavenBundle().groupId("org.apache.servicemix.bundles").artifactId("org.apache.servicemix.bundles.hamcrest").versionAsInProject(),
-            systemPackages(
-                "org.w3c.dom.css",
-                "org.w3c.dom.html",
-                "org.w3c.dom.ranges",
-                "org.w3c.dom.traversal"
-            ),
-            logging()
+            slingScriptingSightly()
         );
     }
 
     @ProbeBuilder
     public TestProbeBuilder probeConfiguration(final TestProbeBuilder testProbeBuilder) {
         testProbeBuilder.setHeader("Sling-Initial-Content",
-                "SLING-INF/jcr_root/apps/pipes-it;path:=/apps/pipes-it;overwrite:=true," +
+            "SLING-INF/jcr_root/apps/pipes-it;path:=/apps/pipes-it;overwrite:=true," +
                 "SLING-INF/jcr_root/etc/pipes-it;path:=/etc/pipes-it;overwrite:=true," +
                 "SLING-INF/jcr_root/content;path:=/content;overwrite:=true"
         );
         return testProbeBuilder;
-    }
-
-    protected Option logging() {
-        final String filename = String.format("file:%s/src/test/resources/logback.xml", PathUtils.getBaseDir());
-        return composite(
-                systemProperty("logback.configurationFile").value(filename),
-                mavenBundle().groupId("org.slf4j").artifactId("slf4j-api").version("1.7.21"),
-                mavenBundle().groupId("org.slf4j").artifactId("jcl-over-slf4j").version("1.7.21"),
-                mavenBundle().groupId("ch.qos.logback").artifactId("logback-core").version("1.1.7"),
-                mavenBundle().groupId("ch.qos.logback").artifactId("logback-classic").version("1.1.7")
-        );
     }
 
     ResourceResolver resolver() throws LoginException {

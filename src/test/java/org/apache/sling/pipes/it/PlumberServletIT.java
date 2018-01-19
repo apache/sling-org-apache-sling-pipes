@@ -16,9 +16,12 @@
  */
 package org.apache.sling.pipes.it;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.sling.pipes.internal.JsonWriter;
-import org.apache.sling.pipes.internal.JsonUtil;
+import java.io.IOException;
+import java.util.HashMap;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import org.jsoup.Jsoup;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
@@ -27,33 +30,28 @@ import org.ops4j.pax.exam.spi.reactors.PerClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.json.JsonObject;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.net.URL;
-import java.nio.charset.Charset;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
 public class PlumberServletIT extends PipesTestSupport {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PipeModelIT.class);
+
+    private final GsonBuilder gsonBuilder = new GsonBuilder();
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(PlumberServletIT.class);
 
     @Test
     public void testListComponentJson() throws IOException {
-        final String urlString = String.format("http://localhost:%s/etc/pipes-it/another-list.json", httpPort());
-        LOGGER.info("fetching {}", urlString);
-        URL url = new URL(urlString);
-        StringWriter writer = new StringWriter();
-        IOUtils.copy(url.openStream(), writer, Charset.defaultCharset());
-        String response = writer.toString();
+        final String url = String.format("http://localhost:%s/etc/pipes-it/another-list.json", httpPort());
+        LOGGER.info("fetching {}", url);
+        final String response = Jsoup.connect(url).header("Authorization", basicAuthorizationHeader(ADMIN_CREDENTIALS)).ignoreContentType(true).execute().body();
         LOGGER.info("retrieved following response {}", response);
-        JsonObject main = JsonUtil.parseObject(response);
-        assertTrue("there should be an items key", main.containsKey(JsonWriter.KEY_ITEMS));
-        assertTrue("there should be a size key", main.containsKey(JsonWriter.KEY_SIZE));
-        assertEquals("there should be 2 elements", 2, main.getInt(JsonWriter.KEY_SIZE));
+        final Gson gson = gsonBuilder.create();
+        final HashMap main = gson.fromJson(response, HashMap.class);
+        assertTrue("there should be an items key", main.containsKey("items"));
+        assertTrue("there should be a size key", main.containsKey("size"));
+        assertEquals("there should be 2 elements", 2, ((Double) main.get("size")).intValue());
     }
 
 }
