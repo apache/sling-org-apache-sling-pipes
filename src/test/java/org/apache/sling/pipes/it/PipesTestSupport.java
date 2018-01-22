@@ -79,7 +79,11 @@ public abstract class PipesTestSupport extends TestSupport {
                 .put("path", "/etc/pipes-it")
                 .asOption(),
             factoryConfiguration("org.apache.sling.jcr.repoinit.RepositoryInitializer")
-                .put("scripts", new String[]{"create service user sling-pipes\n\n  set ACL for sling-pipes\n\n    allow   jcr:all     on /\n\n  end"})
+                .put("scripts", new String[]{"create service user sling-pipes\n\n  set ACL for sling-pipes\n\n" +
+                        "    allow jcr:all   on /content" +
+                        "\n\n allow jcr:all   on /var" +
+                        "\n\n allow jcr:read   on /" +
+                        "\n\n  end"})
                 .asOption(),
             factoryConfiguration("org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended")
                 .put("user.mapping", new String[]{"org.apache.sling.pipes=sling-pipes"})

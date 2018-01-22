@@ -17,10 +17,10 @@
 package org.apache.sling.pipes.it;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.ArrayList;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import org.jsoup.Jsoup;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,16 +30,23 @@ import org.ops4j.pax.exam.spi.reactors.PerClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
 public class PlumberServletIT extends PipesTestSupport {
 
-    private final GsonBuilder gsonBuilder = new GsonBuilder();
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PlumberServletIT.class);
+
+    /**
+     * Java type for parsing the json
+     */
+    class ExpectedResponse {
+        int size;
+        ArrayList<String> items;
+    }
 
     @Test
     public void testListComponentJson() throws IOException {
@@ -47,11 +54,9 @@ public class PlumberServletIT extends PipesTestSupport {
         LOGGER.info("fetching {}", url);
         final String response = Jsoup.connect(url).header("Authorization", basicAuthorizationHeader(ADMIN_CREDENTIALS)).ignoreContentType(true).execute().body();
         LOGGER.info("retrieved following response {}", response);
-        final Gson gson = gsonBuilder.create();
-        final HashMap main = gson.fromJson(response, HashMap.class);
-        assertTrue("there should be an items key", main.containsKey("items"));
-        assertTrue("there should be a size key", main.containsKey("size"));
-        assertEquals("there should be 2 elements", 2, ((Double) main.get("size")).intValue());
+        final ExpectedResponse json = (new Gson()).fromJson(response, new TypeToken<ExpectedResponse>(){}.getType());
+        assertEquals("there should be 2 elements", 2, json.size);
+        assertArrayEquals("should be fruits array", new String[] {"/content/fruits/apple", "/content/fruits/banana"}, json.items.toArray());
     }
 
 }
