@@ -1,0 +1,29 @@
+Bundle-Category: sling
+
+Bundle-Description: ${project.description}
+
+Bundle-DocURL: https://sling.apache.org
+
+Bundle-License: Apache License, Version 2.0
+
+Bundle-Vendor: The Apache Software Foundation
+
+Import-Package:\
+  org.apache.sling.distribution;resolution:=optional,\
+  *
+
+Sling-Model-Packages:\
+  org.apache.sling.pipes.models
+
+-baseline: *
+
+-exportcontents: ${packages;VERSIONED}
+
+-includeresource:\
+  @org.apache.sling.jcr.contentparser-*.jar!/org/apache/sling/jcr/contentparser/impl/JsonTicksConverter.*
+
+-removeheaders:\
+  Embed-Dependency,\
+  Embed-Transitive,\
+  Include-Resource,\
+  Private-Package

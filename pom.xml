@@ -24,13 +24,12 @@
   <parent>
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
-    <version>33-SNAPSHOT</version>
+    <version>33</version>
     <relativePath />
   </parent>
 
   <artifactId>org.apache.sling.pipes</artifactId>
-  <packaging>bundle</packaging>
-  <version>1.1.1-SNAPSHOT</version>
+  <version>2.0.0-SNAPSHOT</version>
 
   <name>Apache Sling Pipes</name>
   <description>bulk content changes tool</description>
@@ -49,38 +48,22 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <extensions>true</extensions>
-        <configuration>
-          <instructions>
-            <Import-Package>
-              org.apache.sling.distribution;resolution:=optional,
-              *
-            </Import-Package>
-            <Embed-Dependency>
-              org.apache.sling.jcr.contentparser;inline="org/apache/sling/jcr/contentparser/impl/JsonTicksConverter.class"
-            </Embed-Dependency>
-            <Export-Package>!org.apache.sling.pipes.internal.*, org.apache.sling.pipes.*</Export-Package>
-                <Sling-Model-Packages>
-                  org.apache.sling.pipes.models
-                </Sling-Model-Packages>
-              </instructions>
-        </configuration>
+        <groupId>biz.aQute.bnd</groupId>
+        <artifactId>bnd-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>biz.aQute.bnd</groupId>
+        <artifactId>bnd-baseline-maven-plugin</artifactId>
       </plugin>
       <plugin>
         <groupId>org.apache.servicemix.tooling</groupId>
         <artifactId>depends-maven-plugin</artifactId>
-        <!-- see SLING-7351, switch to bnd-maven-plugin and remove configuration -->
-        <configuration>
-          <outputFile>${project.build.directory}/test-classes/META-INF/maven/dependencies.properties</outputFile>
-        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.rat</groupId>
         <artifactId>apache-rat-plugin</artifactId>
         <configuration>
-          <excludes>
+          <excludes combine.children="append">
             <!-- test csv files can't have licenses embedded -->
             <exclude>src/test/resources/**/*.csv</exclude>
           </excludes>
