@@ -14,24 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.pipes.internal.slingQuery;
+package org.apache.sling.pipes.internal.slingquery;
 
-import org.apache.sling.pipes.AbstractPipeTest;
-import org.junit.Test;
-
-import java.util.Collection;
-
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class ClosestPipeTest extends AbstractPipeTest {
+import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.pipes.AbstractPipeTest;
+import org.junit.Before;
+import org.junit.Test;
+
+/**
+ * test the sling query pipe
+ */
+public class ChildrenPipeTest extends AbstractPipeTest {
+
+    @Before
+    public void setup() throws PersistenceException {
+        super.setup();
+        context.load().json("/users.json", "/content/users");
+        context.load().json("/children.json", PATH_PIPE);
+    }
 
     @Test
-    public void testClosest() throws Exception {
-        Collection<String> outputs = plumber.newPipe(context.resourceResolver())
-                .echo(SAME_COLOR)
-                .closest("[color=green]").run().getCurrentPathSet();
-        assertEquals("there should be 1 output", 1, outputs.size());
-        assertTrue("there should be pea", outputs.contains(PATH_PEA));
+    public void testChildren() throws Exception {
+        assertTrue("this pipe should have an output", getOutput(PATH_PIPE + "/" + NN_SIMPLE).hasNext());
     }
 }

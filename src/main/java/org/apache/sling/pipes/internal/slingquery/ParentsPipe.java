@@ -14,29 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.pipes.internal.slingQuery;
+package org.apache.sling.pipes.internal.slingquery;
 
-import static org.junit.Assert.assertTrue;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.pipes.Plumber;
+import org.apache.sling.query.SlingQuery;
 
-import org.apache.sling.api.resource.PersistenceException;
-import org.apache.sling.pipes.AbstractPipeTest;
-import org.junit.Before;
-import org.junit.Test;
+import static org.apache.sling.query.SlingQuery.$;
 
 /**
- * test the sling query pipe
+ * returns sling query parents resources of input resource
  */
-public class ChildrenPipeTest extends AbstractPipeTest {
+public class ParentsPipe extends AbstractExpressionSlingQueryPipe {
+    public static final String RESOURCE_TYPE = RT_PREFIX + "parents";
 
-    @Before
-    public void setup() throws PersistenceException {
-        super.setup();
-        context.load().json("/users.json", "/content/users");
-        context.load().json("/children.json", PATH_PIPE);
+    public ParentsPipe(Plumber plumber, Resource resource) throws Exception {
+        super(plumber, resource);
     }
 
-    @Test
-    public void testChildren() throws Exception {
-        assertTrue("this pipe should have an output", getOutput(PATH_PIPE + "/" + NN_SIMPLE).hasNext());
+    @Override
+    protected SlingQuery getQuery(Resource resource, String expression) {
+        return $(resource).parents(expression);
     }
 }

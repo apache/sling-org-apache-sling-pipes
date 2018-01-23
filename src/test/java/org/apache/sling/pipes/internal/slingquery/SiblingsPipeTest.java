@@ -14,23 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.pipes.internal.slingQuery;
+package org.apache.sling.pipes.internal.slingquery;
 
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.pipes.Plumber;
-import org.apache.sling.query.SlingQuery;
+import org.apache.sling.pipes.AbstractPipeTest;
+import org.junit.Test;
 
-import static org.apache.sling.query.SlingQuery.$;
+import java.util.Collection;
 
-public class ClosestPipe extends AbstractExpressionSlingQueryPipe {
-    public static final String RESOURCE_TYPE = RT_PREFIX + "closest";
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-    public ClosestPipe(Plumber plumber, Resource resource) throws Exception {
-        super(plumber, resource);
-    }
+public class SiblingsPipeTest extends AbstractPipeTest{
 
-    @Override
-    protected SlingQuery getQuery(Resource resource, String expression) {
-        return $(resource).closest(expression);
+    @Test
+    public void testSiblings() throws Exception {
+        Collection<String> outputs = plumber.newPipe(context.resourceResolver())
+                .echo(PATH_CARROT)
+                .siblings("[color=green]").run().getCurrentPathSet();
+        assertEquals("there should be 1 outputs", 1, outputs.size());
+        assertTrue("there should be pea", outputs.contains(PATH_PEA));
     }
 }

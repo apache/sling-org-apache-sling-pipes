@@ -14,24 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.pipes.internal.slingQuery;
+package org.apache.sling.pipes.internal.slingquery;
 
-import org.apache.sling.pipes.AbstractPipeTest;
-import org.junit.Test;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.pipes.Plumber;
+import org.apache.sling.query.SlingQuery;
 
-import java.util.Collection;
+import static org.apache.sling.query.SlingQuery.$;
+/**
+ * this pipe uses SlingQuery to filters children (filter defined in expr property) of
+ * a resource (defined in the path property)
+ */
+public class ChildrenPipe extends AbstractExpressionSlingQueryPipe {
+    public final static String RESOURCE_TYPE = RT_PREFIX + "children";
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+    public ChildrenPipe(Plumber plumber, Resource resource) throws Exception {
+        super(plumber, resource);
+    }
 
-public class SiblingsPipeTest extends AbstractPipeTest{
-
-    @Test
-    public void testSiblings() throws Exception {
-        Collection<String> outputs = plumber.newPipe(context.resourceResolver())
-                .echo(PATH_CARROT)
-                .siblings("[color=green]").run().getCurrentPathSet();
-        assertEquals("there should be 1 outputs", 1, outputs.size());
-        assertTrue("there should be pea", outputs.contains(PATH_PEA));
+    @Override
+    protected SlingQuery getQuery(Resource resource, String expression) {
+        return $(resource).children(expression);
     }
 }

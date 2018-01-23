@@ -14,35 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.pipes.internal.slingQuery;
+package org.apache.sling.pipes.internal.slingquery;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.Plumber;
 import org.apache.sling.query.SlingQuery;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-/**
- * deals with sling query pipe code that takes an expression as input
- */
-public abstract class AbstractExpressionSlingQueryPipe extends AbstractSlingQueryPipe {
-    Logger logger = LoggerFactory.getLogger(AbstractExpressionSlingQueryPipe.class);
-    public AbstractExpressionSlingQueryPipe(Plumber plumber, Resource resource) throws Exception {
+import static org.apache.sling.query.SlingQuery.$;
+
+public class FindPipe extends AbstractExpressionSlingQueryPipe {
+    public static final String RESOURCE_TYPE = RT_PREFIX + "find";
+
+    public FindPipe(Plumber plumber, Resource resource) throws Exception {
         super(plumber, resource);
     }
 
-    /**
-     * generates a sling query object out of a resource and an expression
-     * @param resource input resource
-     * @param expression pipe's expression configuration
-     * @return SlingQuery object
-     */
-    protected abstract SlingQuery getQuery(Resource resource, String expression);
-
     @Override
-    protected SlingQuery getQuery(Resource resource) {
-        String expression = getExpr();
-        logger.debug("executing sling query pipe with expression {}", expression);
-        return getQuery(resource, expression);
+    protected SlingQuery getQuery(Resource resource, String expression) {
+        return $(resource).find(expression);
     }
 }
