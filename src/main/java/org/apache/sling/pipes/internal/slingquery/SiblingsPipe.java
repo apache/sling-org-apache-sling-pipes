@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.pipes.internal.slingQuery;
+package org.apache.sling.pipes.internal.slingquery;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.Plumber;
@@ -22,18 +22,16 @@ import org.apache.sling.query.SlingQuery;
 
 import static org.apache.sling.query.SlingQuery.$;
 
-/**
- * returns sling query parents resources of input resource
- */
-public class ParentPipe extends AbstractSlingQueryPipe {
-    public static final String RESOURCE_TYPE = RT_PREFIX + "parent";
+public class SiblingsPipe extends AbstractExpressionSlingQueryPipe {
 
-    public ParentPipe(Plumber plumber, Resource resource) throws Exception {
+    public static final String RESOURCE_TYPE = RT_PREFIX + "siblings";
+
+    public SiblingsPipe(Plumber plumber, Resource resource) throws Exception {
         super(plumber, resource);
     }
 
     @Override
-    protected SlingQuery getQuery(Resource resource) {
-        return $(resource).parent();
+    protected SlingQuery getQuery(Resource resource, String expression) {
+        return $(resource).siblings(expression);
     }
 }

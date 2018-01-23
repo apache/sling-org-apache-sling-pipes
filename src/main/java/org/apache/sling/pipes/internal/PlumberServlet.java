@@ -27,7 +27,7 @@ import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.ContainerPipe;
 import org.apache.sling.pipes.OutputWriter;
 import org.apache.sling.pipes.Plumber;
-import org.apache.sling.pipes.internal.slingQuery.ChildrenPipe;
+import org.apache.sling.pipes.internal.slingquery.ChildrenPipe;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;

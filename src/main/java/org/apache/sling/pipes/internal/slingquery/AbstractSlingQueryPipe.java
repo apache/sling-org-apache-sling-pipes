@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.pipes.internal.slingQuery;
+package org.apache.sling.pipes.internal.slingquery;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.BasePipe;
