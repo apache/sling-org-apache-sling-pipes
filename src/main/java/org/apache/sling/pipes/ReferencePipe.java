@@ -17,6 +17,8 @@
 package org.apache.sling.pipes;
 
 import org.apache.sling.api.resource.Resource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
 
@@ -24,6 +26,8 @@ import java.util.Iterator;
  * executes a pipe referred in the configuration
  */
 public class ReferencePipe extends BasePipe {
+    private static final Logger log = LoggerFactory.getLogger(ReferencePipe.class);
+
     public static final String RESOURCE_TYPE = "slingPipes/reference";
 
     protected Pipe reference;
@@ -39,6 +43,7 @@ public class ReferencePipe extends BasePipe {
             throw new Exception("Unable to build out pipe out of " + getPath());
         }
         reference.setReferrer(this);
+        log.info("set reference to {}", reference);
     }
 
     @Override
@@ -59,6 +64,7 @@ public class ReferencePipe extends BasePipe {
 
     @Override
     public Iterator<Resource> getOutput() {
+        log.debug("getting {} output", reference);
         return reference.getOutput();
     }
 

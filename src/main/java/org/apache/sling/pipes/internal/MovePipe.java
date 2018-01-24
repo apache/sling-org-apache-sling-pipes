@@ -63,6 +63,7 @@ public class MovePipe extends BasePipe {
                         if (resource.adaptTo(Node.class) != null) {
                             session.move(resource.getPath(), targetPath);
                         } else {
+                            logger.debug("resource is a property");
                             int lastLevel = targetPath.lastIndexOf("/");
                             // /a/b/c will get cut in /a/b for parent path, and c for name
                             String parentPath = targetPath.substring(0, lastLevel);

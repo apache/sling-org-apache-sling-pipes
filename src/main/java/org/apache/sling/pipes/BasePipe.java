@@ -173,6 +173,7 @@ public class BasePipe implements Pipe {
                 return bindings.getExecutedResource(previousPipe.getName());
             }
         }
+        logger.debug("input for this pipe is {}", resource != null ? resource.getPath() : null);
         return resource;
     }
 

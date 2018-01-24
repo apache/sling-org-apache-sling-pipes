@@ -186,11 +186,13 @@ public class ContainerPipe extends BasePipe {
                     Pipe nextPipe = container.pipeList.get(++cursor);
                     iterators.put(nextPipe, nextPipe.getOutput());
                     currentPipe = nextPipe;
+                    log.debug("switching to {}", currentPipe);
                     it = iterators.get(currentPipe);
                 }
                 //go down (or stay) to the first pipe having a next item
                 while (!it.hasNext() && cursor > 0) {
                     currentPipe = container.pipeList.get(--cursor);
+                    log.debug("switching to {}", currentPipe);
                     it = iterators.get(currentPipe);
                 }
             } while (it.hasNext() && cursor < container.pipeList.size() - 1);
