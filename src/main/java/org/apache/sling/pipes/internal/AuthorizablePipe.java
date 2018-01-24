@@ -40,14 +40,14 @@ import java.util.Iterator;
 public class AuthorizablePipe extends BasePipe {
     private static Logger logger = LoggerFactory.getLogger(AuthorizablePipe.class);
     public static final String RESOURCE_TYPE = RT_PREFIX + "authorizable";
-    public static final String PN_AUTOCREATEGROUP = "createGroup";
+    public static final String PN_CREATEGROUP = "createGroup";
     public static final String PN_ADDTOGROUP = "addToGroup";
     public static final String PN_ADDMEMBERS = "addMembers";
     public static final String PN_BINDMEMBERS = "bindMembers";
 
     UserManager userManager;
     ResourceResolver resolver;
-    boolean autoCreateGroup;
+    boolean createGroup;
     boolean bindMembers;
     String addToGroup;
     String addMembers;
@@ -63,7 +63,7 @@ public class AuthorizablePipe extends BasePipe {
 
     @Override
     public boolean modifiesContent() {
-        return autoCreateGroup || StringUtils.isNotBlank(addToGroup) || StringUtils.isNotBlank(addMembers);
+        return createGroup || StringUtils.isNotBlank(addToGroup) || StringUtils.isNotBlank(addMembers);
     }
 
     /**
@@ -78,7 +78,7 @@ public class AuthorizablePipe extends BasePipe {
         userManager = resolver.adaptTo(UserManager.class);
         if (getConfiguration() != null) {
             ValueMap properties = getConfiguration().adaptTo(ValueMap.class);
-            autoCreateGroup = properties.get(PN_AUTOCREATEGROUP, false);
+            createGroup = properties.get(PN_CREATEGROUP, false);
             bindMembers = properties.get(PN_BINDMEMBERS, false);
             addToGroup = properties.get(PN_ADDTOGROUP, String.class);
             addMembers = properties.get(PN_ADDMEMBERS, String.class);
@@ -110,7 +110,7 @@ public class AuthorizablePipe extends BasePipe {
 
     /**
      * Returns the authorizable configured by its expression, creating it if
-     * not present and if <code>autoCreateGroup</code> is set to true, or, if
+     * not present and if <code>createGroup</code> is set to true, or, if
      * no expression, tries to resolve getInput() as an authorizable
      * @return corresponding authorizable
      */
@@ -121,9 +121,11 @@ public class AuthorizablePipe extends BasePipe {
             if (StringUtils.isNotBlank(authId)) {
                 logger.debug("try to find authorizable {}", authId);
                 auth = userManager.getAuthorizable(authId);
-                if (auth == null && autoCreateGroup) {
-                    logger.info("authorizable {} does not exist, creating", authId);
-                    auth = userManager.createGroup(authId);
+                if (auth == null && createGroup) {
+                    logger.info("authorizable {} does not exist, and createGroup flag is set, creating it", authId);
+                    if (! isDryRun()) {
+                        auth = userManager.createGroup(authId);
+                    }
                 }
             } else {
                 Resource resource = getInput();
