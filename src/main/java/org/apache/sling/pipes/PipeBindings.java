@@ -85,6 +85,7 @@ public class PipeBindings {
     /**
      * public constructor, built from pipe's resource
      * @param resource pipe's configuration resource
+     * @throws ScriptException in case scripts associated with the bindings are not assessable
      */
     public PipeBindings(Resource resource) throws ScriptException {
     	//Setup script engines
