@@ -23,14 +23,19 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Iterator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 
+import org.apache.commons.collections.IteratorUtils;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.pipes.AbstractPipeTest;
+import org.apache.sling.pipes.ExecutionResult;
 import org.apache.sling.pipes.Pipe;
 import org.junit.Before;
 import org.junit.Test;
@@ -124,5 +129,27 @@ public class WritePipeTest extends AbstractPipeTest {
         Node appleNode = appleResource.adaptTo(Node.class);
         NodeIterator children = appleNode.getNodes();
         assertTrue("Apple node should have children", children.hasNext());
+    }
+
+    @Test
+    public void testReferencedSource() throws Exception {
+        String path = "/content/test/referenced/source";
+        ResourceResolver resolver = context.resourceResolver();
+        ExecutionResult result = plumber.newPipe(resolver)
+                .mkdir(path)
+                .pipe(WritePipe.RESOURCE_TYPE)
+                .expr("/content/fruits")
+                .run();
+        assertEquals("result should have 1", 1, result.size());
+        Resource root = resolver.getResource(path);
+        assertNotNull("target resource should be created", root);
+        Resource property =  root.getChild("index");
+        assertNotNull("property should be here", property);
+        assertArrayEquals("index property should be the same", new String[] {"apple","banana"}, property.adaptTo(String[].class));
+        List<Resource> resources = IteratorUtils.toList(root.listChildren());
+        List<String> children = resources.stream().map(r -> r.getPath()).collect(Collectors.toList());
+        assertEquals("there should be 2 children", 2, children.size());
+        assertTrue("first should be apple", children.get(0).endsWith(APPLE_SUFFIX));
+        assertTrue("second should be banana", children.get(1).endsWith(BANANA_SUFFIX));
     }
 }

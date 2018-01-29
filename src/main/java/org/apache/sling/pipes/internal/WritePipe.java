@@ -16,6 +16,7 @@
  */
 package org.apache.sling.pipes.internal;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
@@ -57,9 +58,15 @@ public class WritePipe extends BasePipe {
     public WritePipe(Plumber plumber, Resource resource) throws Exception {
         super(plumber, resource);
         if (getConfiguration() == null){
-            throw new Exception("write pipe is misconfigured: it should have a configuration node");
+            String pathCandidate = getExpr();
+            if (StringUtils.isNotBlank(pathCandidate) && resolver.getResource(pathCandidate) != null){
+                confTree = resolver.getResource(pathCandidate).adaptTo(Node.class);
+            } else {
+                throw new Exception("write pipe is misconfigured: it should have a configuration node, or an expression");
+            }
+        } else {
+            confTree = getConfiguration().adaptTo(Node.class);
         }
-        confTree = getConfiguration().adaptTo(Node.class);
     }
 
 

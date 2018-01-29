@@ -42,8 +42,10 @@ public class AbstractPipeTest {
 
     protected static final String PATH_PIPE = "/etc/pipe";
     protected static final String PATH_FRUITS = "/content/fruits";
-    protected static final String PATH_BANANA = PATH_FRUITS + "/banana";
-    protected static final String PATH_APPLE = PATH_FRUITS + "/apple";
+    protected static final String BANANA_SUFFIX = "/banana";
+    protected static final String PATH_BANANA = PATH_FRUITS + BANANA_SUFFIX;
+    protected static final String APPLE_SUFFIX = "/apple";
+    protected static final String PATH_APPLE = PATH_FRUITS + APPLE_SUFFIX;
     protected static final String PATH_PEA = PATH_APPLE + "/isnota/pea";
     protected static final String PATH_CARROT = PATH_APPLE + "/isnota/carrot";
     protected static final String SAME_COLOR = PATH_PEA + "/buttheyhavesamecolor";
