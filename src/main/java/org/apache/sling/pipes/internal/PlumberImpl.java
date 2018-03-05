@@ -130,7 +130,7 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
     @Activate
     public void activate(Configuration configuration){
         this.configuration = configuration;
-        serviceUser = Collections.singletonMap(SUBSERVICE, configuration.serviceUser());
+        serviceUser = configuration.serviceUser() != null ? Collections.singletonMap(SUBSERVICE, configuration.serviceUser()) : null;
         allowedUsers = Arrays.asList(configuration.authorizedUsers());
         registry = new HashMap<>();
         registerPipe(BasePipe.RESOURCE_TYPE, BasePipe.class);
@@ -419,6 +419,8 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
             } catch (Exception e) {
                 log.error("failed to execute the pipe", e);
             }
+        } else {
+            log.warn("no service user configured, pipes can't be monitored");
         }
         return beans;
     }
