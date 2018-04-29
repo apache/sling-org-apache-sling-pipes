@@ -14,13 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.pipes.internal;
+package org.apache.sling.pipes.internal.inputstream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.AbstractInputStreamPipe;
 import org.apache.sling.pipes.Plumber;
+import org.apache.sling.pipes.internal.JsonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

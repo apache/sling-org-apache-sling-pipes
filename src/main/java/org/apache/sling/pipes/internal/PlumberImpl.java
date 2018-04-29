@@ -43,6 +43,9 @@ import org.apache.sling.pipes.PipeBuilder;
 import org.apache.sling.pipes.Plumber;
 import org.apache.sling.pipes.PlumberMXBean;
 import org.apache.sling.pipes.ReferencePipe;
+import org.apache.sling.pipes.internal.inputstream.CsvPipe;
+import org.apache.sling.pipes.internal.inputstream.JsonPipe;
+import org.apache.sling.pipes.internal.inputstream.RegexpPipe;
 import org.apache.sling.pipes.internal.slingquery.ChildrenPipe;
 import org.apache.sling.pipes.internal.slingquery.ClosestPipe;
 import org.apache.sling.pipes.internal.slingquery.FindPipe;
@@ -154,6 +157,7 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
         registerPipe(SiblingsPipe.RESOURCE_TYPE, SiblingsPipe.class);
         registerPipe(ClosestPipe.RESOURCE_TYPE, ClosestPipe.class);
         registerPipe(FindPipe.RESOURCE_TYPE, FindPipe.class);
+        registerPipe(RegexpPipe.RESOURCE_TYPE, RegexpPipe.class);
         toggleJmxRegistration(this, PlumberMXBean.class.getName(), true);
         refreshMonitoredPipes();
     }

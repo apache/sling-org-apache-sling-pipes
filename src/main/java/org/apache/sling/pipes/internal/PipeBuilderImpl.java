@@ -30,6 +30,9 @@ import org.apache.sling.pipes.Pipe;
 import org.apache.sling.pipes.PipeBuilder;
 import org.apache.sling.pipes.Plumber;
 import org.apache.sling.pipes.ReferencePipe;
+import org.apache.sling.pipes.internal.inputstream.CsvPipe;
+import org.apache.sling.pipes.internal.inputstream.JsonPipe;
+import org.apache.sling.pipes.internal.inputstream.RegexpPipe;
 import org.apache.sling.pipes.internal.slingquery.ChildrenPipe;
 import org.apache.sling.pipes.internal.slingquery.ClosestPipe;
 import org.apache.sling.pipes.internal.slingquery.FindPipe;
@@ -159,6 +162,11 @@ public class PipeBuilderImpl implements PipeBuilder {
     @Override
     public PipeBuilder json(String expr) {
         return pipeWithExpr(JsonPipe.RESOURCE_TYPE, expr);
+    }
+
+    @Override
+    public PipeBuilder egrep(String expr) {
+        return pipeWithExpr(RegexpPipe.RESOURCE_TYPE, expr);
     }
 
     @Override

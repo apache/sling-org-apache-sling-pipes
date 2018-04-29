@@ -107,6 +107,13 @@ public interface PipeBuilder {
     PipeBuilder json(String expr);
 
     /**
+     * attach a Regexp pipe to the current context
+     * @param expr text expr or URL or path in the resource tree
+     * @return updated instance of PipeBuilder
+     */
+    PipeBuilder egrep(String expr);
+
+    /**
      * Attach a path pipe to the current context
      * @param expr path to create
      * @return updated instance of PipeBuilder

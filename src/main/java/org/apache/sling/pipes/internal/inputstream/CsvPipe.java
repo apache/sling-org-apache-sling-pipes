@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.pipes.internal;
+package org.apache.sling.pipes.internal.inputstream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
@@ -38,7 +38,6 @@ import java.util.Map;
 public class CsvPipe extends AbstractInputStreamPipe {
     private static Logger logger = LoggerFactory.getLogger(JsonPipe.class);
     public static final String RESOURCE_TYPE = RT_PREFIX + "csv";
-
 
     protected static final String PN_SEPARATOR = "separator";
 
