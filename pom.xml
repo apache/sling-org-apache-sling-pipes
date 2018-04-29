@@ -67,7 +67,6 @@
           <excludes combine.children="append">
             <!-- test csv files can't have licenses embedded -->
             <exclude>src/test/resources/**/*.csv</exclude>
-            <exclude>src/test/resources/**/*.csv</exclude>
           </excludes>
         </configuration>
       </plugin>
