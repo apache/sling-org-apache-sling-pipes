@@ -54,7 +54,7 @@ public class BasePipe implements Pipe {
     protected ReferencePipe referrer;
 
     // used by pipes using complex JCR configurations
-    public static final List<String> IGNORED_PROPERTIES = Arrays.asList(new String[]{"jcr:lastModified", "jcr:primaryType", "jcr:created", "jcr:createdBy"});
+    public static final List<String> IGNORED_PROPERTIES = Arrays.asList(new String[]{"jcr:lastModified", "jcr:primaryType", "jcr:created", "jcr:createdBy", "jcr:uuid"});
 
     protected Boolean dryRunObject;
 
