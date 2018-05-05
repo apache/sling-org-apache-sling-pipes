@@ -102,7 +102,15 @@ public class WritePipe extends BasePipe {
         return value;
     }
 
-
+    /**
+     * convert the configured string value (can be an expression) in a value that can be written in a resource.
+     * also handles patch for multivalue properties like <code>+[value]</code> in which case <code>value</code>
+     * is added to the MV property
+     * @param resource resource to which value will be written
+     * @param key property to which value will be written
+     * @param expression configured value to write
+     * @return actual value to write to the resource
+     */
     protected Object computeValue(Resource resource, String key, Object expression) {
         if (expression instanceof String) {
             return computeValue(resource, key, (String)expression);
@@ -177,12 +185,14 @@ public class WritePipe extends BasePipe {
         NodeIterator childrenConf = conf.getNodes();
         if (childrenConf.hasNext()){
             Node targetNode = target.adaptTo(Node.class);
+            logger.info("dubbing {} at {}", conf.getPath(), target.getPath());
             while (childrenConf.hasNext()){
                 Node childConf = childrenConf.nextNode();
                 String name = childConf.getName();
-                logger.info("dubbing {} at {}", conf.getPath(), target.getPath());
+                name = bindings.instantiateExpression(name);
                 if (!isDryRun()){
                     Node childTarget = targetNode.hasNode(name) ? targetNode.getNode(name) : targetNode.addNode(name, childConf.getPrimaryNodeType().getName());
+                    logger.debug("writing tree {}", childTarget.getPath());
                     writeTree(childConf, resolver.getResource(childTarget.getPath()));
                 }
             }

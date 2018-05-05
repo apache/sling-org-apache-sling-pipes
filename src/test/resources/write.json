@@ -90,5 +90,16 @@
         }
       }
     }
+  },
+  "expressionNode":{
+    "jcr:primaryType":"nt:unstructured",
+    "sling:resourceType":"slingPipes/write",
+    "path":"/content/fruits/apple",
+    "conf": {
+      "jcr:primaryType":"nt:unstructured",
+      "${'t' + ((2 > 1) ? 'estExpression':'')}": {
+        "jcr:primaryType":"nt:unstructured"
+      }
+    }
   }
 }

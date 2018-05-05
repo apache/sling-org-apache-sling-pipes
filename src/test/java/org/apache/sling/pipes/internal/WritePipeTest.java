@@ -152,4 +152,12 @@ public class WritePipeTest extends AbstractPipeTest {
         assertTrue("first should be apple", children.get(0).endsWith(APPLE_SUFFIX));
         assertTrue("second should be banana", children.get(1).endsWith(BANANA_SUFFIX));
     }
+
+    @Test
+    public void testExpressionNode() throws PersistenceException {
+        Iterator<Resource> it = getOutput(PATH_PIPE + "/expressionNode");
+        it.next();
+        context.resourceResolver().commit();
+        assertNotNull("there should be a node created", context.resourceResolver().getResource(PATH_APPLE + "/testExpression"));
+    }
 }
