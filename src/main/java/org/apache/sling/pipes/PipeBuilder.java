@@ -167,6 +167,12 @@ public interface PipeBuilder {
      */
     PipeBuilder ref(String expr);
 
+    /**
+     * attach a package pipe, in filter collection mode as default
+     * @param expr path of the pipe
+     * @return updated instance of PipeBuilder
+     */
+    PipeBuilder pkg(String expr);
 
     /**
      * attach a not pipe to the current context

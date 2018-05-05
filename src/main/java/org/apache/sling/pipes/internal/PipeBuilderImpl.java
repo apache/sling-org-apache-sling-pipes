@@ -215,6 +215,16 @@ public class PipeBuilderImpl implements PipeBuilder {
     }
 
     @Override
+    public PipeBuilder pkg(String expr) {
+        try {
+            pipeWithExpr(PackagePipe.RESOURCE_TYPE, expr).with(PackagePipe.PN_FILTERCOLLECTIONMODE, true);
+        } catch (IllegalAccessException e) {
+            logger.error("error when calling pkg", e);
+        }
+        return this;
+    }
+
+    @Override
     public PipeBuilder not(String expr) {
         return pipeWithExpr(NotPipe.RESOURCE_TYPE, expr);
     }
