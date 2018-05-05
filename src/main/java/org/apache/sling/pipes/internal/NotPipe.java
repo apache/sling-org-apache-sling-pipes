@@ -36,7 +36,7 @@ public class NotPipe extends ReferencePipe {
     }
 
     @Override
-    public Iterator<Resource> getOutput() {
+    protected Iterator<Resource> computeOutput() throws Exception {
         if (reference.getOutput().hasNext()){
             return EMPTY_ITERATOR;
         }

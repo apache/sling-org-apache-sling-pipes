@@ -54,45 +54,40 @@ public class CsvPipe extends AbstractInputStreamPipe {
     }
 
     @Override
-    public Iterator<Resource> getOutput(InputStream inputStream) {
+    public Iterator<Resource> getOutput(InputStream inputStream) throws Exception{
         Iterator<Resource> output = EMPTY_ITERATOR;
         String separator = properties.get(PN_SEPARATOR, DEFAULT_SEPARATOR);
-        try {
-            reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
-            String headersLine = reader.readLine();
-            final String[] headers = headersLine.split(separator);
-            if (headers.length > 0){
-                nextLine = reader.readLine();
-                output = new Iterator<Resource>() {
-                    @Override
-                    public boolean hasNext() {
-                        return StringUtils.isNotBlank(nextLine);
-                    }
-                    @Override
-                    public Resource next() {
-                        try {
-                            String[] values = nextLine.split(separator);
-                            if (values.length < headers.length){
-                                throw new IllegalArgumentException("wrong format line " + index + " should have at least the same number of columns than the headers");
-                            }
-                            Map<String, String> map = new HashMap<>();
-                            for (int i = 0; i < headers.length; i ++){
-                                map.put(headers[i], values[i]);
-                            }
-                            binding = map;
-                            nextLine = reader.readLine();
-                        } catch (Exception e) {
-                            logger.error("Unable to retrieve {}nth line of csv file", index, e);
-                            nextLine = null;
+        reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+        String headersLine = reader.readLine();
+        final String[] headers = headersLine.split(separator);
+        if (headers.length > 0){
+            nextLine = reader.readLine();
+            final Resource inputResource = getInput();
+            output = new Iterator<Resource>() {
+                @Override
+                public boolean hasNext() {
+                    return StringUtils.isNotBlank(nextLine);
+                }
+                @Override
+                public Resource next() {
+                    try {
+                        String[] values = nextLine.split(separator);
+                        if (values.length < headers.length){
+                            throw new IllegalArgumentException("wrong format line " + index + " should have at least the same number of columns than the headers");
                         }
-                        return getInput();
+                        Map<String, String> map = new HashMap<>();
+                        for (int i = 0; i < headers.length; i ++){
+                            map.put(headers[i], values[i]);
+                        }
+                        binding = map;
+                        nextLine = reader.readLine();
+                    } catch (Exception e) {
+                        logger.error("Unable to retrieve {}nth line of csv file", index, e);
+                        nextLine = null;
                     }
-                };
-            }
-        } catch (IllegalArgumentException iae){
-            logger.error("unable to correctly process csv file", iae);
-        } catch (IOException e){
-            logger.error("unable to process csv file", e);
+                    return inputResource;
+                }
+            };
         }
         return output;
     }

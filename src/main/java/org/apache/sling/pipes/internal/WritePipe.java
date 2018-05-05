@@ -29,6 +29,7 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
+import javax.script.ScriptException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -79,7 +80,7 @@ public class WritePipe extends BasePipe {
      * @param expression configured value to write
      * @return actual value to write to the resource
      */
-    protected Object computeValue(Resource resource, String key, String expression){
+    protected Object computeValue(Resource resource, String key, String expression) throws ScriptException {
         Object value = bindings.instantiateObject((String) expression);
         if (value != null && value instanceof String) {
             //in that case we treat special case like MV or patches
@@ -111,7 +112,7 @@ public class WritePipe extends BasePipe {
      * @param expression configured value to write
      * @return actual value to write to the resource
      */
-    protected Object computeValue(Resource resource, String key, Object expression) {
+    protected Object computeValue(Resource resource, String key, Object expression) throws ScriptException {
         if (expression instanceof String) {
             return computeValue(resource, key, (String)expression);
         } else if (expression instanceof String[]){
@@ -137,7 +138,7 @@ public class WritePipe extends BasePipe {
      * @param target target resource on which configured values will be written
      * @throws RepositoryException issues occuring when traversing nodes
      */
-    private void copyProperties(Resource conf, Resource target) throws RepositoryException {
+    private void copyProperties(Resource conf, Resource target) throws ScriptException {
         ValueMap writeMap = conf.adaptTo(ValueMap.class);
         ModifiableValueMap properties = target.adaptTo(ModifiableValueMap.class);
 
@@ -180,7 +181,7 @@ public class WritePipe extends BasePipe {
      * @param conf configuration JCR tree to write to target resource
      * @param target target resource to write
      */
-    private void writeTree(Node conf, Resource target) throws RepositoryException {
+    private void writeTree(Node conf, Resource target) throws RepositoryException, ScriptException {
         copyProperties(resolver.getResource(conf.getPath()), target);
         NodeIterator childrenConf = conf.getNodes();
         if (childrenConf.hasNext()){
@@ -201,7 +202,7 @@ public class WritePipe extends BasePipe {
 
 
     @Override
-    public Iterator<Resource> getOutput() {
+    protected Iterator<Resource> computeOutput() throws Exception {
         try {
             Resource resource = getInput();
             if (resource != null) {
@@ -217,10 +218,8 @@ public class WritePipe extends BasePipe {
                         }
                     }
                 }
-                return super.getOutput();
+                return super.computeOutput();
             }
-        } catch (Exception e) {
-            logger.error("unable to write values, cutting pipe", e);
         } finally {
             if (propertiesToRemove != null){
                 propertiesToRemove.clear();

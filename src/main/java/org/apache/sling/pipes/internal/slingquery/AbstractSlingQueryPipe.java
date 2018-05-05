@@ -20,13 +20,13 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.Plumber;
 import org.apache.sling.query.SlingQuery;
-
 import java.util.Iterator;
 
 /**
  * deals with common sling query pipe code
  */
 public abstract class AbstractSlingQueryPipe extends BasePipe {
+
     public AbstractSlingQueryPipe(Plumber plumber, Resource resource) throws Exception {
         super(plumber, resource);
     }
@@ -46,7 +46,7 @@ public abstract class AbstractSlingQueryPipe extends BasePipe {
      * generate outputs out of input resource and abstract query
      * @return output's resource iterator, empty in case input is null
      */
-    public Iterator<Resource> getOutput() {
+    protected Iterator<Resource> computeOutput() throws Exception {
         Resource resource = getInput();
         if (resource != null) {
             SlingQuery query = getQuery(resource);

@@ -16,22 +16,26 @@
  */
 package org.apache.sling.pipes.internal;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.pipes.CustomOutputWriter;
+import org.apache.sling.pipes.OutputWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.json.Json;
 import javax.json.JsonValue;
 import javax.json.stream.JsonGenerator;
+import javax.script.ScriptException;
 import java.io.StringWriter;
-import java.io.Writer;
 import java.util.Map;
 
 /**
  * default output writer, that outputs JSON with size and output resources' path
  */
-public class JsonWriter extends CustomOutputWriter {
+public class JsonWriter extends OutputWriter {
+    private static Logger logger = LoggerFactory.getLogger(JsonWriter.class);
 
     protected JsonGenerator jsonWriter;
 
@@ -39,10 +43,6 @@ public class JsonWriter extends CustomOutputWriter {
 
     JsonWriter(){
         setWriter(new StringWriter());
-    }
-
-    JsonWriter(Writer writer){
-        setWriter(writer);
     }
 
     @Override
@@ -71,11 +71,17 @@ public class JsonWriter extends CustomOutputWriter {
             jsonWriter.writeStartObject();
             jsonWriter.write(PATH_KEY, resource.getPath());
             for (Map.Entry<String, Object> entry : customOutputs.entrySet()) {
-                Object o = pipe.getBindings().instantiateObject((String) entry.getValue());
-                if (o instanceof JsonValue) {
-                    jsonWriter.write(entry.getKey(), (JsonValue) o);
-                } else {
-                    jsonWriter.write(entry.getKey(), o.toString());
+                Object o = null;
+                try {
+                    o = pipe.getBindings().instantiateObject((String) entry.getValue());
+                    if (o instanceof JsonValue) {
+                        jsonWriter.write(entry.getKey(), (JsonValue) o);
+                    } else {
+                        jsonWriter.write(entry.getKey(), o.toString());
+                    }
+                } catch (ScriptException e) {
+                    logger.error("unable to write entry {}, will write empty value", entry, e);
+                    jsonWriter.write(StringUtils.EMPTY);
                 }
             }
             jsonWriter.writeEnd();

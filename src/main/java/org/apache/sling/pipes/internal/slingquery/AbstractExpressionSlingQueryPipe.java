@@ -22,6 +22,8 @@ import org.apache.sling.query.SlingQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.script.ScriptException;
+
 /**
  * deals with sling query pipe code that takes an expression as input
  */
@@ -41,8 +43,13 @@ public abstract class AbstractExpressionSlingQueryPipe extends AbstractSlingQuer
 
     @Override
     protected SlingQuery getQuery(Resource resource) {
-        String expression = getExpr();
-        logger.debug("executing sling query pipe with expression {}", expression);
-        return getQuery(resource, expression);
+        try {
+            String expression = getExpr();
+            logger.debug("executing sling query pipe with expression {}", expression);
+            return getQuery(resource, expression);
+        } catch (ScriptException e){
+            logger.error("please check pipe expressions", e);
+        }
+        return null;
     }
 }

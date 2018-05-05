@@ -74,7 +74,7 @@ public abstract class AbstractInputStreamPipe extends BasePipe {
         client.getParams().setAuthenticationPreemptive(false);
     }
 
-    InputStream getInputStream() throws IOException {
+    InputStream getInputStream() throws Exception {
         String expr = getExpr();
         if (expr.startsWith(REMOTE_START)) {
             //first look at
@@ -104,21 +104,18 @@ public abstract class AbstractInputStreamPipe extends BasePipe {
         return binding;
     }
 
-    abstract public Iterator<Resource> getOutput(InputStream inputStream);
+    abstract public Iterator<Resource> getOutput(InputStream inputStream) throws Exception;
 
     @Override
-    public Iterator<Resource> getOutput() {
+    public Iterator<Resource> computeOutput() throws Exception {
         try {
             is = getInputStream();
             return getOutput(is);
-        } catch (Exception e){
-            LOGGER.error("unable to fecth input stream", e);
-        } finally {
+        }  finally {
             IOUtils.closeQuietly(is);
             if (method != null){
                 method.releaseConnection();
             }
         }
-        return EMPTY_ITERATOR;
     }
 }

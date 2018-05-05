@@ -86,24 +86,21 @@ public class AuthorizablePipe extends BasePipe {
     }
 
     @Override
-    public Iterator<Resource> getOutput() {
-        try {
-            Authorizable auth = getAuthorizable();
-            if (auth != null) {
-                logger.debug("Retrieved authorizable {}", auth.getID());
-                if (StringUtils.isNotBlank(addToGroup)){
-                    addToGroup(auth);
-                }
-                if (StringUtils.isNotBlank(addMembers)){
-                    addMembers(auth);
-                }
-                if (bindMembers){
-                    bindMembers(auth);
-                }
-                Resource resource = resolver.getResource(auth.getPath());
-                return Collections.singleton(resource).iterator();
+    public Iterator<Resource> computeOutput() throws Exception {
+        Authorizable auth = getAuthorizable();
+        if (auth != null) {
+            logger.debug("Retrieved authorizable {}", auth.getID());
+            if (StringUtils.isNotBlank(addToGroup)){
+                addToGroup(auth);
             }
-        } catch (Exception e){
+            if (StringUtils.isNotBlank(addMembers)){
+                addMembers(auth);
+            }
+            if (bindMembers){
+                bindMembers(auth);
+            }
+            Resource resource = resolver.getResource(auth.getPath());
+            return Collections.singleton(resource).iterator();
         }
         return EMPTY_ITERATOR;
     }

@@ -48,7 +48,7 @@ public class MovePipe extends BasePipe {
     }
 
     @Override
-    public Iterator<Resource> getOutput() {
+    protected Iterator<Resource> computeOutput() throws Exception {
         Iterator<Resource> output = Collections.emptyIterator();
         Resource resource = getInput();
         if (resource != null && resource.adaptTo(Item.class) != null) {

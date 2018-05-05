@@ -55,22 +55,18 @@ public class RemovePipe extends BasePipe {
     }
 
     @Override
-    public Iterator<Resource> getOutput() {
+    protected Iterator<Resource> computeOutput() throws Exception {
         Resource resource = getInput();
         String parentPath = null;
-        try {
-            if (resource.adaptTo(Node.class) != null) {
-                parentPath = removeTree(resource, filter);
-            } else if (resource.adaptTo(Property.class) != null){
-                Property property = resource.adaptTo(Property.class);
-                parentPath = property.getParent().getPath();
-                logger.info("removing property {}", property.getPath());
-                if (!isDryRun()){
-                    property.remove();
-                }
+        if (resource.adaptTo(Node.class) != null) {
+            parentPath = removeTree(resource, filter);
+        } else if (resource.adaptTo(Property.class) != null){
+            Property property = resource.adaptTo(Property.class);
+            parentPath = property.getParent().getPath();
+            logger.info("removing property {}", property.getPath());
+            if (!isDryRun()){
+                property.remove();
             }
-        } catch (RepositoryException e){
-            logger.error("unable to remove current resource {}", resource.getPath(), e);
         }
         if (parentPath != null) {
             return Collections.singleton(resolver.getResource(parentPath)).iterator();

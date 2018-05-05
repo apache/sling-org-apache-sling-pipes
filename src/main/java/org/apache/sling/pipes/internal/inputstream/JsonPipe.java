@@ -69,56 +69,52 @@ public class JsonPipe extends AbstractInputStreamPipe {
      * @return input resource of the pipe, can be reouputed N times in case output json binding is an array of
      * N element (output binding would be here each time the Nth element of the array)
      */
-    public Iterator<Resource> getOutput(InputStream is) {
+    public Iterator<Resource> getOutput(InputStream is) throws Exception {
         Iterator<Resource> output = EMPTY_ITERATOR;
         Iterator<Resource> inputSingletonIterator = Collections.singleton(getInput()).iterator();
-        String jsonString = null;
-        try {
-            jsonString = IOUtils.toString(is, StandardCharsets.UTF_8);
-            if (StringUtils.isNotBlank(jsonString)) {
-                JsonStructure json;
-                try {
-                    json = JsonUtil.parse(jsonString);
+        String jsonString = IOUtils.toString(is, StandardCharsets.UTF_8);
+        if (StringUtils.isNotBlank(jsonString)) {
+            JsonStructure json;
+            try {
+                json = JsonUtil.parse(jsonString);
 
-                } catch (JsonException ex) {
-                    json = null;
+            } catch (JsonException ex) {
+                json = null;
+            }
+            if (json == null) {
+                binding = jsonString.trim();
+                output = inputSingletonIterator;
+            } else {
+                String valuePath = properties.get(PN_VALUEPATH, String.class);
+                if (StringUtils.isNotBlank(valuePath)){
+                    json = getValue(json, valuePath);
                 }
-                if (json == null) {
-                    binding = jsonString.trim();
+                if (json.getValueType() != ValueType.ARRAY) {
+                    binding = JsonUtil.unbox(json);
                     output = inputSingletonIterator;
                 } else {
-                    String valuePath = properties.get(PN_VALUEPATH, String.class);
-                    if (StringUtils.isNotBlank(valuePath)){
-                        json = getValue(json, valuePath);
-                    }
-                    if (json.getValueType() != ValueType.ARRAY) {
-                        binding = JsonUtil.unbox(json);
-                        output = inputSingletonIterator;
-                    } else {
-                        binding = array = (JsonArray) json;
-                        index = 0;
-                        output = new Iterator<Resource>() {
-                            @Override
-                            public boolean hasNext() {
-                                return index < array.size();
-                            }
+                    binding = array = (JsonArray) json;
+                    index = 0;
+                    final Resource inputResource = getInput();
+                    output = new Iterator<Resource>() {
+                        @Override
+                        public boolean hasNext() {
+                            return index < array.size();
+                        }
 
-                            @Override
-                            public Resource next() {
-                                try {
-                                    binding = JsonUtil.unbox(array.get(index));
-                                } catch (Exception e) {
-                                    logger.error("Unable to retrieve {}nth item of jsonarray", index, e);
-                                }
-                                index++;
-                                return getInput();
+                        @Override
+                        public Resource next() {
+                            try {
+                                binding = JsonUtil.unbox(array.get(index));
+                            } catch (Exception e) {
+                                logger.error("Unable to retrieve {}nth item of jsonarray", index, e);
                             }
-                        };
-                    }
+                            index++;
+                            return inputResource;
+                        }
+                    };
                 }
             }
-        }catch (Exception e) {
-            logger.error("unable to parse JSON {} ", jsonString, e);
         }
         return output;
     }

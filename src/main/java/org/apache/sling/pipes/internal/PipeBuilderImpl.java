@@ -24,8 +24,8 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.ContainerPipe;
-import org.apache.sling.pipes.CustomOutputWriter;
 import org.apache.sling.pipes.ExecutionResult;
+import org.apache.sling.pipes.OutputWriter;
 import org.apache.sling.pipes.Pipe;
 import org.apache.sling.pipes.PipeBuilder;
 import org.apache.sling.pipes.Plumber;
@@ -353,7 +353,7 @@ public class PipeBuilderImpl implements PipeBuilder {
     public Pipe build(String path) throws PersistenceException {
         Resource pipeResource = persistStep(path, NT_SLING_FOLDER, containerStep);
         if (outputs != null){
-            ResourceUtil.getOrCreateResource(resolver, path + "/" + CustomOutputWriter.PARAM_WRITER, outputs, NT_SLING_FOLDER, false);
+            ResourceUtil.getOrCreateResource(resolver, path + "/" + OutputWriter.PARAM_WRITER, outputs, NT_SLING_FOLDER, false);
         }
         int index = 0;
         for (Step step : steps){

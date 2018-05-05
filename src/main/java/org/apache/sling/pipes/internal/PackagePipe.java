@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.script.ScriptException;
 import java.io.IOException;
 import java.util.Iterator;
 
@@ -67,20 +68,16 @@ public class PackagePipe extends BasePipe {
     }
 
     @Override
-    public Iterator<Resource> getOutput() {
+    protected Iterator<Resource> computeOutput() throws Exception {
         Iterator<Resource> output = EMPTY_ITERATOR;
-        try {
-            init();
-            if (properties.get(PN_FILTERCOLLECTIONMODE, false)){
-                if (filters == null){
-                    filters = new DefaultWorkspaceFilter();
-                }
-                filters.add(new PathFilterSet(getInput().getPath()));
-                jcrPackage.getDefinition().setFilter(filters, true);
-                output = IteratorUtils.singletonIterator(getInput());
+        init();
+        if (properties.get(PN_FILTERCOLLECTIONMODE, false)){
+            if (filters == null){
+                filters = new DefaultWorkspaceFilter();
             }
-        } catch (IOException | RepositoryException e) {
-            LOGGER.error("unable to deal with package persistence", e);
+            filters.add(new PathFilterSet(getInput().getPath()));
+            jcrPackage.getDefinition().setFilter(filters, true);
+            output = IteratorUtils.singletonIterator(getInput());
         }
         return output;
     }
@@ -91,7 +88,7 @@ public class PackagePipe extends BasePipe {
      * @throws IOException problem with binary
      * @throws RepositoryException problem with package persistence
      */
-    protected void init() throws IOException, RepositoryException {
+    protected void init() throws IOException, RepositoryException, ScriptException {
         if (jcrPackage == null){
             String packagePath = getExpr();
             if (StringUtils.isNotBlank(packagePath)) {

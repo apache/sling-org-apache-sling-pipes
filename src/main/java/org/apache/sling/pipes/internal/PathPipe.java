@@ -24,6 +24,7 @@ import org.apache.sling.pipes.Plumber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.script.ScriptException;
 import java.util.Collections;
 import java.util.Iterator;
 
@@ -65,7 +66,7 @@ public class PathPipe extends BasePipe {
     }
 
     @Override
-    public Iterator<Resource> getOutput() {
+    protected Iterator<Resource> computeOutput() throws Exception {
         Iterator<Resource> output = Collections.emptyIterator();
         String expression = getExpr();
         try {

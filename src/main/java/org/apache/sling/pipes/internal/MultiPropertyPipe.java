@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.Value;
+import javax.script.ScriptException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
@@ -44,7 +45,7 @@ public class MultiPropertyPipe extends BasePipe {
     MVResourceIterator iterator;
 
     @Override
-    public Iterator<Resource> getOutput() {
+    protected Iterator<Resource> computeOutput() throws Exception {
         iterator = new MVResourceIterator(getInput());
         return iterator;
     }

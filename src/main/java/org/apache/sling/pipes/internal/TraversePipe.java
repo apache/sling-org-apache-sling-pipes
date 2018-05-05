@@ -52,7 +52,7 @@ public class TraversePipe extends BasePipe {
 
 
     @Override
-    public Iterator<Resource> getOutput() {
+    protected Iterator<Resource> computeOutput() throws Exception {
         return new TraversingIterator(getInput(), getResource().getValueMap());
     }
 

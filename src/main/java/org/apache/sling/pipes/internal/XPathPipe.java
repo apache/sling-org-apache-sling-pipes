@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.query.Query;
+import javax.script.ScriptException;
 import java.util.Iterator;
 
 /**
@@ -39,7 +40,7 @@ public class XPathPipe extends BasePipe {
     }
 
     @Override
-    public Iterator<Resource> getOutput() {
+    protected Iterator<Resource> computeOutput() throws Exception {
         String query = getExpr();
         if (StringUtils.isNotBlank(query)){
             logger.info("Executing query: {}", query);

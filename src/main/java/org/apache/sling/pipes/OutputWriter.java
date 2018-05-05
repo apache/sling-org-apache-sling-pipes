@@ -33,7 +33,7 @@ import java.util.Map;
  * defines how pipe's output get written to a servlet response or output stream
  */
 public abstract class OutputWriter {
-    Logger log = LoggerFactory.getLogger(CustomOutputWriter.class);
+    Logger log = LoggerFactory.getLogger(OutputWriter.class);
 
     public static final String KEY_SIZE = "size";
 

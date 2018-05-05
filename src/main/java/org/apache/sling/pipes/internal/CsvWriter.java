@@ -16,19 +16,22 @@
  */
 package org.apache.sling.pipes.internal;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.pipes.CustomOutputWriter;
+import org.apache.sling.pipes.OutputWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.script.ScriptException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class CsvWriter extends CustomOutputWriter {
+public class CsvWriter extends OutputWriter {
     private static final Logger LOG = LoggerFactory.getLogger(CsvWriter.class);
 
     private static final String CSV_EXTENSION = "csv";
@@ -71,10 +74,20 @@ public class CsvWriter extends CustomOutputWriter {
         }
         if (headers != null){
             try {
-                String line = headers.stream().map(key -> key.equals(PATH_KEY) ?
-                        resource.getPath()
-                        : (String)pipe.getBindings().instantiateObject((String)customOutputs.get(key)))
-                        .collect(Collectors.joining(SEPARATOR));
+                List<String> elts = new ArrayList<>();
+                for (String key : headers){
+                    if (key.equals(PATH_KEY)){
+                        elts.add(resource.getPath());
+                    } else {
+                        try {
+                            elts.add(pipe.getBindings().instantiateExpression((String)customOutputs.get(key)));
+                        } catch (ScriptException e){
+                            LOG.error("unable to evalutate {}, will write empty value", customOutputs.get(key), e);
+                            elts.add(StringUtils.EMPTY);
+                        }
+                    }
+                }
+                String line = elts.stream().collect(Collectors.joining(SEPARATOR));
                 writer.write(line + NEW_LINE);
             } catch (IOException e) {
                 LOG.error("unable to write header", e);

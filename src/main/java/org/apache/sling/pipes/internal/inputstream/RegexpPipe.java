@@ -23,6 +23,7 @@ import org.apache.sling.pipes.Plumber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.script.ScriptException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -63,6 +64,7 @@ public class RegexpPipe extends AbstractInputStreamPipe {
             logger.trace("about to parse {}", text);
             Matcher matcher = pattern.matcher(text);
             if (matcher.find()) {
+                final Resource next = getInput();
                 output = new Iterator<Resource>() {
                     boolean hasNext = true;
                     @Override
@@ -83,11 +85,11 @@ public class RegexpPipe extends AbstractInputStreamPipe {
                             binding = matcher.group(0);
                         }
                         hasNext = matcher.find();
-                        return getInput();
+                        return next;
                     }
                 };
             }
-        } catch (IOException e) {
+        } catch (ScriptException | IOException e) {
             logger.error("unable to open input stream", e);
         }
         return output;

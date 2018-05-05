@@ -267,40 +267,32 @@ public class PipeBindings {
      * we implement here as a String
      * @param expr ecma like expression
      * @return String that is the result of the expression
+     * @throws ScriptException
      */
-    public String instantiateExpression(String expr){
-        try {
-            return (String)evaluate(expr);
-        } catch (ScriptException e) {
-            log.error("Unable to evaluate the script", e);
-        }
-        return expr;
+    public String instantiateExpression(String expr) throws ScriptException {
+        return (String)evaluate(expr);
     }
 
     /**
      * Instantiate object from expression
      * @param expr ecma expression
      * @return instantiated object
+     * @throws ScriptException
      */
-    public Object instantiateObject(String expr){
-        try {
-            Object result = evaluate(expr);
-            if (result != null && ! result.getClass().getName().startsWith("java.lang.")) {
-                //special case of the date in which case jdk.nashorn.api.scripting.ScriptObjectMirror will
-                //be returned
-                JsDate jsDate = ((Invocable) engine).getInterface(result, JsDate.class);
-                if (jsDate != null ) {
-                    Date date = new Date(jsDate.getTime() + jsDate.getTimezoneOffset() * 60 * 1000);
-                    Calendar cal = Calendar.getInstance();
-                    cal.setTime(date);
-                    return cal;
-                }
+    public Object instantiateObject(String expr) throws ScriptException {
+        Object result = evaluate(expr);
+        if (result != null && ! result.getClass().getName().startsWith("java.lang.")) {
+            //special case of the date in which case jdk.nashorn.api.scripting.ScriptObjectMirror will
+            //be returned
+            JsDate jsDate = ((Invocable) engine).getInterface(result, JsDate.class);
+            if (jsDate != null ) {
+                Date date = new Date(jsDate.getTime() + jsDate.getTimezoneOffset() * 60 * 1000);
+                Calendar cal = Calendar.getInstance();
+                cal.setTime(date);
+                return cal;
             }
-            return result;
-        } catch (ScriptException e) {
-            log.error("Unable to evaluate the script for expr {} ", expr, e);
         }
-        return expr;
+        return result;
     }
 
     /**

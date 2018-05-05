@@ -25,7 +25,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
-import java.util.Collections;
+import javax.jcr.RepositoryException;
+import javax.script.ScriptException;
 import java.util.Iterator;
 import java.util.regex.Pattern;
 
@@ -44,7 +45,7 @@ public class FilterPipe extends BasePipe {
         super(plumber, resource);
     }
 
-    boolean propertiesPass(ValueMap current, ValueMap filter){
+    boolean propertiesPass(ValueMap current, ValueMap filter) throws ScriptException {
         if (filter.containsKey(PN_TEST)){
             Object test = bindings.instantiateObject(filter.get(PN_TEST, "${false}"));
             if (! (test instanceof Boolean)){
@@ -64,37 +65,33 @@ public class FilterPipe extends BasePipe {
         return true;
     }
 
-    boolean filterPasses(Resource currentResource, Resource filterResource){
-        try {
-            ValueMap current = currentResource.adaptTo(ValueMap.class);
-            ValueMap filter = filterResource.adaptTo(ValueMap.class);
-            if (propertiesPass(current, filter)) {
-                Node currentNode = currentResource.adaptTo(Node.class);
-                boolean noChildren = (Boolean) bindings.instantiateObject(filter.get(PN_NOCHILDREN, "${false}"));
-                if (noChildren) {
-                    return !currentNode.hasNodes();
-                } else {
-                    Node filterNode = filterResource.adaptTo(Node.class);
-                    boolean returnValue = true;
-                    for (NodeIterator children = filterNode.getNodes(); returnValue && children.hasNext();){
-                        String childName = children.nextNode().getName();
-                        if (!currentNode.hasNode(childName)){
-                            return false;
-                        } else {
-                            returnValue &= filterPasses(currentResource.getChild(childName), filterResource.getChild(childName));
-                        }
+    boolean filterPasses(Resource currentResource, Resource filterResource) throws ScriptException, RepositoryException {
+        ValueMap current = currentResource.adaptTo(ValueMap.class);
+        ValueMap filter = filterResource.adaptTo(ValueMap.class);
+        if (propertiesPass(current, filter)) {
+            Node currentNode = currentResource.adaptTo(Node.class);
+            boolean noChildren = (Boolean) bindings.instantiateObject(filter.get(PN_NOCHILDREN, "${false}"));
+            if (noChildren) {
+                return !currentNode.hasNodes();
+            } else {
+                Node filterNode = filterResource.adaptTo(Node.class);
+                boolean returnValue = true;
+                for (NodeIterator children = filterNode.getNodes(); returnValue && children.hasNext();){
+                    String childName = children.nextNode().getName();
+                    if (!currentNode.hasNode(childName)){
+                        return false;
+                    } else {
+                        returnValue &= filterPasses(currentResource.getChild(childName), filterResource.getChild(childName));
                     }
-                    return returnValue;
                 }
+                return returnValue;
             }
-        } catch (Exception e){
-            logger.error("error when executing filter", e);
         }
         return false;
     }
 
     @Override
-    public Iterator<Resource> getOutput() {
+    protected Iterator<Resource> computeOutput() throws Exception {
         Resource resource = getInput();
         if (resource != null){
             boolean not = properties.get(PN_NOT, false);
@@ -104,11 +101,11 @@ public class FilterPipe extends BasePipe {
             // - all the other combinations should pass
             if (filterPasses(resource, getConfiguration()) ^ not){
                 logger.debug("filter passes for {}", resource.getPath());
-                return super.getOutput();
+                return super.computeOutput();
             } else {
                 logger.debug("{} got filtered out", resource.getPath());
             }
         }
-        return Collections.emptyIterator();
+        return EMPTY_ITERATOR;
     }
 }

@@ -23,6 +23,7 @@ import org.apache.sling.api.resource.ValueMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.script.ScriptException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
@@ -97,14 +98,18 @@ public class BasePipe implements Pipe {
     public boolean isDryRun() {
         if (dryRunObject == null) {
             dryRunObject = false;
-            Object run =  bindings.isBindingDefined(DRYRUN_KEY) ? bindings.instantiateObject(DRYRUN_EXPR) : false;
-            if (run != null) {
-                dryRunObject = true;
-                if (run instanceof Boolean){
-                    dryRunObject = (Boolean)run;
-                } else if (run instanceof String && String.format("%s", Boolean.FALSE).equals(run)){
-                    dryRunObject = false;
+            try {
+                Object run = bindings.isBindingDefined(DRYRUN_KEY) ? bindings.instantiateObject(DRYRUN_EXPR) : false;
+                if (run != null) {
+                    dryRunObject = true;
+                    if (run instanceof Boolean) {
+                        dryRunObject = (Boolean) run;
+                    } else if (run instanceof String && String.format("%s", Boolean.FALSE).equals(run)) {
+                        dryRunObject = false;
+                    }
                 }
+            } catch (ScriptException e){
+                logger.error("error evaluating {}, assuming dry run", DRYRUN_EXPR, e);
             }
         }
         return dryRunObject;
@@ -129,7 +134,7 @@ public class BasePipe implements Pipe {
      * Get pipe's expression, instanciated or not
      * @return configured expression
      */
-    public String getExpr(){
+    public String getExpr() throws ScriptException {
         String rawExpression = properties.get(PN_EXPR, "");
         return bindings.instantiateExpression(rawExpression);
     }
@@ -138,13 +143,13 @@ public class BasePipe implements Pipe {
      * Get pipe's path, instanciated or not
      * @return configured path (can be empty)
      */
-    public String getPath() {
+    public String getPath() throws ScriptException {
         String rawPath = properties.get(PN_PATH, "");
         return bindings.instantiateExpression(rawPath);
     }
 
     @Override
-    public Resource getConfiguredInput() {
+    public Resource getConfiguredInput() throws ScriptException {
         Resource configuredInput = null;
         String path = getPath();
         if (StringUtils.isNotBlank(path)){
@@ -165,7 +170,7 @@ public class BasePipe implements Pipe {
     }
 
     @Override
-    public Resource getInput() {
+    public Resource getInput() throws ScriptException {
         Resource resource = getConfiguredInput();
         if (resource == null && parent != null){
             Pipe previousPipe = getPreviousPipe();
@@ -202,9 +207,23 @@ public class BasePipe implements Pipe {
      * default execution, just returns current resource
      * @return output of this pipe, which is here the input resource
      */
-    public Iterator<Resource> getOutput(){
+    public Iterator<Resource> getOutput() {
+        try {
+            return computeOutput();
+        } catch (Exception e){
+            logger.error("error with pipe execution ", e);
+        }
+        return EMPTY_ITERATOR;
+    }
+
+    /**
+     *
+     * @return
+     * @throws ScriptException
+     */
+    protected Iterator<Resource> computeOutput() throws Exception {
         Resource resource = getInput();
-        if (resource != null){
+        if (resource != null) {
             return Collections.singleton(resource).iterator();
         }
         return EMPTY_ITERATOR;

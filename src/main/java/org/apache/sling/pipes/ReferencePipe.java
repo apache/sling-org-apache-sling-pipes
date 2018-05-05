@@ -63,7 +63,7 @@ public class ReferencePipe extends BasePipe {
     }
 
     @Override
-    public Iterator<Resource> getOutput() {
+    protected Iterator<Resource> computeOutput() throws Exception {
         log.debug("getting {} output", reference);
         return reference.getOutput();
     }
