@@ -162,7 +162,7 @@ public class PipeBindings {
                 try {
                     engine.eval(new InputStreamReader(is), scriptContext);
                 } catch (Exception e) {
-                    log.error("unable to execute {}", path);
+                    log.error("Add script: unable to evaluate script {}", path, e);
                 }
             }
         } finally {
