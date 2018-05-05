@@ -62,6 +62,11 @@ public class PackagePipe extends BasePipe {
     }
 
     @Override
+    public boolean modifiesContent() {
+        return true;
+    }
+
+    @Override
     public Iterator<Resource> getOutput() {
         Iterator<Resource> output = EMPTY_ITERATOR;
         try {
