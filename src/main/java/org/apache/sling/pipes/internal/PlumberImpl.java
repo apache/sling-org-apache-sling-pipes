@@ -272,12 +272,14 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
             ExecutionResult result = new ExecutionResult(writer);
             for (Iterator<Resource> it = pipe.getOutput(); it.hasNext();){
                 Resource resource = it.next();
+                checkError(pipe, result);
                 if (resource != null) {
                     log.debug("[{}] retrieved {}", pipe.getName(), resource.getPath());
                     result.addResultItem(resource);
                     persist(resolver, pipe, result, resource);
                 }
             }
+            checkError(pipe, result);
             if (save && pipe.modifiesContent()) {
                 persist(resolver, pipe, result, null);
             }
@@ -295,6 +297,18 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
             if (!success && monitor != null){
                 monitor.failed();
             }
+        }
+    }
+
+    /**
+     * check if current state contains error, and record it
+     * @param pipe current pipe
+     * @param result current result
+     */
+    protected void checkError(Pipe pipe, ExecutionResult result){
+        String error = pipe.getBindings().popCurrentError();
+        if (StringUtils.isNotBlank(error)){
+            result.addError(error);
         }
     }
 

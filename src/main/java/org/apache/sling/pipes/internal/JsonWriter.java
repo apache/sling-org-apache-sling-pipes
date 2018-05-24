@@ -25,10 +25,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.json.Json;
+import javax.json.JsonArray;
 import javax.json.JsonValue;
 import javax.json.stream.JsonGenerator;
 import javax.script.ScriptException;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -92,6 +95,14 @@ public class JsonWriter extends OutputWriter {
     public void ends() {
         jsonWriter.writeEnd();
         jsonWriter.write(KEY_SIZE,size);
+        if (nbErrors > 0) {
+            jsonWriter.write(KEY_NB_ERRORS, nbErrors);
+            jsonWriter.writeStartArray(KEY_ERRORS);
+            for (String error : errors){
+                jsonWriter.write(error);
+            }
+            jsonWriter.writeEnd();
+        }
         jsonWriter.writeEnd();
         jsonWriter.flush();
     }

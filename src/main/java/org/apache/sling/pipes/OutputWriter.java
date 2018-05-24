@@ -26,7 +26,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -39,11 +41,17 @@ public abstract class OutputWriter {
 
     public static final String KEY_ITEMS = "items";
 
+    public static final String KEY_ERRORS = "errors";
+
+    public static final String KEY_NB_ERRORS = "nbErrors";
+
     public static final String PARAM_SIZE = KEY_SIZE;
 
     public static final int NB_MAX = 10;
 
     protected long size;
+
+    protected long nbErrors;
 
     protected long max = NB_MAX;
 
@@ -57,6 +65,7 @@ public abstract class OutputWriter {
 
     protected Map<String, Object> customOutputs;
 
+    protected List<String> errors = new ArrayList<>();
 
     /**
      *
@@ -129,10 +138,21 @@ public abstract class OutputWriter {
     }
 
     /**
+     * Write a given error
+     * @param path resource that lead to the error
+     */
+    public void error(String path) {
+        if (nbErrors++ < max) {
+            errors.add(path);
+        }
+    }
+
+    /**
      * Write a given resource
      * @param resource resource that will be written
      */
     protected abstract void writeItem(Resource resource);
+
 
     /**
      * writes the end of the output

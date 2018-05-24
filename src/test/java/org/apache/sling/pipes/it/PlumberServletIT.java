@@ -36,8 +36,6 @@ import static org.junit.Assert.assertEquals;
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
 public class PlumberServletIT extends PipesTestSupport {
-
-
     private static final Logger LOGGER = LoggerFactory.getLogger(PlumberServletIT.class);
 
     /**
@@ -45,7 +43,9 @@ public class PlumberServletIT extends PipesTestSupport {
      */
     class ExpectedResponse {
         int size;
+        int nbErrors;
         ArrayList<String> items;
+        ArrayList<String> errors;
     }
 
     @Test
@@ -57,6 +57,19 @@ public class PlumberServletIT extends PipesTestSupport {
         final ExpectedResponse json = (new Gson()).fromJson(response, new TypeToken<ExpectedResponse>(){}.getType());
         assertEquals("there should be 2 elements", 2, json.size);
         assertArrayEquals("should be fruits array", new String[] {"/content/fruits/apple", "/content/fruits/banana"}, json.items.toArray());
+    }
+
+    @Test
+    public void testErrors() throws IOException {
+        final String url = String.format("http://localhost:%s/etc/pipes-it/bad-list.json", httpPort());
+        LOGGER.info("fetching {}", url);
+        final String response = Jsoup.connect(url).header("Authorization", basicAuthorizationHeader(ADMIN_CREDENTIALS)).ignoreContentType(true).execute().body();
+        LOGGER.info("retrieved following response {}", response);
+        final ExpectedResponse json = (new Gson()).fromJson(response, new TypeToken<ExpectedResponse>(){}.getType());
+        assertEquals("there should be 1 elements", 1, json.size);
+        assertArrayEquals("should be single apple array", new String[] {"/content/fruits/apple"}, json.items.toArray());
+        assertEquals("there should be 1 error", 1, json.nbErrors);
+        assertArrayEquals("should be single error array", new String[] {"${name.list === 'apple' ? path.apple : unexistingVariable}"}, json.errors.toArray());
     }
 
 }

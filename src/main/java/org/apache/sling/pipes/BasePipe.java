@@ -140,11 +140,18 @@ public class BasePipe implements Pipe {
     }
 
     /**
+     * @return configured input path (not computed)
+     */
+    protected String getRawPath() {
+        return properties.get(PN_PATH, "");
+    }
+
+    /**
      * Get pipe's path, instanciated or not
      * @return configured path (can be empty)
      */
     public String getPath() throws ScriptException {
-        String rawPath = properties.get(PN_PATH, "");
+        String rawPath = getRawPath();
         return bindings.instantiateExpression(rawPath);
     }
 
@@ -169,14 +176,24 @@ public class BasePipe implements Pipe {
         return referrer == null ? (parent != null ? parent.getPreviousPipe(this) : null) : referrer.getPreviousPipe();
     }
 
-    @Override
-    public Resource getInput() throws ScriptException {
-        Resource resource = getConfiguredInput();
-        if (resource == null && parent != null){
+    /**
+     * @return previous pipe's output if in a container, null otherwise
+     */
+    protected Resource getPreviousResource(){
+        if (parent != null){
             Pipe previousPipe = getPreviousPipe();
             if (previousPipe != null) {
                 return bindings.getExecutedResource(previousPipe.getName());
             }
+        }
+        return null;
+    }
+
+    @Override
+    public Resource getInput() throws ScriptException {
+        Resource resource = getConfiguredInput();
+        if (resource == null) {
+            resource = getPreviousResource();
         }
         logger.debug("input for this pipe is {}", resource != null ? resource.getPath() : null);
         return resource;
@@ -211,7 +228,15 @@ public class BasePipe implements Pipe {
         try {
             return computeOutput();
         } catch (Exception e){
-            logger.error("error with pipe execution ", e);
+            String path = getRawPath();
+            if (StringUtils.isBlank(path)){
+                Resource input = getPreviousResource();
+                if (input != null){
+                    path = resource.getPath();
+                }
+            }
+            bindings.setCurrentError(path);
+            logger.error("error with pipe execution from {}", path, e);
         }
         return EMPTY_ITERATOR;
     }

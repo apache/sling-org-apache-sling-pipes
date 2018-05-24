@@ -16,6 +16,7 @@
  */
 package org.apache.sling.pipes.internal;
 
+import com.sun.org.apache.bcel.internal.generic.NEW;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -39,6 +40,8 @@ public class CsvWriter extends OutputWriter {
     private static final String SEPARATOR = ",";
 
     private static final String NEW_LINE = "\n";
+
+    private static final String HEADER_ERROR = "errors";
 
     List<String> headers;
 
@@ -98,6 +101,12 @@ public class CsvWriter extends OutputWriter {
     @Override
     public void ends() {
         try {
+            if (errors.size() > 0){
+                writer.write(HEADER_ERROR + NEW_LINE);
+                for (String error : errors){
+                    writer.write(error + NEW_LINE);
+                }
+            }
             writer.flush();
         } catch (IOException e) {
             LOG.error("unable to flush", e);

@@ -115,4 +115,11 @@ public class ExecutionResult {
         }
         return data;
     }
+
+    /**
+     * @param error path to record
+     */
+    public void addError(String error) {
+        writer.error(error);
+    }
 }

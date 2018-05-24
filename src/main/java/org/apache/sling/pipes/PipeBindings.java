@@ -82,6 +82,8 @@ public class PipeBindings {
 
     Map<String, Resource> outputResources = new HashMap<>();
 
+    String currentError;
+
     /**
      * public constructor, built from pipe's resource
      * @param resource pipe's configuration resource
@@ -325,5 +327,21 @@ public class PipeBindings {
             pathBindings.put(name, resource.getPath());
             nameBindings.put(name, resource.getName());
         }
+    }
+
+    /**
+     * @return current error if any, and reset it
+     */
+    public String popCurrentError() {
+        String returnValue = currentError;
+        currentError = null;
+        return returnValue;
+    }
+
+    /**
+     * @param currentError error path to set
+     */
+    public void setCurrentError(String currentError) {
+        this.currentError = currentError;
     }
 }

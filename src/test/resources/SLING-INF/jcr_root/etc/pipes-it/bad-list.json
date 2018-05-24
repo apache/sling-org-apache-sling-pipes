@@ -1,0 +1,19 @@
+{
+  "jcr:primaryType":"nt:unstructured",
+  "jcr:description":"returns fruit list under /content/fruits",
+  "sling:resourceType":"slingPipes/container",
+  "conf":{
+    "jcr:primaryType":"sling:OrderedFolder",
+    "list": {
+      "jcr:primaryType":"nt:unstructured",
+      "jcr:description":"returns fruit list under /content/fruits",
+      "sling:resourceType":"slingPipes/children",
+      "path":"/content/fruits",
+      "expr":"nt:base"
+    },
+    "echo": {
+      "sling:resourceType":"slingPipes/base",
+      "path":"${name.list === 'apple' ? path.apple : unexistingVariable}"
+    }
+  }
+}

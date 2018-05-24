@@ -19,6 +19,12 @@ package org.apache.sling.pipes;
 import org.apache.sling.api.resource.PersistenceException;
 import org.junit.Test;
 
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import java.io.StringReader;
+
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -38,5 +44,13 @@ public class BasePipeTest extends AbstractPipeTest {
         assertTrue("Is dry run should be true with flag set to boolean true", resetDryRun(true).isDryRun());
         assertTrue("Is dry run should be true with flag set to text true", resetDryRun("true").isDryRun());
         assertTrue("Is dry run should be true with flag set to something that is not false or 'false'", resetDryRun("other").isDryRun());
+    }
+
+    @Test
+    public void simpleErrorTest() throws Exception {
+        ExecutionResult result = plumber.newPipe(context.resourceResolver()).echo("${whatever is wrong}").run();
+        JsonObject response = Json.createReader(new StringReader(result.toString())).readObject();
+        JsonArray array = response.getJsonArray(OutputWriter.KEY_ERRORS);
+        assertEquals("there should be one error", 1, array.size());
     }
 }
