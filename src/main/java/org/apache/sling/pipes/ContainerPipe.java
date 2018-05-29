@@ -98,11 +98,17 @@ public class ContainerPipe extends BasePipe {
      */
     public Pipe getPreviousPipe(Pipe pipe){
         Pipe previousPipe = null;
-        for (Pipe candidate : pipeList){
-            if (candidate.equals(pipe)){
-                return previousPipe;
+        if (!pipeList.isEmpty()){
+            if (pipeList.get(0).equals(pipe) && referrer != null){
+                //in case this pipe is referred, previous pipe is the one of the referrer
+                return referrer.getPreviousPipe();
             }
-            previousPipe = candidate;
+            for (Pipe candidate : pipeList){
+                if (candidate.equals(pipe)){
+                    return previousPipe;
+                }
+                previousPipe = candidate;
+            }
         }
         return null;
     }
