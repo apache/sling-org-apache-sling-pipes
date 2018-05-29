@@ -15,15 +15,11 @@ Import-Package:\
 Sling-Model-Packages:\
   org.apache.sling.pipes.models
 
--baseline: *
-
 -exportcontents: ${packages;VERSIONED}
 
 -includeresource:\
   @org.apache.sling.jcr.contentparser-*.jar!/org/apache/sling/jcr/contentparser/impl/JsonTicksConverter.*
 
 -removeheaders:\
-  Embed-Dependency,\
-  Embed-Transitive,\
   Include-Resource,\
   Private-Package
