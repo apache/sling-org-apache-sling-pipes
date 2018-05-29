@@ -16,10 +16,12 @@
  */
 package org.apache.sling.pipes;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.script.ScriptException;
 import java.util.Iterator;
 
 /**
@@ -32,29 +34,13 @@ public class ReferencePipe extends BasePipe {
 
     protected Pipe reference;
 
+    /**
+     * path of the reference pipe
+     */
+    String referencePath;
+
     public ReferencePipe(Plumber plumber, Resource resource) throws Exception {
         super(plumber, resource);
-        Resource pipeResource = resolver.getResource(getExpr());
-        if (pipeResource == null){
-            throw new Exception("Reference configuration error: There is no resource at " + getExpr());
-        }
-        reference = plumber.getPipe(pipeResource);
-        if (reference == null){
-            throw new Exception("Unable to build out pipe out of " + getPath());
-        }
-        reference.setReferrer(this);
-        log.info("set reference to {}", reference);
-    }
-
-    @Override
-    public void setParent(ContainerPipe parent) {
-        super.setParent(parent);
-        reference.setParent(parent);
-    }
-
-    @Override
-    public void setBindings(PipeBindings bindings) {
-        reference.setBindings(bindings);
     }
 
     @Override
@@ -62,8 +48,47 @@ public class ReferencePipe extends BasePipe {
         return reference.getBindings();
     }
 
+    /**
+     * Computing the pipe this pipe refers to, and make necessary bindings
+     * @throws Exception
+     */
+    protected void computeReference() throws Exception {
+        Resource pipeResource = resolver.getResource(referencePath);
+        if (pipeResource == null) {
+            throw new Exception("Reference configuration error: There is no resource at " + getExpr());
+        }
+        reference = plumber.getPipe(pipeResource);
+        if (reference == null) {
+            throw new Exception("Unable to build out pipe out of " + getPath());
+        }
+        reference.setReferrer(this);
+        log.info("set reference to {}", reference);
+
+        //bind parent to the reference
+        if (parent != null) {
+            reference.setParent(parent);
+        }
+        //set reference's bindings
+        if (bindings != null) {
+            reference.setBindings(bindings);
+        }
+    }
+
     @Override
     protected Iterator<Resource> computeOutput() throws Exception {
+        String expression = getExpr();
+        if (StringUtils.isNotBlank(expression) && !expression.equals(referencePath)){
+            referencePath = expression;
+            computeReference();
+        }
+        return computeReferenceOutput();
+    }
+
+    /**
+     * @return referenced pipe output
+     * @throws Exception sent by reference piped execution
+     */
+    protected Iterator<Resource> computeReferenceOutput() throws Exception {
         log.debug("getting {} output", reference);
         return reference.getOutput();
     }
