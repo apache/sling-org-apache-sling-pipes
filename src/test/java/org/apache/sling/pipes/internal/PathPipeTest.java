@@ -21,6 +21,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.pipes.AbstractPipeTest;
 import org.apache.sling.pipes.Pipe;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.jcr.Node;
@@ -63,6 +64,7 @@ public class PathPipeTest extends AbstractPipeTest {
         assertEquals("Parent node type should be sling:Folder", NT_SLING_FOLDER, node.getParent().getPrimaryNodeType().getName());
     }
 
+    @Ignore
     @Test
     public void autosaveResourceTest() throws Exception {
         ResourceResolver resolver = context.resourceResolver();
@@ -72,6 +74,7 @@ public class PathPipeTest extends AbstractPipeTest {
         assertNull("Resource should *not* be here", resolver.getResource(WATERMELON_FULL_PATH));
     }
 
+    @Ignore
     @Test
     public void autosaveJCRTest() throws Exception {
         ResourceResolver resolver = context.resourceResolver();
