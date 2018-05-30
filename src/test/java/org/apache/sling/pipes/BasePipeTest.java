@@ -17,6 +17,7 @@
 package org.apache.sling.pipes;
 
 import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.api.resource.Resource;
 import org.junit.Test;
 
 import javax.json.Json;
@@ -26,6 +27,7 @@ import java.io.StringReader;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class BasePipeTest extends AbstractPipeTest {
@@ -52,5 +54,15 @@ public class BasePipeTest extends AbstractPipeTest {
         JsonObject response = Json.createReader(new StringReader(result.toString())).readObject();
         JsonArray array = response.getJsonArray(OutputWriter.KEY_ERRORS);
         assertEquals("there should be one error", 1, array.size());
+    }
+
+    @Test
+    public void testRelativeInput() throws Exception {
+        Resource resource = plumber.newPipe(context.resourceResolver())
+                .echo(ROOT)
+                .echo(NN_FRUITS)
+                .build().getOutput().next();
+        assertNotNull("there should be an output", resource);
+        assertEquals("it should be fruits root", PATH_FRUITS, resource.getPath());
     }
 }

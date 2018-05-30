@@ -35,7 +35,7 @@ import java.util.List;
 public class BasePipe implements Pipe {
 
     private final Logger logger = LoggerFactory.getLogger(BasePipe.class);
-
+    public static final String SLASH = "/";
     public static final String RT_PREFIX = "slingPipes/";
     public static final String RESOURCE_TYPE = RT_PREFIX + "base";
     public static final String DRYRUN_KEY = "dryRun";
@@ -160,12 +160,23 @@ public class BasePipe implements Pipe {
         Resource configuredInput = null;
         String path = getPath();
         if (StringUtils.isNotBlank(path)){
+            if (!isRootPath(path) && getPreviousResource() != null){
+                path = getPreviousResource().getPath() + SLASH + path;
+            }
             configuredInput = resolver.getResource(path);
             if (configuredInput == null) {
                 logger.warn("configured path {} is not found, expect some troubles...", path);
             }
         }
         return configuredInput;
+    }
+
+    /**
+     * @param path path to be checked
+     * @return true if path is root (aka not relative)
+     */
+    protected boolean isRootPath(String path){
+        return path.startsWith(SLASH);
     }
 
     /**

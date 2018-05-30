@@ -41,7 +41,9 @@ import org.junit.Rule;
 public class AbstractPipeTest {
 
     protected static final String PATH_PIPE = "/etc/pipe";
-    protected static final String PATH_FRUITS = "/content/fruits";
+    protected static final String ROOT = "/content";
+    protected static final String NN_FRUITS = "fruits";
+    protected static final String PATH_FRUITS = ROOT + BasePipe.SLASH + NN_FRUITS;
     protected static final String BANANA_SUFFIX = "/banana";
     protected static final String PATH_BANANA = PATH_FRUITS + BANANA_SUFFIX;
     protected static final String APPLE_SUFFIX = "/apple";

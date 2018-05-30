@@ -50,7 +50,6 @@ public class PathPipe extends BasePipe {
     public static final String PN_NODETYPE = "nodeType";
     public static final String PN_INTERMEDIATE = "intermediateType";
     public static final String PN_AUTOSAVE = "autosave";
-    public static final String SLASH = "/";
 
     String resourceType;
     String nodeType;
@@ -77,16 +76,16 @@ public class PathPipe extends BasePipe {
     @Override
     protected Iterator<Resource> computeOutput() throws Exception {
         Iterator<Resource> output = Collections.emptyIterator();
-        String expression = getExpr();
+        String expr = getExpr();
         try {
-            String path = expression.startsWith(SLASH) ? expression : getInput().getPath() + SLASH + expression;
+            String path = isRootPath(expr) ? expr : getInput().getPath() + SLASH + expr;
             logger.info("creating path {}", path);
             if (!isDryRun()) {
                 Resource resource = jcr ? getOrCreateNode(path) : ResourceUtil.getOrCreateResource(resolver, path, resourceType, intermediateType, autosave);
                 output = Collections.singleton(resource).iterator();
             }
         } catch (PersistenceException e){
-            logger.error ("Not able to create path {}", expression, e);
+            logger.error ("Not able to create path {}", expr, e);
         }
         return output;
     }
