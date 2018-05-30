@@ -17,11 +17,15 @@
 package org.apache.sling.pipes.internal;
 
 import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.pipes.AbstractPipeTest;
 import org.apache.sling.pipes.Pipe;
 import org.junit.Test;
 
+import javax.jcr.Node;
+
+import static org.apache.sling.jcr.resource.JcrResourceConstants.NT_SLING_FOLDER;
 import static org.junit.Assert.*;
 
 /**
@@ -30,7 +34,8 @@ import static org.junit.Assert.*;
 public class PathPipeTest extends AbstractPipeTest {
 
     private static final String WATERMELON = "watermelon";
-    private static final String WATERMELON_FULL_PATH = PATH_FRUITS + "/" + WATERMELON;
+    private static final String WATERMELON_RELATIVEPATH = "parent/" + WATERMELON;
+    private static final String WATERMELON_FULL_PATH = PATH_FRUITS + "/" + WATERMELON_RELATIVEPATH;
 
     @Test
     public void modifiesContent() throws IllegalAccessException, PersistenceException {
@@ -41,17 +46,46 @@ public class PathPipeTest extends AbstractPipeTest {
     }
 
     @Test
-    public void getClassicOutput() throws Exception {
+    public void getClassicOutputResource() throws Exception {
         ResourceResolver resolver = context.resourceResolver();
         plumber.newPipe(resolver).mkdir(WATERMELON_FULL_PATH).run();
-        resolver.revert();
         assertNotNull("Resource should be here & saved", resolver.getResource(WATERMELON_FULL_PATH));
+    }
+
+    @Test
+    public void getClassicOutputJCR() throws Exception {
+        ResourceResolver resolver = context.resourceResolver();
+        plumber.newPipe(resolver).mkdir(WATERMELON_FULL_PATH).with("nodeType","nt:unstructured","intermediateType",NT_SLING_FOLDER).run();
+        Resource watermelon = resolver.getResource(WATERMELON_FULL_PATH);
+        assertNotNull("Resource should be here & saved", watermelon);
+        Node node = watermelon.adaptTo(Node.class);
+        assertEquals("node type should be nt:unstructured", "nt:unstructured",node.getPrimaryNodeType().getName());
+        assertEquals("Parent node type should be sling:Folder", NT_SLING_FOLDER, node.getParent().getPrimaryNodeType().getName());
+    }
+
+    @Test
+    public void autosaveResourceTest() throws Exception {
+        ResourceResolver resolver = context.resourceResolver();
+        Pipe pipe = plumber.newPipe(resolver).mkdir(WATERMELON_FULL_PATH).with("autosave",false).build();
+        pipe.getOutput().next();
+        resolver.revert();
+        assertNull("Resource should *not* be here", resolver.getResource(WATERMELON_FULL_PATH));
+    }
+
+    @Test
+    public void autosaveJCRTest() throws Exception {
+        ResourceResolver resolver = context.resourceResolver();
+        Pipe pipe = plumber.newPipe(resolver).mkdir(WATERMELON_FULL_PATH).with("nodeType","nt:unstructured","autosave",false).build();
+        pipe.getOutput().next();
+        resolver.revert();
+        Resource watermelon = resolver.getResource(WATERMELON_FULL_PATH);
+        assertNull("JCR Resource should *not* be here", watermelon);
     }
 
     @Test
     public void getRelativePath() throws Exception {
         ResourceResolver resolver = context.resourceResolver();
-        plumber.newPipe(resolver).echo(PATH_FRUITS).mkdir(WATERMELON).run();
-        assertNotNull("Resource should be    here & saved", resolver.getResource(WATERMELON_FULL_PATH));
+        plumber.newPipe(resolver).echo(PATH_FRUITS).mkdir(WATERMELON_RELATIVEPATH).run();
+        assertNotNull("Resource should be here & saved", resolver.getResource(WATERMELON_FULL_PATH));
     }
 }
