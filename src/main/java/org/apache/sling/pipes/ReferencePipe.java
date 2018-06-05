@@ -100,6 +100,7 @@ public class ReferencePipe extends BasePipe {
 
     @Override
     public boolean modifiesContent() {
-        return reference.modifiesContent();
+        //assuming true in case we don't know yet to be on the safe side
+        return reference != null ? reference.modifiesContent() : true;
     }
 }

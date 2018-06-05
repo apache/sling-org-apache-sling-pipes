@@ -136,6 +136,22 @@ public class PlumberServletTest extends AbstractPipeTest {
         assertTrue("Execution should have failed", hasFailed);
     }
 
+    /**
+     * in this test we execute a pipe that modifies content, with a flag mocking the GET request, but with a dryRun parameter
+     * the execution should *not* fail.
+     */
+    @Test
+    public void testGetOnOnDryRUnWriteExecute() {
+        SlingHttpServletRequest request = mockPlumberServletRequest(context.resourceResolver(), "json", pipedWritePath, null, null, null, "true", "-1");
+        boolean hasFailed = true;
+        try {
+            servlet.execute(request, response, false);
+            hasFailed = false;
+        } catch (Exception e){
+        }
+        assertFalse("Execution should not have failed", hasFailed);
+    }
+
     @Test
     public void testAdditionalBindingsAndWriter() throws Exception {
         String testBinding = "testBinding";

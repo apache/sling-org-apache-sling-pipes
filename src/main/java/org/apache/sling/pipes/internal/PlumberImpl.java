@@ -243,9 +243,6 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
         if (pipe == null) {
             throw new Exception("unable to build pipe based on configuration at " + path);
         }
-        if (additionalBindings != null && (Boolean)additionalBindings.getOrDefault(BasePipe.READ_ONLY, true) && pipe.modifiesContent()) {
-            throw new Exception("This pipe modifies content, you should use a POST request");
-        }
         return execute(resolver, pipe, additionalBindings, writer, save);
     }
 
@@ -254,10 +251,16 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
         boolean success = false;
         PipeMonitor monitor = null;
         try {
-            log.info("[{}] execution starts, save ({})", pipe, save);
-            if (additionalBindings != null && pipe instanceof ContainerPipe){
+            if (additionalBindings != null){
                 pipe.getBindings().addBindings(additionalBindings);
             }
+            if (additionalBindings != null && additionalBindings.containsKey(BasePipe.READ_ONLY)){
+                //this execution comes from a request
+                if ((Boolean)additionalBindings.get(BasePipe.READ_ONLY) && pipe.modifiesContent() && !pipe.isDryRun()) {
+                    throw new Exception("This pipe modifies content, you should use a POST request");
+                }
+            }
+            log.info("[{}] execution starts, save ({})", pipe, save);
             Resource confResource = pipe.getResource();
             writer.setPipe(pipe);
             if (isRunning(confResource)){
