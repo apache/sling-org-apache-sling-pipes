@@ -65,7 +65,7 @@ public class PathPipe extends BasePipe {
         resourceType = properties.get(PN_RESOURCETYPE, NT_SLING_FOLDER);
         jcr = StringUtils.isNotBlank(nodeType);
         intermediateType = properties.get(PN_INTERMEDIATE, resourceType);
-        autosave = properties.get(PN_AUTOSAVE, true);
+        autosave = properties.get(PN_AUTOSAVE, false);
     }
 
     @Override
