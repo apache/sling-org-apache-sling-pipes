@@ -82,16 +82,17 @@ public class BasePipe implements Pipe {
      * Pipe Constructor
      * @param plumber plumber
      * @param resource configuration resource
+     * @param upperBindings already set bindings, can be null
      * @throws Exception in case configuration is not working
      */
-    public BasePipe(Plumber plumber, Resource resource) throws Exception {
+    public BasePipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
         this.resource = resource;
         properties = resource.adaptTo(ValueMap.class);
         resolver = resource.getResourceResolver();
         this.plumber = plumber;
         name = properties.get(PN_NAME, resource.getName());
         distributionAgent = properties.get(PN_DISTRIBUTION_AGENT, String.class);
-        bindings = new PipeBindings(resource);
+        bindings = upperBindings == null ? new PipeBindings(resource) : upperBindings;
     }
 
     @Override
@@ -224,11 +225,6 @@ public class BasePipe implements Pipe {
     @Override
     public PipeBindings getBindings() {
         return bindings;
-    }
-
-    @Override
-    public void setBindings(PipeBindings bindings) {
-        this.bindings = bindings;
     }
 
     /**

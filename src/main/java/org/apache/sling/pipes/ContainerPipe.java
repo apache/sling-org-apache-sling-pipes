@@ -49,19 +49,19 @@ public class ContainerPipe extends BasePipe {
      * Constructor
      * @param plumber plumber
      * @param resource container's configuration resource
+     * @param upperBindings pipe bindings
      * @throws Exception bad configuration handling
      */
-    public ContainerPipe(Plumber plumber, Resource resource) throws Exception{
-        super(plumber, resource);
+    public ContainerPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception{
+        super(plumber, resource, upperBindings);
         sleep = properties.get(PN_SLEEP, 0L);
         for (Iterator<Resource> childPipeResources = getConfiguration().listChildren(); childPipeResources.hasNext();){
             Resource pipeResource = childPipeResources.next();
-            Pipe pipe = plumber.getPipe(pipeResource);
+            Pipe pipe = plumber.getPipe(pipeResource, bindings);
             if (pipe == null) {
                 log.error("configured pipe {} is either not registered, or not computable by the plumber", pipeResource.getPath());
             } else {
                 pipe.setParent(this);
-                pipe.setBindings(bindings);
                 pipes.put(pipe.getName(), pipe);
                 pipeList.add(pipe);
             }
@@ -76,14 +76,6 @@ public class ContainerPipe extends BasePipe {
             }
         }
         return false;
-    }
-
-    @Override
-    public void setBindings(PipeBindings bindings) {
-        this.bindings = bindings;
-        for (Pipe pipe : pipeList){
-            pipe.setBindings(bindings);
-        }
     }
 
     @Override

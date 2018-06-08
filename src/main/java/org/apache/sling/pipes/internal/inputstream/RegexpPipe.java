@@ -19,6 +19,7 @@ package org.apache.sling.pipes.internal.inputstream;
 import org.apache.commons.io.IOUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.AbstractInputStreamPipe;
+import org.apache.sling.pipes.PipeBindings;
 import org.apache.sling.pipes.Plumber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,8 +47,8 @@ public class RegexpPipe extends AbstractInputStreamPipe {
     private static final Pattern PATTERN_NAME = Pattern.compile("\\?<([\\w]+)>");
     private static final short PATTERN_IDX_NAME = 1;
 
-    public RegexpPipe(Plumber plumber, Resource resource) throws Exception {
-        super(plumber, resource);
+    public RegexpPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
+        super(plumber, resource, upperBindings);
     }
 
     @Override

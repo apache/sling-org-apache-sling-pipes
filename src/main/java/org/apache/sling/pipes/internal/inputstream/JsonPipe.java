@@ -20,6 +20,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.AbstractInputStreamPipe;
+import org.apache.sling.pipes.PipeBindings;
 import org.apache.sling.pipes.Plumber;
 import org.apache.sling.pipes.internal.JsonUtil;
 import org.slf4j.Logger;
@@ -60,8 +61,8 @@ public class JsonPipe extends AbstractInputStreamPipe {
     JsonArray array;
     int index = -1;
 
-    public JsonPipe(Plumber plumber, Resource resource) throws Exception {
-        super(plumber, resource);
+    public JsonPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
+        super(plumber, resource, upperBindings);
     }
 
     /**

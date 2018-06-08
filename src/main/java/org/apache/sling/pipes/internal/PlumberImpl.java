@@ -204,12 +204,17 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
 
     @Override
     public Pipe getPipe(Resource resource) {
+        return getPipe(resource, null);
+    }
+
+    @Override
+    public Pipe getPipe(Resource resource, PipeBindings upperBindings) {
         if ((resource == null) || !registry.containsKey(resource.getResourceType())) {
             log.error("Pipe configuration resource is either null, or its type is not registered");
         } else {
             try {
                 Class<? extends Pipe> pipeClass = registry.get(resource.getResourceType());
-                return pipeClass.getDeclaredConstructor(Plumber.class, Resource.class).newInstance(this, resource);
+                return pipeClass.getDeclaredConstructor(Plumber.class, Resource.class, PipeBindings.class).newInstance(this, resource, upperBindings);
             } catch (Exception e) {
                 log.error("Unable to properly instantiate the pipe configured in {}", resource.getPath(), e);
             }

@@ -26,6 +26,7 @@ import org.apache.jackrabbit.vault.packaging.PackagingService;
 import org.apache.jackrabbit.vault.util.Text;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.BasePipe;
+import org.apache.sling.pipes.PipeBindings;
 import org.apache.sling.pipes.Plumber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,8 +59,8 @@ public class PackagePipe extends BasePipe {
      *
      * @throws Exception in case configuration is not working
      */
-    public PackagePipe(Plumber plumber, Resource resource) throws Exception {
-        super(plumber, resource);
+    public PackagePipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
+        super(plumber, resource, upperBindings);
     }
 
     @Override

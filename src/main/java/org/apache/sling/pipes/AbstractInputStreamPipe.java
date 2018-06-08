@@ -57,8 +57,8 @@ public abstract class AbstractInputStreamPipe extends BasePipe {
 
     InputStream is;
 
-    public AbstractInputStreamPipe(Plumber plumber, Resource resource) throws Exception {
-        super(plumber, resource);
+    public AbstractInputStreamPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
+        super(plumber, resource, upperBindings);
         configureHttpClient();
         binding = null;
     }

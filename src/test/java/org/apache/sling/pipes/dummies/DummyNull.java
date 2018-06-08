@@ -21,14 +21,15 @@ import java.util.Iterator;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.BasePipe;
+import org.apache.sling.pipes.PipeBindings;
 import org.apache.sling.pipes.Plumber;
 
 /**
  * this pipe has nothing in output
  */
 public class DummyNull extends BasePipe {
-    public DummyNull(Plumber plumber, Resource resource) throws Exception {
-        super(plumber, resource);
+    public DummyNull(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
+        super(plumber, resource, upperBindings);
     }
 
     @Override

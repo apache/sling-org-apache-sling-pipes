@@ -115,12 +115,6 @@ public interface Pipe {
     PipeBindings getBindings();
 
     /**
-     * set the pipe's bindings
-     * @param bindings bindings to set
-     */
-    void setBindings(PipeBindings bindings);
-
-    /**
      * Executes the pipe, can be contained in a parent or not
      * @return iterator of resource resulting from execution of this pipe
      */

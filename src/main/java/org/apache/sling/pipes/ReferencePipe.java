@@ -39,8 +39,8 @@ public class ReferencePipe extends BasePipe {
      */
     String referencePath;
 
-    public ReferencePipe(Plumber plumber, Resource resource) throws Exception {
-        super(plumber, resource);
+    public ReferencePipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
+        super(plumber, resource, upperBindings);
     }
 
     @Override
@@ -57,7 +57,7 @@ public class ReferencePipe extends BasePipe {
         if (pipeResource == null) {
             throw new Exception("Reference configuration error: There is no resource at " + getExpr());
         }
-        reference = plumber.getPipe(pipeResource);
+        reference = plumber.getPipe(pipeResource, bindings);
         if (reference == null) {
             throw new Exception("Unable to build out pipe out of " + getPath());
         }
@@ -67,10 +67,6 @@ public class ReferencePipe extends BasePipe {
         //bind parent to the reference
         if (parent != null) {
             reference.setParent(parent);
-        }
-        //set reference's bindings
-        if (bindings != null) {
-            reference.setBindings(bindings);
         }
     }
 

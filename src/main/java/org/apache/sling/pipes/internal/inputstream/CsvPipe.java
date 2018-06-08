@@ -19,6 +19,7 @@ package org.apache.sling.pipes.internal.inputstream;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.AbstractInputStreamPipe;
+import org.apache.sling.pipes.PipeBindings;
 import org.apache.sling.pipes.Plumber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,8 +50,8 @@ public class CsvPipe extends AbstractInputStreamPipe {
 
     int index = 0;
 
-    public CsvPipe(Plumber plumber, Resource resource) throws Exception {
-        super(plumber, resource);
+    public CsvPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
+        super(plumber, resource, upperBindings);
     }
 
     @Override

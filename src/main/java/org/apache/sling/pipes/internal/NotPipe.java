@@ -17,6 +17,7 @@
 package org.apache.sling.pipes.internal;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.pipes.PipeBindings;
 import org.apache.sling.pipes.Plumber;
 import org.apache.sling.pipes.ReferencePipe;
 
@@ -31,8 +32,8 @@ public class NotPipe extends ReferencePipe {
 
     public static final String RESOURCE_TYPE = RT_PREFIX + "not";
 
-    public NotPipe(Plumber plumber, Resource resource) throws Exception {
-        super(plumber, resource);
+    public NotPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
+        super(plumber, resource, upperBindings);
     }
 
     @Override

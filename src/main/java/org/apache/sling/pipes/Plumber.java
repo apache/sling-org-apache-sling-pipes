@@ -38,6 +38,16 @@ public interface Plumber {
      */
     Pipe getPipe(Resource resource);
 
+
+    /**
+     * Instantiate a pipe from the given resource and returns it
+     * @param resource configuration resource
+     * @param upperBindings already set binding we want to initiate our pipe with
+     * @return pipe instantiated from the resource, null otherwise
+     */
+    Pipe getPipe(Resource resource, PipeBindings upperBindings);
+
+
     /**
      * executes in a background thread
      * @param resolver resolver used for registering the execution (id will be checked against the configuration)

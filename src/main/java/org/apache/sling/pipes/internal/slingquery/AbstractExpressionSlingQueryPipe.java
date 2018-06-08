@@ -17,6 +17,7 @@
 package org.apache.sling.pipes.internal.slingquery;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.pipes.PipeBindings;
 import org.apache.sling.pipes.Plumber;
 import org.apache.sling.query.SlingQuery;
 import org.slf4j.Logger;
@@ -29,8 +30,8 @@ import javax.script.ScriptException;
  */
 public abstract class AbstractExpressionSlingQueryPipe extends AbstractSlingQueryPipe {
     Logger logger = LoggerFactory.getLogger(AbstractExpressionSlingQueryPipe.class);
-    public AbstractExpressionSlingQueryPipe(Plumber plumber, Resource resource) throws Exception {
-        super(plumber, resource);
+    public AbstractExpressionSlingQueryPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
+        super(plumber, resource, upperBindings);
     }
 
     /**

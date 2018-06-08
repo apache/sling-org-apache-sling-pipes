@@ -24,6 +24,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.pipes.BasePipe;
+import org.apache.sling.pipes.PipeBindings;
 import org.apache.sling.pipes.Plumber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,8 +73,8 @@ public class AuthorizablePipe extends BasePipe {
      * @param resource configuration resource
      * @throws Exception bad configuration handling
      */
-    public AuthorizablePipe(Plumber plumber, Resource resource) throws Exception {
-        super(plumber, resource);
+    public AuthorizablePipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
+        super(plumber, resource, upperBindings);
         resolver = resource.getResourceResolver();
         userManager = resolver.adaptTo(UserManager.class);
         if (getConfiguration() != null) {

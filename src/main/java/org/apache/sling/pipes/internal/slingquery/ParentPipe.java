@@ -17,6 +17,7 @@
 package org.apache.sling.pipes.internal.slingquery;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.pipes.PipeBindings;
 import org.apache.sling.pipes.Plumber;
 import org.apache.sling.query.SlingQuery;
 
@@ -28,8 +29,8 @@ import static org.apache.sling.query.SlingQuery.$;
 public class ParentPipe extends AbstractSlingQueryPipe {
     public static final String RESOURCE_TYPE = RT_PREFIX + "parent";
 
-    public ParentPipe(Plumber plumber, Resource resource) throws Exception {
-        super(plumber, resource);
+    public ParentPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
+        super(plumber, resource, upperBindings);
     }
 
     @Override

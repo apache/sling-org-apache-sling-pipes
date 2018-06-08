@@ -19,6 +19,7 @@ package org.apache.sling.pipes.internal;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.pipes.BasePipe;
+import org.apache.sling.pipes.PipeBindings;
 import org.apache.sling.pipes.Plumber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,8 +42,8 @@ public class FilterPipe extends BasePipe {
     public static final String PN_NOCHILDREN = PREFIX_FILTER + "noChildren";
     public static final String PN_TEST = PREFIX_FILTER + "test";
 
-    public FilterPipe(Plumber plumber, Resource resource) throws Exception {
-        super(plumber, resource);
+    public FilterPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
+        super(plumber, resource, upperBindings);
     }
 
     boolean propertiesPass(ValueMap current, ValueMap filter) throws ScriptException {

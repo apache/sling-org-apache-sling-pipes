@@ -69,8 +69,7 @@ public class ReferencePipeTest  extends AbstractPipeTest {
         bindings.put("fruit", newFruit);
         Pipe pipe = plumber.newPipe(context.resourceResolver()).echo(PATH_FRUITS + "/${fruit}").build();
         Collection<String> paths = plumber.newPipe(context.resourceResolver())
-                .pipe(ReferencePipe.RESOURCE_TYPE)
-                .expr(pipe.getResource().getPath())
+                .ref(pipe.getResource().getPath())
                 .run(bindings).getCurrentPathSet();
         assertTrue("paths should contain new path", paths.contains(newPath));
     }

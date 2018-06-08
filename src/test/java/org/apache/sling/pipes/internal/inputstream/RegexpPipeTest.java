@@ -33,7 +33,7 @@ import static org.junit.Assert.*;
 public class RegexpPipeTest extends AbstractPipeTest {
     @Test
     public void getGroupNames() throws Exception {
-        RegexpPipe pipe = new RegexpPipe(plumber, context.resourceResolver().getResource("/content"));
+        RegexpPipe pipe = new RegexpPipe(plumber, context.resourceResolver().getResource("/content"), null);
         Collection<String> names = pipe.getGroupNames("some (?<first>group) that uses (?<name>names)");
         assertEquals("there should be 2 names", 2, names.size());
         assertTrue("there should be first", names.contains("first"));

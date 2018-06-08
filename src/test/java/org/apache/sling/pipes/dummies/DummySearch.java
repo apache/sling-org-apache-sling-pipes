@@ -24,6 +24,7 @@ import javax.jcr.NodeIterator;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.BasePipe;
+import org.apache.sling.pipes.PipeBindings;
 import org.apache.sling.pipes.Plumber;
 
 /**
@@ -31,8 +32,8 @@ import org.apache.sling.pipes.Plumber;
  */
 public class DummySearch extends BasePipe {
 
-    public DummySearch(Plumber plumber, Resource resource) throws Exception {
-        super(plumber, resource);
+    public DummySearch(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
+        super(plumber, resource, upperBindings);
     }
 
     @Override
