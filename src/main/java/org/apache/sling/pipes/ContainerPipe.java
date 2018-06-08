@@ -80,7 +80,10 @@ public class ContainerPipe extends BasePipe {
 
     @Override
     public Iterator<Resource> getOutput()  {
-        return new ContainerResourceIterator(this, sleep);
+        if (pipeList.size() > 0) {
+            return new ContainerResourceIterator(this, sleep);
+        }
+        return EMPTY_ITERATOR;
     }
 
     /**
