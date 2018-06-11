@@ -37,8 +37,9 @@ import static org.junit.Assert.assertTrue;
 public class PipeBuilderTest extends AbstractPipeTest {
     @Test
     public void simpleBuild() throws Exception {
-        PipeBuilder rmBuilder = plumber.newPipe(context.resourceResolver());
-        Pipe rmPipe = rmBuilder.echo(PATH_APPLE).rm().build();
+        Pipe rmPipe = plumber.newPipe(context.resourceResolver())
+                        .echo(PATH_APPLE)
+                .rm().build();
         assertNotNull(" a basePipe should be built", rmPipe);
         //we rebuild basePipe out of created basePipe path, execute it, and test correct output (= correct basePipe built)
         testOneResource(rmPipe.getResource().getPath(), PATH_FRUITS);

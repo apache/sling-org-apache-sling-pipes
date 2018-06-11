@@ -103,6 +103,20 @@ public class ContainerPipeTest extends AbstractPipeTest {
         assertTrue("There should be children", getOutput(PATH_PIPE + "/" + NN_ONEPIPE).hasNext());
     }
 
+    /**
+     * one "empty" sub pipe in the middle of the execution should cut the pipe
+     */
+    @Test
+    public void testContainerCut() throws PersistenceException {
+        Pipe pipe = plumber.newPipe(context.resourceResolver())
+                .echo(PATH_FRUITS) //should return fruit root
+                .echo("nonexisting") // /content/fruits/nonexisting does not exist
+                .echo(PATH_APPLE) // existing apple
+                .build();
+        assertFalse("there should be no output to that pipe because some empty pipe is in the middle",
+                pipe.getOutput().hasNext());
+    }
+
     @Test
     public void testSleep() throws Exception {
         long interval = 100L;
