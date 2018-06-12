@@ -93,7 +93,7 @@ public class PipeBuilderIT extends PipesTestSupport {
             }
             Collection<String> results = plumber.newPipe(resolver).echo(ROOT).traverse().run().getCurrentPathSet();
             LOGGER.info("Following results are found {}", results);
-            assertEquals("we should have root and implemented children", 11, results.size());
+            assertEquals("we should have root and implemented subpipes", 11, results.size());
         }
     }
 }

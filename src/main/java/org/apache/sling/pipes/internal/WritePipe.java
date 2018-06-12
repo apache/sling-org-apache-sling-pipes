@@ -135,7 +135,7 @@ public class WritePipe extends BasePipe {
      * Write properties from the configuration to the target resource,
      * instantiating both property names & values
      *
-     * @param conf configured resource that holds all properties to write (and children)
+     * @param conf configured resource that holds all properties to write (and subpipes)
      * @param target target resource on which configured values will be written
      * @throws RepositoryException issues occuring when traversing nodes
      */

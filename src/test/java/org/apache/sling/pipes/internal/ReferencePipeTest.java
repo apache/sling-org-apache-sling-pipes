@@ -19,7 +19,6 @@ package org.apache.sling.pipes.internal;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.pipes.AbstractPipeTest;
 import org.apache.sling.pipes.Pipe;
-import org.apache.sling.pipes.ReferencePipe;
 import org.junit.Before;
 import org.junit.Test;
 

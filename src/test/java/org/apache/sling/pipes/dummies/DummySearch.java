@@ -28,7 +28,7 @@ import org.apache.sling.pipes.PipeBindings;
 import org.apache.sling.pipes.Plumber;
 
 /**
- * dummy search reads its conf node children and returns them.
+ * dummy search reads its conf node subpipes and returns them.
  */
 public class DummySearch extends BasePipe {
 
