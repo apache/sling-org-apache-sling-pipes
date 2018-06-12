@@ -46,7 +46,8 @@ public class AbstractPipeTest {
     protected static final String PATH_FRUITS = ROOT + BasePipe.SLASH + NN_FRUITS;
     protected static final String BANANA_SUFFIX = "/banana";
     protected static final String PATH_BANANA = PATH_FRUITS + BANANA_SUFFIX;
-    protected static final String APPLE_SUFFIX = "/apple";
+    protected static final String NN_APPLE = "apple";
+    protected static final String APPLE_SUFFIX = BasePipe.SLASH + NN_APPLE;
     protected static final String PATH_APPLE = PATH_FRUITS + APPLE_SUFFIX;
     protected static final String PATH_PEA = PATH_APPLE + "/isnota/pea";
     protected static final String PATH_CARROT = PATH_APPLE + "/isnota/carrot";

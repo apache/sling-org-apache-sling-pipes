@@ -24,7 +24,6 @@ import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.pipes.AbstractInputStreamPipe;
 import org.apache.sling.pipes.BasePipe;
-import org.apache.sling.pipes.ContainerPipe;
 import org.apache.sling.pipes.OutputWriter;
 import org.apache.sling.pipes.Plumber;
 import org.apache.sling.pipes.internal.slingquery.ChildrenPipe;

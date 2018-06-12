@@ -128,7 +128,7 @@ public class WritePipeTest extends AbstractPipeTest {
         assertArrayEquals("Colors should be correctly set", new String[]{"green", "red"}, properties.get("colors", String[].class));
         Node appleNode = appleResource.adaptTo(Node.class);
         NodeIterator children = appleNode.getNodes();
-        assertTrue("Apple node should have children", children.hasNext());
+        assertTrue("Apple node should have subpipes", children.hasNext());
     }
 
     @Test
@@ -148,7 +148,7 @@ public class WritePipeTest extends AbstractPipeTest {
         assertArrayEquals("index property should be the same", new String[] {"apple","banana"}, property.adaptTo(String[].class));
         List<Resource> resources = IteratorUtils.toList(root.listChildren());
         List<String> children = resources.stream().map(r -> r.getPath()).collect(Collectors.toList());
-        assertEquals("there should be 2 children", 2, children.size());
+        assertEquals("there should be 2 subpipes", 2, children.size());
         assertTrue("first should be apple", children.get(0).endsWith(APPLE_SUFFIX));
         assertTrue("second should be banana", children.get(1).endsWith(BANANA_SUFFIX));
     }

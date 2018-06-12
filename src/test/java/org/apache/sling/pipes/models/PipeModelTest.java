@@ -52,7 +52,7 @@ public class PipeModelTest extends AbstractPipeTest {
 
     @Test
     /**
-     * we've loaded under NN_PIPES all the pipes from container json (direct children): all those pipes output should be mounted
+     * we've loaded under NN_PIPES all the pipes from container json (direct subpipes): all those pipes output should be mounted
      * as outputs of the model
      */
     public void testInit(){

@@ -71,16 +71,15 @@ public interface Pipe {
     String getName();
 
     /**
-     * set the pipe parent
-     * @param parent container pipe
+     * sets the parent pipe this pipe is referred by
+     * @param pipe referrer that refers to this instance
      */
-    void setParent(ContainerPipe parent);
+    void setParent(SuperPipe pipe);
 
     /**
-     * Return parent's pipe (can be null)
-     * @return pipe's container parent
+     * @return pipe's parent (can be null)
      */
-    ContainerPipe getParent();
+    SuperPipe getParent();
 
     /**
      * Get pipe current's resource *before* next execution, meaning either the
@@ -119,10 +118,4 @@ public interface Pipe {
      * @return configured distribution agent
      */
     String getDistributionAgent();
-
-    /**
-     * sets the reference pipe this pipe is referred by
-     * @param pipe referrer that refers to this instance
-     */
-    void setReferrer(ReferencePipe pipe);
 }

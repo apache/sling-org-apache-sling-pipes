@@ -19,7 +19,6 @@ package org.apache.sling.pipes.internal;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.PipeBindings;
 import org.apache.sling.pipes.Plumber;
-import org.apache.sling.pipes.ReferencePipe;
 
 import java.util.Collections;
 import java.util.Iterator;
@@ -37,7 +36,7 @@ public class NotPipe extends ReferencePipe {
     }
 
     @Override
-    protected Iterator<Resource> computeReferenceOutput() throws Exception {
+    protected Iterator<Resource> computeSubpipesOutput() throws Exception {
         if (reference.getOutput().hasNext()){
             return EMPTY_ITERATOR;
         }

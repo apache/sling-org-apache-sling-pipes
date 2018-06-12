@@ -49,10 +49,9 @@ public class BasePipe implements Pipe {
     protected ResourceResolver resolver;
     protected ValueMap properties;
     protected Resource resource;
-    protected ContainerPipe parent;
+    protected SuperPipe parent;
     protected String distributionAgent;
     protected PipeBindings bindings;
-    protected ReferencePipe referrer;
 
     // used by pipes using complex JCR configurations
     public static final List<String> IGNORED_PROPERTIES = Arrays.asList(new String[]{"jcr:lastModified", "jcr:primaryType", "jcr:created", "jcr:createdBy", "jcr:uuid"});
@@ -60,12 +59,12 @@ public class BasePipe implements Pipe {
     protected Boolean dryRunObject;
 
     @Override
-    public ContainerPipe getParent() {
+    public SuperPipe getParent() {
         return parent;
     }
 
     @Override
-    public void setParent(ContainerPipe parent) {
+    public void setParent(SuperPipe parent) {
         this.parent = parent;
     }
 
@@ -183,7 +182,7 @@ public class BasePipe implements Pipe {
      * @return pipe before this one or the referrer's can be null in case there is no parent
      */
     protected Pipe getPreviousPipe(){
-        return referrer == null ? (parent != null ? parent.getPreviousPipe(this) : null) : referrer.getPreviousPipe();
+        return parent != null ? parent.getPreviousPipe(this) : null;
     }
 
     /**
@@ -280,11 +279,6 @@ public class BasePipe implements Pipe {
     @Override
     public String getDistributionAgent() {
         return distributionAgent;
-    }
-
-    @Override
-    public void setReferrer(ReferencePipe pipe) {
-        referrer = pipe;
     }
 
     /**

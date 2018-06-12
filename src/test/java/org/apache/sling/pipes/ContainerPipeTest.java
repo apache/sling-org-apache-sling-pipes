@@ -26,6 +26,7 @@ import java.util.Iterator;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.pipes.internal.ContainerPipe;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -100,7 +101,7 @@ public class ContainerPipeTest extends AbstractPipeTest {
 
     @Test
     public void testOnePipe() throws Exception {
-        assertTrue("There should be children", getOutput(PATH_PIPE + "/" + NN_ONEPIPE).hasNext());
+        assertTrue("There should be subpipes", getOutput(PATH_PIPE + "/" + NN_ONEPIPE).hasNext());
     }
 
     /**
@@ -127,5 +128,12 @@ public class ContainerPipeTest extends AbstractPipeTest {
         long start = System.currentTimeMillis();
         outputs.next();
         assertTrue("time spent should be bigger than interval", System.currentTimeMillis() - start > interval);
+    }
+
+    @Test
+    public void testNested() throws Exception {
+        Pipe firstPipe = plumber.newPipe(context.resourceResolver()).echo(ROOT).echo(NN_FRUITS).build();
+        Pipe superPipe = plumber.newPipe(context.resourceResolver()).ref(firstPipe.getResource().getPath()).echo("apple").build();
+        testOneResource(superPipe.getResource().getPath(), PATH_APPLE);
     }
 }

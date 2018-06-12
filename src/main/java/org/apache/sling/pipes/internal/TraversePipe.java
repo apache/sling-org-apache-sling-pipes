@@ -137,7 +137,7 @@ public class TraversePipe extends BasePipe {
                     }
                 }
             } catch (RepositoryException e) {
-                LOGGER.error("unable to read node children", e);
+                LOGGER.error("unable to read node subpipes", e);
             }
             return currentResources != null && currentResources.hasNext();
         }

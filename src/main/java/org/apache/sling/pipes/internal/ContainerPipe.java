@@ -14,37 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.pipes;
+package org.apache.sling.pipes.internal;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.pipes.SuperPipe;
+import org.apache.sling.pipes.Pipe;
+import org.apache.sling.pipes.PipeBindings;
+import org.apache.sling.pipes.Plumber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 /**
  * This pipe executes the pipes it has in its configuration, chaining their result, and
  * modifying each contained pipe's expression with its context
  */
-public class ContainerPipe extends BasePipe {
+public class ContainerPipe extends SuperPipe {
     private static final Logger log = LoggerFactory.getLogger(ContainerPipe.class);
 
     public static final String RESOURCE_TYPE = "slingPipes/container";
 
-    /**
-     * Sleep time, in ms, after each resource returned
-     */
-    public static final String PN_SLEEP = "sleep";
-
-    Map<String, Pipe> pipes = new HashMap<>();
-
-    List<Pipe> pipeList = new ArrayList<>();
-
-    long sleep = 0L;
     /**
      * Constructor
      * @param plumber plumber
@@ -54,7 +46,10 @@ public class ContainerPipe extends BasePipe {
      */
     public ContainerPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception{
         super(plumber, resource, upperBindings);
-        sleep = properties.get(PN_SLEEP, 0L);
+    }
+
+    @Override
+    public void buildChildren() {
         for (Iterator<Resource> childPipeResources = getConfiguration().listChildren(); childPipeResources.hasNext();){
             Resource pipeResource = childPipeResources.next();
             Pipe pipe = plumber.getPipe(pipeResource, bindings);
@@ -62,74 +57,17 @@ public class ContainerPipe extends BasePipe {
                 log.error("configured pipe {} is either not registered, or not computable by the plumber", pipeResource.getPath());
             } else {
                 pipe.setParent(this);
-                pipes.put(pipe.getName(), pipe);
-                pipeList.add(pipe);
+                subpipes.add(pipe);
             }
         }
     }
 
     @Override
-    public boolean modifiesContent() {
-        for (Pipe pipe : pipes.values()){
-            if (pipe.modifiesContent()){
-                return true;
-            }
-        }
-        return false;
-    }
-
-    @Override
-    public Iterator<Resource> getOutput()  {
-        if (pipeList.size() > 0) {
-            return new ContainerResourceIterator(this, sleep);
+    protected Iterator<Resource> computeSubpipesOutput() {
+        if (subpipes.size() > 0) {
+            return new ContainerResourceIterator(this);
         }
         return EMPTY_ITERATOR;
-    }
-
-    /**
-     * Returns the pipe immediately before the given pipe, null if it's the first
-     * @param pipe given pipe
-     * @return previous pipe of the param
-     */
-    public Pipe getPreviousPipe(Pipe pipe){
-        Pipe previousPipe = null;
-        if (!pipeList.isEmpty()){
-            if (pipeList.get(0).equals(pipe) && referrer != null){
-                //in case this pipe is referred, previous pipe is the one of the referrer
-                return referrer.getPreviousPipe();
-            }
-            for (Pipe candidate : pipeList){
-                if (candidate.equals(pipe)){
-                    return previousPipe;
-                }
-                previousPipe = candidate;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Return the first pipe in the container
-     * @return first pipe of the container
-     */
-    public Pipe getFirstPipe() {
-        return pipeList.iterator().next();
-    }
-
-    /**
-     * Return the last pipe in the container
-     * @return pipe in the last position of the container's pipes
-     */
-    public Pipe getLastPipe() {
-        return pipeList.get(pipeList.size() - 1);
-    }
-
-    /**
-     * output resource of the container pipe
-     * @return output resource of the last pipe of the container
-     */
-    public Resource getOutputResource() {
-        return bindings.getExecutedResource(getLastPipe().getName());
     }
 
     /**
@@ -158,12 +96,12 @@ public class ContainerPipe extends BasePipe {
          * Constructor
          * @param containerPipe corresponding container pipe
          */
-        ContainerResourceIterator(ContainerPipe containerPipe, long sleep) {
+        ContainerResourceIterator(ContainerPipe containerPipe) {
             container = containerPipe;
             bindings = container.bindings;
             iterators = new HashMap<>();
             Pipe firstPipe = container.getFirstPipe();
-            this.sleep = sleep;
+            this.sleep = container.sleep;
             //we initialize the first iterator the only one not to be updated
             iterators.put(firstPipe, firstPipe.getOutput());
         }
@@ -174,17 +112,17 @@ public class ContainerPipe extends BasePipe {
          * @return true if cursor has been updated
          */
         private boolean updateCursor(){
-            Pipe currentPipe = container.pipeList.get(cursor);
+            Pipe currentPipe = container.subpipes.get(cursor);
             Iterator<Resource> it = iterators.get(currentPipe);
             do {
                 // go up to at best reach the last pipe, updating iterators & bindings of the
                 // all intermediates, if an intermediate pipe is not outputing anything
                 // anymore, stop.
-                while (it.hasNext() && cursor < container.pipeList.size() - 1) {
+                while (it.hasNext() && cursor < container.subpipes.size() - 1) {
                     Resource resource = it.next();
                     bindings.updateBindings(currentPipe, resource);
                     //now we update the following pipe output with that new context
-                    Pipe nextPipe = container.pipeList.get(++cursor);
+                    Pipe nextPipe = container.subpipes.get(++cursor);
                     iterators.put(nextPipe, nextPipe.getOutput());
                     currentPipe = nextPipe;
                     log.debug("switching to {}", currentPipe);
@@ -192,11 +130,11 @@ public class ContainerPipe extends BasePipe {
                 }
                 //go down (or stay) to the first pipe having a next item
                 while (!it.hasNext() && cursor > 0) {
-                    currentPipe = container.pipeList.get(--cursor);
+                    currentPipe = container.subpipes.get(--cursor);
                     log.debug("switching to {}", currentPipe);
                     it = iterators.get(currentPipe);
                 }
-            } while (it.hasNext() && cursor < container.pipeList.size() - 1);
+            } while (it.hasNext() && cursor < container.subpipes.size() - 1);
             //2 choices here:
             // either cursor is at 0 with no resource left: end,
             // either cursor is on last pipe with a resource left: hasNext
