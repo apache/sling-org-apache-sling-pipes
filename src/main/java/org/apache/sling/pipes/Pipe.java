@@ -83,12 +83,6 @@ public interface Pipe {
     ContainerPipe getParent();
 
     /**
-     * Get the pipe's optional configured resource or null
-     * @return input if configured
-     */
-    Resource getConfiguredInput() throws ScriptException;
-
-    /**
      * Get pipe current's resource *before* next execution, meaning either the
      * configured resource, either previous' pipe output resource
      * @return input, configured or previous pipe

@@ -32,8 +32,8 @@ import org.junit.Test;
  */
 public class ExecutorPipeTest extends AbstractPipeTest {
 
-    public static final String NN_STRAINED = "strainedExecutor";
     public static final String NN_DEFAULT = "defaultExecutor";
+    public static final String NN_STRAINED = "strainedExecutor";
 
     @Before
     public void setup() throws PersistenceException {

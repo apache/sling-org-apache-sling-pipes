@@ -23,7 +23,6 @@ import java.util.NoSuchElementException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -180,7 +179,7 @@ public class ExecutorPipe extends BasePipe {
             queueCheckLock.writeLock().lock();
             try {
                 // expecting more data, wait for one of the pipes to push some
-                resourceQueued.await(100, TimeUnit.MICROSECONDS);
+                resourceQueued.await();
                 // someone farted, find the culprit
                 return next();
             } catch (InterruptedException e) {

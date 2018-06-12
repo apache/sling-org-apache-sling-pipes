@@ -156,20 +156,18 @@ public class BasePipe implements Pipe {
         return bindings.instantiateExpression(rawPath);
     }
 
-    @Override
-    public Resource getConfiguredInput() throws ScriptException {
-        Resource configuredInput = null;
+    /**
+     * @return computed path: getPath, with relative path taken in account
+     * @throws ScriptException
+     */
+    protected String getComputedPath() throws ScriptException {
         String path = getPath();
-        if (StringUtils.isNotBlank(path)){
-            if (!isRootPath(path) && getPreviousResource() != null){
+        if (StringUtils.isNotBlank(path)) {
+            if (!isRootPath(path) && getPreviousResource() != null) {
                 path = getPreviousResource().getPath() + SLASH + path;
             }
-            configuredInput = resolver.getResource(path);
-            if (configuredInput == null) {
-                logger.warn("configured path {} is not found, expect some troubles...", path);
-            }
         }
-        return configuredInput;
+        return path;
     }
 
     /**
@@ -203,20 +201,30 @@ public class BasePipe implements Pipe {
 
     @Override
     public Resource getInput() throws ScriptException {
-        Resource resource = getConfiguredInput();
-        if (resource == null) {
-            resource = getPreviousResource();
+        String path = getComputedPath();
+        Resource input = null;
+        if (StringUtils.isNotBlank(path)){
+            input = resolver.getResource(path);
+            if (input == null) {
+                logger.warn("configured path {} is not found, expect some troubles...", path);
+            }
+        } else {
+            //no input has been configured: we explicitly expect input to come from previouse resource
+            input = getPreviousResource();
+            if (input == null) {
+                logger.warn("no path has been configured, and no previous resource to bind on, expect some troubles...");
+            }
         }
-        logger.debug("input for this pipe is {}", resource != null ? resource.getPath() : null);
-        return resource;
+        logger.debug("input for this pipe is {}", input != null ? input.getPath() : null);
+        return input;
     }
 
     @Override
     public Object getOutputBinding() {
         if (parent != null){
-            Resource resource = bindings.getExecutedResource(getName());
-            if (resource != null) {
-                return resource.adaptTo(ValueMap.class);
+            Resource output = bindings.getExecutedResource(getName());
+            if (output != null) {
+                return output.adaptTo(ValueMap.class);
             }
         }
         return null;
@@ -254,9 +262,9 @@ public class BasePipe implements Pipe {
      * @throws ScriptException
      */
     protected Iterator<Resource> computeOutput() throws Exception {
-        Resource resource = getInput();
-        if (resource != null) {
-            return Collections.singleton(resource).iterator();
+        Resource input = getInput();
+        if (input != null) {
+            return Collections.singleton(input).iterator();
         }
         return EMPTY_ITERATOR;
     }
