@@ -182,6 +182,13 @@ public interface PipeBuilder {
     PipeBuilder not(String expr);
 
     /**
+     * attach an executor pipe to the current context
+     * @param expr expression
+     * @return updated instance of PipeBuilder
+     */
+    PipeBuilder executor(String expr);
+
+    /**
      * parameterized current pipe in the context
      * @param params key value pair of parameters
      * @return updated instance of PipeBuilder

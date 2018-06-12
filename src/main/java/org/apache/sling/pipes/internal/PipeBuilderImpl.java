@@ -25,6 +25,7 @@ import org.apache.sling.event.jobs.Job;
 import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.ContainerPipe;
 import org.apache.sling.pipes.ExecutionResult;
+import org.apache.sling.pipes.ExecutorPipe;
 import org.apache.sling.pipes.OutputWriter;
 import org.apache.sling.pipes.Pipe;
 import org.apache.sling.pipes.PipeBuilder;
@@ -237,6 +238,11 @@ public class PipeBuilderImpl implements PipeBuilder {
     @Override
     public PipeBuilder conf(Object... properties) throws IllegalAccessException {
         return writeToCurrentStep(Pipe.NN_CONF, properties);
+    }
+
+    @Override
+    public PipeBuilder executor(String expr) {
+        return pipeWithExpr(ExecutorPipe.RESOURCE_TYPE, expr);
     }
 
     /**
