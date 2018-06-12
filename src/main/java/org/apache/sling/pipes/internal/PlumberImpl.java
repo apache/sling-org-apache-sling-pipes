@@ -288,8 +288,6 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
                 }
             }
             checkError(pipe, result);
-            log.debug("[{}] after execution hook is called", pipe);
-            pipe.after();
             if (save && pipe.modifiesContent()) {
                 persist(resolver, pipe, result, null);
             }
@@ -304,6 +302,8 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
             writeStatus(pipe, STATUS_FINISHED);
             resolver.commit();
             log.info("[{}] done executing.", pipe.getName());
+            log.debug("[{}] after execution hook is called", pipe);
+            pipe.after();
             if (!success && monitor != null){
                 monitor.failed();
             }
