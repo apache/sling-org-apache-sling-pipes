@@ -126,4 +126,23 @@ public abstract class SuperPipe extends BasePipe {
         }
         return true;
     }
+
+    @Override
+    public void before() throws Exception {
+        super.before();
+        if (subpipes.size() == 0){
+            buildChildren();
+        }
+        for (Pipe pipe : subpipes){
+            pipe.before();
+        }
+    }
+
+    @Override
+    public void after() throws Exception {
+        super.after();
+        for (Pipe pipe : subpipes){
+            pipe.after();
+        }
+    }
 }

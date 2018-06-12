@@ -263,6 +263,8 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
                     throw new Exception("This pipe modifies content, you should use a POST request");
                 }
             }
+            log.debug("[{}] before execution hook is called", pipe);
+            pipe.before();
             log.info("[{}] execution starts, save ({})", pipe, save);
             Resource confResource = pipe.getResource();
             writer.setPipe(pipe);
@@ -286,6 +288,8 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
                 }
             }
             checkError(pipe, result);
+            log.debug("[{}] after execution hook is called", pipe);
+            pipe.after();
             if (save && pipe.modifiesContent()) {
                 persist(resolver, pipe, result, null);
             }

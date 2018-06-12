@@ -42,6 +42,8 @@ public class BasePipe implements Pipe {
     public static final String READ_ONLY = "readOnly";
     public static final String PN_STATUS = "status";
     public static final String PN_STATUS_MODIFIED = "statusModified";
+    public static final String PN_BEFOREHOOK = "beforeHook";
+    public static final String PN_AFTERHOOK = "afterHook";
     public static final String STATUS_STARTED = "started";
     public static final String STATUS_FINISHED = "finished";
     protected static final String DRYRUN_EXPR = String.format("${%s}", DRYRUN_KEY);
@@ -52,6 +54,8 @@ public class BasePipe implements Pipe {
     protected SuperPipe parent;
     protected String distributionAgent;
     protected PipeBindings bindings;
+    protected String beforeHook;
+    protected String afterHook;
 
     // used by pipes using complex JCR configurations
     public static final List<String> IGNORED_PROPERTIES = Arrays.asList(new String[]{"jcr:lastModified", "jcr:primaryType", "jcr:created", "jcr:createdBy", "jcr:uuid"});
@@ -92,6 +96,8 @@ public class BasePipe implements Pipe {
         name = properties.get(PN_NAME, resource.getName());
         distributionAgent = properties.get(PN_DISTRIBUTION_AGENT, String.class);
         bindings = upperBindings == null ? new PipeBindings(resource) : upperBindings;
+        beforeHook = properties.get(PN_BEFOREHOOK, String.class);
+        afterHook = properties.get(PN_AFTERHOOK, String.class);
     }
 
     @Override
@@ -253,6 +259,20 @@ public class BasePipe implements Pipe {
             logger.error("error with pipe execution from {}", path, e);
         }
         return EMPTY_ITERATOR;
+    }
+
+    @Override
+    public void before() throws Exception {
+        if (StringUtils.isNotBlank(beforeHook)){
+            plumber.newPipe(resolver).ref(beforeHook).run();
+        }
+    }
+
+    @Override
+    public void after() throws Exception {
+        if (StringUtils.isNotBlank(afterHook)){
+            plumber.newPipe(resolver).ref(afterHook).run();
+        }
     }
 
     /**
