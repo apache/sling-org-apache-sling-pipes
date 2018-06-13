@@ -48,9 +48,18 @@ public class PackagePipe extends BasePipe {
 
     public static final String PN_FILTERCOLLECTIONMODE = "filterCollectionMode";
 
+    public static final String PN_ASSEMBLE = "assemble";
+
+    public static final String PN_CHECKEXISTENCE = "checkExistence";
+
     DefaultWorkspaceFilter filters;
 
     JcrPackage jcrPackage;
+
+    boolean assemble;
+
+    boolean checkExistence;
+
     /**
      * Pipe Constructor
      *
@@ -61,6 +70,8 @@ public class PackagePipe extends BasePipe {
      */
     public PackagePipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
         super(plumber, resource, upperBindings);
+        assemble = properties.get(PN_ASSEMBLE, true);
+        checkExistence = properties.get(PN_CHECKEXISTENCE, true);
     }
 
     @Override
@@ -73,12 +84,18 @@ public class PackagePipe extends BasePipe {
         Iterator<Resource> output = EMPTY_ITERATOR;
         init();
         if (properties.get(PN_FILTERCOLLECTIONMODE, false)){
-            if (filters == null){
-                filters = new DefaultWorkspaceFilter();
+            Resource filterResource = getInput();
+            if (filterResource != null || !checkExistence){
+                if (filters == null){
+                    filters = new DefaultWorkspaceFilter();
+                }
+                //we take as a filter either computed resource, either configured path, as if resource,
+                //is null, check existence has been configured to be false
+                String filter = filterResource != null ? filterResource.getPath() : getComputedPath();
+                filters.add(new PathFilterSet(filter));
+                jcrPackage.getDefinition().setFilter(filters, true);
+                output = IteratorUtils.singletonIterator(getInput());
             }
-            filters.add(new PathFilterSet(getInput().getPath()));
-            jcrPackage.getDefinition().setFilter(filters, true);
-            output = IteratorUtils.singletonIterator(getInput());
         }
         return output;
     }
@@ -110,6 +127,15 @@ public class PackagePipe extends BasePipe {
             } else {
                 LOGGER.error("expression should not be blank as it's supposed to hold package path");
             }
+        }
+    }
+
+    @Override
+    public void after() throws Exception {
+        super.after();
+        if (assemble) {
+            JcrPackageManager mgr = PackagingService.getPackageManager(resolver.adaptTo(Session.class));
+            mgr.assemble(jcrPackage, null);
         }
     }
 }

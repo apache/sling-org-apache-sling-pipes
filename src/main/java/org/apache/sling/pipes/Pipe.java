@@ -114,6 +114,16 @@ public interface Pipe {
     Iterator<Resource> getOutput();
 
     /**
+     * to be executed before output is retrieved
+     */
+    void before() throws Exception;
+
+    /**
+     * to be executed before output is retrieved
+     */
+    void after() throws Exception;
+
+    /**
      * Get Distribution agent
      * @return configured distribution agent
      */
