@@ -30,7 +30,7 @@ import org.junit.Test;
 /**
  * testing executor with dummy child pipes
  */
-public class ExecutorPipeTest extends AbstractPipeTest {
+public class ThreadedPipeTest extends AbstractPipeTest {
 
     public static final String NN_DEFAULT = "defaultExecutor";
     public static final String NN_STRAINED = "strainedExecutor";
@@ -38,7 +38,7 @@ public class ExecutorPipeTest extends AbstractPipeTest {
     @Before
     public void setup() throws PersistenceException {
         super.setup();
-        context.load().json("/executor.json", PATH_PIPE);
+        context.load().json("/threaded.json", PATH_PIPE);
     }
 
     @Test

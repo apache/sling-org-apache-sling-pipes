@@ -26,7 +26,7 @@ import org.junit.Test;
 
 import javax.jcr.Node;
 
-import static org.apache.sling.jcr.resource.JcrResourceConstants.NT_SLING_FOLDER;
+import static org.apache.sling.jcr.resource.api.JcrResourceConstants.NT_SLING_FOLDER;
 import static org.junit.Assert.*;
 
 /**

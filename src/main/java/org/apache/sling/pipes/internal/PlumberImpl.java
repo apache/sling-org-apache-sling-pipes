@@ -35,7 +35,6 @@ import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.ExecutionResult;
-import org.apache.sling.pipes.ExecutorPipe;
 import org.apache.sling.pipes.OutputWriter;
 import org.apache.sling.pipes.Pipe;
 import org.apache.sling.pipes.PipeBindings;
@@ -158,7 +157,7 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
         registerPipe(FindPipe.RESOURCE_TYPE, FindPipe.class);
         registerPipe(RegexpPipe.RESOURCE_TYPE, RegexpPipe.class);
         registerPipe(PackagePipe.RESOURCE_TYPE, PackagePipe.class);
-        registerPipe(ExecutorPipe.RESOURCE_TYPE, ExecutorPipe.class);
+        registerPipe(ThreadedPipe.RESOURCE_TYPE, ThreadedPipe.class);
         toggleJmxRegistration(this, PlumberMXBean.class.getName(), true);
         refreshMonitoredPipes();
     }

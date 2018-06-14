@@ -16,6 +16,10 @@
  */
 package org.apache.sling.pipes.internal;
 
+import static org.apache.sling.jcr.resource.api.JcrResourceConstants.NT_SLING_FOLDER;
+import static org.apache.sling.jcr.resource.api.JcrResourceConstants.NT_SLING_ORDERED_FOLDER;
+import static org.apache.sling.jcr.resource.api.JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
@@ -24,7 +28,6 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.ExecutionResult;
-import org.apache.sling.pipes.ExecutorPipe;
 import org.apache.sling.pipes.OutputWriter;
 import org.apache.sling.pipes.Pipe;
 import org.apache.sling.pipes.PipeBuilder;
@@ -47,10 +50,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
-import static org.apache.sling.jcr.resource.JcrResourceConstants.NT_SLING_FOLDER;
-import static org.apache.sling.jcr.resource.JcrResourceConstants.NT_SLING_ORDERED_FOLDER;
-import static org.apache.sling.jcr.resource.JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY;
 
 /**
  * Implementation of the PipeBuilder interface
@@ -240,7 +239,7 @@ public class PipeBuilderImpl implements PipeBuilder {
 
     @Override
     public PipeBuilder executor(String expr) {
-        return pipeWithExpr(ExecutorPipe.RESOURCE_TYPE, expr);
+        return pipeWithExpr(ThreadedPipe.RESOURCE_TYPE, expr);
     }
 
     /**
