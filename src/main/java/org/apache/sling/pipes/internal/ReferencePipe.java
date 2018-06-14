@@ -79,6 +79,8 @@ public class ReferencePipe extends SuperPipe {
             //we only support raw references, as there are good chances
             //compute fails at that stage
             super.before();
+        } else {
+            log.warn("before hook configured for this pipe's reference (and descendants) will be ignored as we can't figure them out right now");
         }
     }
 }
