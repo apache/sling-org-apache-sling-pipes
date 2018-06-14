@@ -137,12 +137,18 @@ public class BasePipe implements Pipe {
     }
 
     /**
+     * @return configured expression (not computed)
+     */
+    public String getRawExpression() {
+        return properties.get(PN_EXPR, "");
+    }
+
+    /**
      * Get pipe's expression, instanciated or not
      * @return configured expression
      */
     public String getExpr() throws ScriptException {
-        String rawExpression = properties.get(PN_EXPR, "");
-        return bindings.instantiateExpression(rawExpression);
+        return bindings.instantiateExpression(getRawExpression());
     }
 
     /**

@@ -73,4 +73,12 @@ public class ReferencePipe extends SuperPipe {
         return reference.getOutput();
     }
 
+    @Override
+    public void before() throws Exception {
+        if (bindings.isPlainString(getRawExpression())){
+            //we only support raw references, as there are good chances
+            //compute fails at that stage
+            super.before();
+        }
+    }
 }
