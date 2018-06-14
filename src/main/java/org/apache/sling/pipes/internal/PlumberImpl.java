@@ -157,6 +157,7 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
         registerPipe(FindPipe.RESOURCE_TYPE, FindPipe.class);
         registerPipe(RegexpPipe.RESOURCE_TYPE, RegexpPipe.class);
         registerPipe(PackagePipe.RESOURCE_TYPE, PackagePipe.class);
+        registerPipe(ThreadedPipe.RESOURCE_TYPE, ThreadedPipe.class);
         toggleJmxRegistration(this, PlumberMXBean.class.getName(), true);
         refreshMonitoredPipes();
     }

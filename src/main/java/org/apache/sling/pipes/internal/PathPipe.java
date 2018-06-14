@@ -33,7 +33,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 
-import static org.apache.sling.jcr.resource.JcrResourceConstants.NT_SLING_FOLDER;
+import static org.apache.sling.jcr.resource.api.JcrResourceConstants.NT_SLING_FOLDER;
 
 /**
  * creates or get given expression's path and returns corresponding resource
