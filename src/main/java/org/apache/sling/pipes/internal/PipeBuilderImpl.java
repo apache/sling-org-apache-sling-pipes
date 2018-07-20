@@ -19,6 +19,7 @@ package org.apache.sling.pipes.internal;
 import static org.apache.sling.jcr.resource.api.JcrResourceConstants.NT_SLING_FOLDER;
 import static org.apache.sling.jcr.resource.api.JcrResourceConstants.NT_SLING_ORDERED_FOLDER;
 import static org.apache.sling.jcr.resource.api.JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY;
+import static org.apache.sling.pipes.internal.ThreadedPipe.PN_NUM_THREADS;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.PersistenceException;
@@ -237,11 +238,6 @@ public class PipeBuilderImpl implements PipeBuilder {
         return writeToCurrentStep(Pipe.NN_CONF, properties);
     }
 
-    @Override
-    public PipeBuilder executor(String expr) {
-        return pipeWithExpr(ThreadedPipe.RESOURCE_TYPE, expr);
-    }
-
     /**
      * Checks arguments and throws exception if there is an issue
      * @param params arguments to check
@@ -394,6 +390,16 @@ public class PipeBuilderImpl implements PipeBuilder {
     public Job runAsync(Map bindings) throws PersistenceException {
         Pipe pipe = this.build();
         return plumber.executeAsync(resolver, pipe.getResource().getPath(), bindings);
+    }
+
+    @Override
+    public ExecutionResult runParallel(int numThreads) throws Exception {
+        JsonWriter writer = new JsonWriter();
+        writer.starts();
+        pipe(ThreadedPipe.RESOURCE_TYPE);
+        Pipe pipe = this.build();
+        Map bindings = new HashMap() {{put(PN_NUM_THREADS, numThreads);}};
+        return plumber.execute(resolver, pipe, bindings,  writer , true);
     }
 
     /**

@@ -173,9 +173,17 @@ public class PipeBindings {
     }
 
     /**
+     * @param expr expression with or without ${} use
+     * @return true if the expression is 'just' a plain string
+     */
+    public boolean isPlainString(String expr){
+        return computeECMA5Expression(expr) == null;
+    }
+
+    /**
      * Doesn't look like nashorn likes template strings :-(
      * @param expr ECMA like expression <code>blah${'some' + 'ecma' + 'expression'}</code>
-     * @return computed expression
+     * @return computed expression, null if the expression is a plain string
      */
     protected String computeECMA5Expression(String expr){
         Matcher matcher = INJECTED_SCRIPT.matcher(expr);

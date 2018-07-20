@@ -28,6 +28,7 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.dummies.DummyNull;
 import org.apache.sling.pipes.dummies.DummySearch;
+import org.apache.sling.pipes.dummies.DummySearchMulti;
 import org.apache.sling.pipes.internal.PlumberImpl;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;

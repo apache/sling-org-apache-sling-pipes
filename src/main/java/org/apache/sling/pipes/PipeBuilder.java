@@ -182,13 +182,6 @@ public interface PipeBuilder {
     PipeBuilder not(String expr);
 
     /**
-     * attach an executor pipe to the current context
-     * @param expr expression
-     * @return updated instance of PipeBuilder
-     */
-    PipeBuilder executor(String expr);
-
-    /**
      * parameterized current pipe in the context
      * @param params key value pair of parameters
      * @return updated instance of PipeBuilder
@@ -281,4 +274,11 @@ public interface PipeBuilder {
      * @throws PersistenceException in case something goes wrong in the job creation
      */
     Job runAsync(Map bindings) throws PersistenceException;
+
+    /**
+     * run referenced pipes in parallel
+     * @param numThreads number of threads to use for running the contained pipes
+     * @return set of resource path, merged output of pipes execution (order is arbitrary)
+     */
+    ExecutionResult runParallel(int numThreads) throws Exception;
 }

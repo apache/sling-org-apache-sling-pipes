@@ -45,10 +45,17 @@ public class ThreadedPipe extends SuperPipe {
     private static final Logger log = LoggerFactory.getLogger(ThreadedPipe.class);
 
     public static final String RESOURCE_TYPE = "slingPipes/executor";
-    private static final String PN_QUEUE_SIZE = "queueSize";
-    private static final String PN_NUM_THREADS = "numThreads";
+    public static final String PN_QUEUE_SIZE = "queueSize";
+    public static final String PN_NUM_THREADS = "numThreads";
+    public static final String PN_EXECUTION_TIMEOUT = "executionTimeout";
+    public static final int QUEUE_SIZE_DEFAULT = 10000;
+    public static final int NUM_THREADS_DEFAULT = 5;
+    public static final int EXECUTION_TIMEOUT_DEFAULT = 24*60*60;
+    // marker to be inserted in the queue after all thread pipes are done pushing output
+    private static final Resource END_OF_STREAM = new NonExistingResource(null, "");
 
     private int numThreads;
+    private int executionTimeout;
     private ArrayBlockingQueue<Resource> outputQueue;
 
     /**
@@ -60,8 +67,9 @@ public class ThreadedPipe extends SuperPipe {
      */
     public ThreadedPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception{
         super(plumber, resource, upperBindings);
-        int queueSize = properties.get(PN_QUEUE_SIZE, 10000);
-        numThreads = properties.get(PN_NUM_THREADS, 5);
+        int queueSize = properties.get(PN_QUEUE_SIZE, QUEUE_SIZE_DEFAULT);
+        numThreads = properties.get(PN_NUM_THREADS, NUM_THREADS_DEFAULT);
+        executionTimeout = properties.get(PN_EXECUTION_TIMEOUT, EXECUTION_TIMEOUT_DEFAULT);
         outputQueue = new ArrayBlockingQueue<>(queueSize);
     }
 
@@ -97,7 +105,7 @@ public class ThreadedPipe extends SuperPipe {
             try {
                 plumber.execute(pipe.getResource().getResourceResolver().clone(null), pipe, null, new ThreadOutputWriter(), true);
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("Error while running pipe %s", pipe.getName(), e);
             }
         }
     }
@@ -131,13 +139,12 @@ public class ThreadedPipe extends SuperPipe {
 
         private ExecutorService executorService;
         private Resource nextItem = null;
-        private final Resource END_OF_STREAM = new NonExistingResource(null, "");
 
         private class StreamTerminator implements Runnable {
             @Override
             public void run() {
                 try {
-                    executorService.awaitTermination(365, TimeUnit.DAYS);
+                    executorService.awaitTermination(executionTimeout, TimeUnit.SECONDS);
                     outputQueue.put(END_OF_STREAM);
                 } catch (InterruptedException e) {
                     log.error("Interrupted while waiting for input exhaustion", e);
