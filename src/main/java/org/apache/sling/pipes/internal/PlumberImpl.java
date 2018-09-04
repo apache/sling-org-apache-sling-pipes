@@ -39,17 +39,9 @@ import org.apache.sling.pipes.OutputWriter;
 import org.apache.sling.pipes.Pipe;
 import org.apache.sling.pipes.PipeBindings;
 import org.apache.sling.pipes.PipeBuilder;
+import org.apache.sling.pipes.PipeExecutor;
 import org.apache.sling.pipes.Plumber;
 import org.apache.sling.pipes.PlumberMXBean;
-import org.apache.sling.pipes.internal.inputstream.CsvPipe;
-import org.apache.sling.pipes.internal.inputstream.JsonPipe;
-import org.apache.sling.pipes.internal.inputstream.RegexpPipe;
-import org.apache.sling.pipes.internal.slingquery.ChildrenPipe;
-import org.apache.sling.pipes.internal.slingquery.ClosestPipe;
-import org.apache.sling.pipes.internal.slingquery.FindPipe;
-import org.apache.sling.pipes.internal.slingquery.ParentPipe;
-import org.apache.sling.pipes.internal.slingquery.ParentsPipe;
-import org.apache.sling.pipes.internal.slingquery.SiblingsPipe;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
@@ -67,6 +59,7 @@ import javax.jcr.query.Query;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import java.lang.management.ManagementFactory;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -134,31 +127,27 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
         serviceUser = configuration.serviceUser() != null ? Collections.singletonMap(SUBSERVICE, configuration.serviceUser()) : null;
         allowedUsers = Arrays.asList(configuration.authorizedUsers());
         registry = new HashMap<>();
-        registerPipe(BasePipe.RESOURCE_TYPE, BasePipe.class);
-        registerPipe(ContainerPipe.RESOURCE_TYPE, ContainerPipe.class);
-        registerPipe(ChildrenPipe.RESOURCE_TYPE, ChildrenPipe.class);
-        registerPipe(WritePipe.RESOURCE_TYPE, WritePipe.class);
-        registerPipe(JsonPipe.RESOURCE_TYPE, JsonPipe.class);
-        registerPipe(MultiPropertyPipe.RESOURCE_TYPE, MultiPropertyPipe.class);
-        registerPipe(AuthorizablePipe.RESOURCE_TYPE, AuthorizablePipe.class);
-        registerPipe(XPathPipe.RESOURCE_TYPE, XPathPipe.class);
-        registerPipe(ReferencePipe.RESOURCE_TYPE, ReferencePipe.class);
-        registerPipe(RemovePipe.RESOURCE_TYPE, RemovePipe.class);
-        registerPipe(ParentsPipe.RESOURCE_TYPE, ParentsPipe.class);
-        registerPipe(MovePipe.RESOURCE_TYPE, MovePipe.class);
-        registerPipe(PathPipe.RESOURCE_TYPE, PathPipe.class);
-        registerPipe(FilterPipe.RESOURCE_TYPE, FilterPipe.class);
-        registerPipe(NotPipe.RESOURCE_TYPE, NotPipe.class);
-        registerPipe(TraversePipe.RESOURCE_TYPE, TraversePipe.class);
-        registerPipe(CsvPipe.RESOURCE_TYPE, CsvPipe.class);
-        registerPipe(ParentPipe.RESOURCE_TYPE, ParentPipe.class);
-        registerPipe(SiblingsPipe.RESOURCE_TYPE, SiblingsPipe.class);
-        registerPipe(ClosestPipe.RESOURCE_TYPE, ClosestPipe.class);
-        registerPipe(FindPipe.RESOURCE_TYPE, FindPipe.class);
-        registerPipe(RegexpPipe.RESOURCE_TYPE, RegexpPipe.class);
-        registerPipe(PackagePipe.RESOURCE_TYPE, PackagePipe.class);
+        registerPipes();
         toggleJmxRegistration(this, PlumberMXBean.class.getName(), true);
         refreshMonitoredPipes();
+    }
+
+    /**
+     * Register all pipes declared in pipe builder
+     */
+    protected void registerPipes(){
+        registerPipe(ContainerPipe.RESOURCE_TYPE, ContainerPipe.class);
+        for (Method method : PipeBuilder.class.getDeclaredMethods()){
+            PipeExecutor executor = method.getAnnotation(PipeExecutor.class);
+            if (executor != null){
+                registerPipe(executor.resourceType(), executor.pipeClass());
+            }
+        }
+    }
+
+    @Override
+    public Map getServiceUser() {
+        return serviceUser;
     }
 
     @Deactivate
@@ -441,7 +430,7 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
         if (serviceUser != null) {
             try (ResourceResolver resolver = factory.getServiceResourceResolver(serviceUser)) {
                 for (Iterator<Resource> resourceIterator = resolver.findResources(MONITORED_PIPES_QUERY, Query.XPATH); resourceIterator.hasNext(); ) {
-                    beans.add(new org.apache.sling.pipes.internal.PipeMonitor(this, getPipe(resourceIterator.next())));
+                    beans.add(new PipeMonitor(this, getPipe(resourceIterator.next())));
                 }
             } catch (LoginException e) {
                 log.error("unable to retrieve resolver for collecting exposed pipes", e);

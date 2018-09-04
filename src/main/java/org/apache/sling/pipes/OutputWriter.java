@@ -98,6 +98,13 @@ public abstract class OutputWriter {
     }
 
     /**
+     * @param customOutputs custom outputs
+     */
+    public void setCustomOutputs(Map<String, Object> customOutputs) {
+        this.customOutputs = customOutputs;
+    }
+
+    /**
      * Specifically init the response
      * @param response response on which to write
      */
@@ -179,5 +186,9 @@ public abstract class OutputWriter {
     @Override
     public String toString() {
         return writer.toString();
+    }
+
+    public Map<String, Object> getCustomOutputs() {
+        return customOutputs;
     }
 }

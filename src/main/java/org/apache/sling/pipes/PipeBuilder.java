@@ -18,6 +18,27 @@ package org.apache.sling.pipes;
 
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.event.jobs.Job;
+import org.apache.sling.pipes.internal.AuthorizablePipe;
+import org.apache.sling.pipes.internal.FilterPipe;
+import org.apache.sling.pipes.internal.MovePipe;
+import org.apache.sling.pipes.internal.MultiPropertyPipe;
+import org.apache.sling.pipes.internal.NotPipe;
+import org.apache.sling.pipes.internal.PackagePipe;
+import org.apache.sling.pipes.internal.PathPipe;
+import org.apache.sling.pipes.internal.ReferencePipe;
+import org.apache.sling.pipes.internal.RemovePipe;
+import org.apache.sling.pipes.internal.TraversePipe;
+import org.apache.sling.pipes.internal.WritePipe;
+import org.apache.sling.pipes.internal.XPathPipe;
+import org.apache.sling.pipes.internal.inputstream.CsvPipe;
+import org.apache.sling.pipes.internal.inputstream.JsonPipe;
+import org.apache.sling.pipes.internal.inputstream.RegexpPipe;
+import org.apache.sling.pipes.internal.slingquery.ChildrenPipe;
+import org.apache.sling.pipes.internal.slingquery.ClosestPipe;
+import org.apache.sling.pipes.internal.slingquery.FindPipe;
+import org.apache.sling.pipes.internal.slingquery.ParentPipe;
+import org.apache.sling.pipes.internal.slingquery.ParentsPipe;
+import org.apache.sling.pipes.internal.slingquery.SiblingsPipe;
 import org.osgi.annotation.versioning.ProviderType;
 
 import java.util.Map;
@@ -39,6 +60,8 @@ public interface PipeBuilder {
      * @param expr target of the resource to move
      * @return updated instance of PipeBuilder
      */
+    @PipeExecutor(command = "mv", resourceType = MovePipe.RESOURCE_TYPE, pipeClass = MovePipe.class,
+            description = "move current resource to expr (more on https://sling.apache.org/documentation/bundles/sling-pipes/writers.html)")
     PipeBuilder mv(String expr);
 
     /**
@@ -47,6 +70,8 @@ public interface PipeBuilder {
      * @return updated instance of PipeBuilder
      * @throws IllegalAccessException in case it's called with bad configuration
      */
+    @PipeExecutor(command = "write", resourceType = WritePipe.RESOURCE_TYPE, pipeClass = WritePipe.class,
+            description = "write following key=value pairs to the current resource")
     PipeBuilder write(Object... conf) throws IllegalAccessException;
 
     /**
@@ -55,6 +80,8 @@ public interface PipeBuilder {
      * @return updated instance of PipeBuilder
      * @throws IllegalAccessException in case it's called with bad configuration
      */
+    @PipeExecutor(command = "grep", resourceType = FilterPipe.RESOURCE_TYPE, pipeClass = FilterPipe.class,
+            description = "filter current resources with following key=value pairs")
     PipeBuilder grep(Object... conf) throws IllegalAccessException;
 
     /**
@@ -63,6 +90,8 @@ public interface PipeBuilder {
      * @return updated instance of PipeBuilder
      * @throws IllegalAccessException in case it's called with bad configuration
      */
+    @PipeExecutor(command = "auth", resourceType = AuthorizablePipe.RESOURCE_TYPE, pipeClass = AuthorizablePipe.class,
+            description = "convert current resource as authorizable")
     PipeBuilder auth(Object... conf) throws IllegalAccessException;
 
     /**
@@ -70,6 +99,8 @@ public interface PipeBuilder {
      * @param expr xpath expression
      * @return updated instance of PipeBuilder
      */
+    @PipeExecutor(command = "xpath", resourceType = XPathPipe.RESOURCE_TYPE, pipeClass = XPathPipe.class,
+            description = "create following xpath query's result as output resources")
     PipeBuilder xpath(String expr);
 
     /**
@@ -77,6 +108,8 @@ public interface PipeBuilder {
      * @param expr sling query expression
      * @return updated instance of PipeBuilder
      */
+    @PipeExecutor(command = "children", resourceType = ChildrenPipe.RESOURCE_TYPE, pipeClass = ChildrenPipe.class,
+            description = "list current resource's immediate children")
     PipeBuilder children(String expr);
 
     /**
@@ -84,12 +117,16 @@ public interface PipeBuilder {
      * @param expr sling query expression
      * @return updated instance of PipeBuilder
      */
+    @PipeExecutor(command = "siblings", resourceType = SiblingsPipe.RESOURCE_TYPE, pipeClass = SiblingsPipe.class,
+        description = "list current resource's siblings")
     PipeBuilder siblings(String expr);
 
     /**
      * attach a rm pipe to the current context
      * @return updated instance of PipeBuilder
      */
+    @PipeExecutor(command = "rm", resourceType = RemovePipe.RESOURCE_TYPE, pipeClass =  RemovePipe.class,
+            description = "remove current resource")
     PipeBuilder rm();
 
     /**
@@ -97,6 +134,8 @@ public interface PipeBuilder {
      * @param expr csv expr or URL or path in the resource tree
      * @return updated instance of PipeBuilder
      */
+    @PipeExecutor(command = "csv", resourceType = CsvPipe.RESOURCE_TYPE, pipeClass = CsvPipe.class,
+        description = "read expr's csv and output each line in the bindings")
     PipeBuilder csv(String expr);
 
     /**
@@ -104,6 +143,8 @@ public interface PipeBuilder {
      * @param expr json expr or URL or path in the resource tree
      * @return updated instance of PipeBuilder
      */
+    @PipeExecutor(command = "json", resourceType = JsonPipe.RESOURCE_TYPE, pipeClass = JsonPipe.class,
+            description = "read expr's json array and output each object in the bindings")
     PipeBuilder json(String expr);
 
     /**
@@ -111,6 +152,8 @@ public interface PipeBuilder {
      * @param expr text expr or URL or path in the resource tree
      * @return updated instance of PipeBuilder
      */
+    @PipeExecutor(command = "egrep", resourceType = RegexpPipe.RESOURCE_TYPE, pipeClass = RegexpPipe.class,
+            description = "read expr's txt and output each found pattern in the binding")
     PipeBuilder egrep(String expr);
 
     /**
@@ -118,6 +161,8 @@ public interface PipeBuilder {
      * @param expr path to create
      * @return updated instance of PipeBuilder
      */
+    @PipeExecutor(command = "mkdir", resourceType = PathPipe.RESOURCE_TYPE, pipeClass = PathPipe.class,
+            description = "create expr path")
     PipeBuilder mkdir(String expr);
 
     /**
@@ -125,18 +170,24 @@ public interface PipeBuilder {
      * @param path pipe path
      * @return updated instance of PipeBuilder
      */
+    @PipeExecutor(command = "echo", resourceType = BasePipe.RESOURCE_TYPE, pipeClass = BasePipe.class,
+            description = "output input's path")
     PipeBuilder echo(String path);
 
     /**
      * attach a traverse pipe to the current context
      * @return updated instance of PipeBuilder
      */
+    @PipeExecutor(command = "traverse", resourceType = TraversePipe.RESOURCE_TYPE, pipeClass = TraversePipe.class,
+            description = "traverse current resource")
     PipeBuilder traverse();
 
     /**
      * attach a sling query parent pipe to the current context
      * @return updated instance of PipeBuilder
      */
+    @PipeExecutor(command = "parent", resourceType = ParentPipe.RESOURCE_TYPE, pipeClass = ParentPipe.class,
+            description = "return current's resource parent")
     PipeBuilder parent();
 
     /**
@@ -144,6 +195,8 @@ public interface PipeBuilder {
      * @param expr expression
      * @return updated instance of PipeBuilder
      */
+    @PipeExecutor(command = "parents", resourceType = ParentsPipe.RESOURCE_TYPE, pipeClass = ParentsPipe.class,
+            description = "return current's resource parents")
     PipeBuilder parents(String expr);
 
     /**
@@ -151,6 +204,8 @@ public interface PipeBuilder {
      * @param expr expression
      * @return updated instance of PipeBuilder
      */
+    @PipeExecutor(command = "closest", resourceType = ClosestPipe.RESOURCE_TYPE, pipeClass = ClosestPipe.class,
+            description = "return closest resource of the current")
     PipeBuilder closest(String expr);
 
     /**
@@ -158,6 +213,8 @@ public interface PipeBuilder {
      * @param expr expression
      * @return updated instance of PipeBuilder
      */
+    @PipeExecutor(command = "$", resourceType = FindPipe.RESOURCE_TYPE, pipeClass = FindPipe.class,
+            description = "find resource from the current, with the given expression as a parameter")
     PipeBuilder $(String expr);
 
     /**
@@ -165,6 +222,8 @@ public interface PipeBuilder {
      * @param expr reference
      * @return updated instance of PipeBuilder
      */
+    @PipeExecutor(command = "ref", resourceType = ReferencePipe.RESOURCE_TYPE, pipeClass = ReferencePipe.class,
+            description = "reference passed pipe")
     PipeBuilder ref(String expr);
 
     /**
@@ -172,6 +231,8 @@ public interface PipeBuilder {
      * @param expr path of the pipe
      * @return updated instance of PipeBuilder
      */
+    @PipeExecutor(command = "pkg", resourceType = PackagePipe.RESOURCE_TYPE, pipeClass = PackagePipe.class,
+            description = "package up current resource in given package")
     PipeBuilder pkg(String expr);
 
     /**
@@ -179,7 +240,17 @@ public interface PipeBuilder {
      * @param expr reference
      * @return updated instance of PipeBuilder
      */
+    @PipeExecutor(command = "not", resourceType = NotPipe.RESOURCE_TYPE, pipeClass = NotPipe.class,
+            description = "invert output: if input, return nothing, if no input, return single resource")
     PipeBuilder not(String expr);
+
+    /**
+     * attach a multi value property pipe to the current context
+     * @return updated instance of PipeBuilder
+     */
+    @PipeExecutor(command = "mp", resourceType = MultiPropertyPipe.RESOURCE_TYPE, pipeClass = MultiPropertyPipe.class,
+            description = "read multi property, and output each value in the bindings")
+    PipeBuilder mp();
 
     /**
      * parameterized current pipe in the context

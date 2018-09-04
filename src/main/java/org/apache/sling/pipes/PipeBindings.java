@@ -277,7 +277,7 @@ public class PipeBindings {
      * we implement here as a String
      * @param expr ecma like expression
      * @return String that is the result of the expression
-     * @throws ScriptException
+     * @throws ScriptException in case expression computing went wrong
      */
     public String instantiateExpression(String expr) throws ScriptException {
         return (String)evaluate(expr);
@@ -287,7 +287,7 @@ public class PipeBindings {
      * Instantiate object from expression
      * @param expr ecma expression
      * @return instantiated object
-     * @throws ScriptException
+     * @throws ScriptException in case object computing went wrong
      */
     public Object instantiateObject(String expr) throws ScriptException {
         Object result = evaluate(expr);

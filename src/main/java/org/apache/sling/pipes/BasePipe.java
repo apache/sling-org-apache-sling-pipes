@@ -146,6 +146,7 @@ public class BasePipe implements Pipe {
     /**
      * Get pipe's expression, instanciated or not
      * @return configured expression
+     * @throws ScriptException in case computed expression goes wrong
      */
     public String getExpr() throws ScriptException {
         return bindings.instantiateExpression(getRawExpression());
@@ -161,6 +162,7 @@ public class BasePipe implements Pipe {
     /**
      * Get pipe's path, instanciated or not
      * @return configured path (can be empty)
+     * @throws ScriptException in case computed path goes wrong
      */
     public String getPath() throws ScriptException {
         String rawPath = getRawPath();
@@ -169,7 +171,7 @@ public class BasePipe implements Pipe {
 
     /**
      * @return computed path: getPath, with relative path taken in account
-     * @throws ScriptException
+     * @throws ScriptException in case computed path goes wrong
      */
     protected String getComputedPath() throws ScriptException {
         String path = getPath();
@@ -282,9 +284,8 @@ public class BasePipe implements Pipe {
     }
 
     /**
-     *
-     * @return
-     * @throws ScriptException
+     * @return outputs of the pipe, as an iterator of resources
+     * @throws ScriptException if any exception has occured
      */
     protected Iterator<Resource> computeOutput() throws Exception {
         Resource input = getInput();

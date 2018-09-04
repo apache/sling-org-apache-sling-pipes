@@ -55,11 +55,13 @@ public abstract class SuperPipe extends BasePipe {
 
     /**
      * build the subpipes pipes list
+     * @throws Exception in case one of the child building has went wrong
      */
     public abstract void buildChildren() throws Exception;
 
     /**
      * @return output of this super pipe's subpipes
+     * @throws Exception in case one of the outputs computation went wrong
      */
     protected abstract Iterator<Resource> computeSubpipesOutput() throws Exception;
 

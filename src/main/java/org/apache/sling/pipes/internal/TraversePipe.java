@@ -45,6 +45,7 @@ public class TraversePipe extends BasePipe {
      *
      * @param plumber  plumber
      * @param resource configuration resource
+     * @param upperBindings super pipe's bindings
      * @throws Exception in case configuration is not working
      */
     public TraversePipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {

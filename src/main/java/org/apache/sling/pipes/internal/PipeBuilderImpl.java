@@ -51,6 +51,8 @@ import static org.apache.sling.jcr.resource.JcrResourceConstants.NT_SLING_FOLDER
 import static org.apache.sling.jcr.resource.JcrResourceConstants.NT_SLING_ORDERED_FOLDER;
 import static org.apache.sling.jcr.resource.JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY;
 
+import static org.apache.sling.pipes.internal.CommandUtil.checkArguments;
+import static org.apache.sling.pipes.internal.CommandUtil.writeToMap;
 /**
  * Implementation of the PipeBuilder interface
  */
@@ -213,6 +215,11 @@ public class PipeBuilderImpl implements PipeBuilder {
     }
 
     @Override
+    public PipeBuilder mp() {
+        return pipe(MultiPropertyPipe.RESOURCE_TYPE);
+    }
+
+    @Override
     public PipeBuilder pkg(String expr) {
         try {
             pipeWithExpr(PackagePipe.RESOURCE_TYPE, expr).with(PackagePipe.PN_FILTERCOLLECTIONMODE, true);
@@ -235,28 +242,6 @@ public class PipeBuilderImpl implements PipeBuilder {
     @Override
     public PipeBuilder conf(Object... properties) throws IllegalAccessException {
         return writeToCurrentStep(Pipe.NN_CONF, properties);
-    }
-
-    /**
-     * Checks arguments and throws exception if there is an issue
-     * @param params arguments to check
-     * @throws IllegalArgumentException exception thrown in case arguments are wrong
-     */
-    protected void checkArguments(Object... params) throws IllegalArgumentException {
-        if (params.length % 2 > 0){
-            throw new IllegalArgumentException("there should be an even number of arguments");
-        }
-    }
-
-    /**
-     * write key/value pairs into a map
-     * @param map target map
-     * @param params key/value pairs to write into the map
-     */
-    protected void writeToMap(Map map, Object... params){
-        for (int i = 0; i < params.length; i += 2){
-            map.put(params[i], params[i + 1]);
-        }
     }
 
     /**

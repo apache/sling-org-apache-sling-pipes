@@ -65,7 +65,7 @@ public class PackagePipe extends BasePipe {
      *
      * @param plumber  plumber
      * @param resource configuration resource
-     *
+     * @param upperBindings super pipe's bindings
      * @throws Exception in case configuration is not working
      */
     public PackagePipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
@@ -105,6 +105,8 @@ public class PackagePipe extends BasePipe {
      * computes configured package based on expression configuration (either existing or creating it)
      * @throws IOException problem with binary
      * @throws RepositoryException problem with package persistence
+     * @throws IOException problem with package build
+     * @throws ScriptException problem with some expression/path compute
      */
     protected void init() throws IOException, RepositoryException, ScriptException {
         if (jcrPackage == null){

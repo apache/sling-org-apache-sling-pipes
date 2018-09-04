@@ -85,6 +85,7 @@ public interface Pipe {
      * Get pipe current's resource *before* next execution, meaning either the
      * configured resource, either previous' pipe output resource
      * @return input, configured or previous pipe
+     * @throws ScriptException in case computed input goes wrong
      */
     Resource getInput() throws ScriptException;
 
@@ -115,11 +116,13 @@ public interface Pipe {
 
     /**
      * to be executed before output is retrieved
+     * @throws Exception in case anything goes wrong
      */
     void before() throws Exception;
 
     /**
      * to be executed before output is retrieved
+     * @throws Exception in case anything goes wrong
      */
     void after() throws Exception;
 

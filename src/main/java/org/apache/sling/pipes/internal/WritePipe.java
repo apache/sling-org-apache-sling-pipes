@@ -55,6 +55,7 @@ public class WritePipe extends BasePipe {
      * public constructor
      * @param plumber plumber instance
      * @param resource configuration resource
+     * @param upperBindings super pipe's bindings
      * @throws Exception bad configuration handling
      */
     public WritePipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
@@ -80,6 +81,7 @@ public class WritePipe extends BasePipe {
      * @param key property to which value will be written
      * @param expression configured value to write
      * @return actual value to write to the resource
+     * @throws ScriptException in case value computation went wrong
      */
     protected Object computeValue(Resource resource, String key, String expression) throws ScriptException {
         Object value = bindings.instantiateObject((String) expression);

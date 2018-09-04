@@ -71,6 +71,7 @@ public class AuthorizablePipe extends BasePipe {
      * public constructor
      * @param plumber plumber instance
      * @param resource configuration resource
+     * @param upperBindings bindings coming from super pipe
      * @throws Exception bad configuration handling
      */
     public AuthorizablePipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
