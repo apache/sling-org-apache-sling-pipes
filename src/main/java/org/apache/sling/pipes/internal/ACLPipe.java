@@ -177,6 +177,11 @@ public class ACLPipe extends BasePipe {
                 }
                 principal_Privileges_Mappings.add(PN_AUTHORIZABLE, entry.getPrincipal().getName());
                 principal_Privileges_Mappings.add(PRIVILEGES_JSON_KEY, privileges);
+                if (entry.isAllow()) {
+                    principal_Privileges_Mappings.add(PN_ALLOW, true);
+                } else {
+                    principal_Privileges_Mappings.add(PN_DENY, true);
+                }
                 principal_Privileges_Array.add(principal_Privileges_Mappings);
             }
             outputBinding = JsonUtil.toString(principal_Privileges_Array);
