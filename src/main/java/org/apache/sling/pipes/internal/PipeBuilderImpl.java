@@ -244,6 +244,11 @@ public class PipeBuilderImpl implements PipeBuilder {
         return writeToCurrentStep(Pipe.NN_CONF, properties);
     }
 
+    @Override
+    public PipeBuilder acls(Object... conf) throws IllegalAccessException{
+        return pipe(ACLPipe.RESOURCE_TYPE).conf(conf);
+    }
+
     /**
      * Add some configurations to current's Step node defined by name (if null, will be step's properties)
      * @param name name of the configuration node, can be null in which case it's the subpipe itself

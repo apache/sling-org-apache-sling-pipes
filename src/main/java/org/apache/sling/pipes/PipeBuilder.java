@@ -30,6 +30,7 @@ import org.apache.sling.pipes.internal.RemovePipe;
 import org.apache.sling.pipes.internal.TraversePipe;
 import org.apache.sling.pipes.internal.WritePipe;
 import org.apache.sling.pipes.internal.XPathPipe;
+import org.apache.sling.pipes.internal.ACLPipe;
 import org.apache.sling.pipes.internal.inputstream.CsvPipe;
 import org.apache.sling.pipes.internal.inputstream.JsonPipe;
 import org.apache.sling.pipes.internal.inputstream.RegexpPipe;
@@ -251,6 +252,16 @@ public interface PipeBuilder {
     @PipeExecutor(command = "mp", resourceType = MultiPropertyPipe.RESOURCE_TYPE, pipeClass = MultiPropertyPipe.class,
             description = "read multi property, and output each value in the bindings")
     PipeBuilder mp();
+
+    /**
+     * attach an ACL pipe to the current context
+     * @param conf configuration parameters
+     * @return updated instance of PipeBuilder
+     * @throws IllegalAccessException in case it's called with bad configuration
+     */
+    @PipeExecutor(command = "acls", resourceType = ACLPipe.RESOURCE_TYPE, pipeClass = ACLPipe.class,
+            description = "sets acls on the resource or output each acls on the resource or  acls for authorizable in repository in bindings")
+    PipeBuilder acls(Object... conf) throws IllegalAccessException;
 
     /**
      * parameterized current pipe in the context
