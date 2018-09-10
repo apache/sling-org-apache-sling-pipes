@@ -244,6 +244,21 @@ public class PipeBuilderImpl implements PipeBuilder {
         return writeToCurrentStep(Pipe.NN_CONF, properties);
     }
 
+    @Override
+    public PipeBuilder acls() throws IllegalAccessException{
+        return pipe(ACLPipe.RESOURCE_TYPE);
+    }
+
+    @Override
+    public PipeBuilder allow(String expr) throws IllegalAccessException{
+        return pipeWithExpr(ACLPipe.RESOURCE_TYPE, expr).with("allow","true");
+    }
+
+    @Override
+    public PipeBuilder deny(String expr) throws IllegalAccessException{
+        return pipeWithExpr(ACLPipe.RESOURCE_TYPE, expr).with("deny","true");
+    }
+
     /**
      * Add some configurations to current's Step node defined by name (if null, will be step's properties)
      * @param name name of the configuration node, can be null in which case it's the subpipe itself

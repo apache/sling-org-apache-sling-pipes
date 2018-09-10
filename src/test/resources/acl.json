@@ -1,0 +1,43 @@
+{
+  "jcr:primaryType": "nt:unstructured",
+  "allow": {
+    "jcr:primaryType": "nt:unstructured",
+    "sling:resourceType": "slingPipes/acl",
+    "path":"/content/fruits",
+    "expr": "anonymous",
+    "jcr:privileges":["jcr:read"],
+    "allow":true
+  },
+  "deny": {
+    "jcr:primaryType": "nt:unstructured",
+    "sling:resourceType": "slingPipes/acl",
+    "path":"/content/fruits",
+    "expr": "anonymous",
+    "jcr:privileges":["jcr:write"],
+    "deny":true
+  },
+  "allowDefault": {
+    "jcr:primaryType": "nt:unstructured",
+    "sling:resourceType": "slingPipes/acl",
+    "path":"/content/fruits",
+    "expr": "anonymous",
+    "allow":true
+  },
+  "denyDefault": {
+    "jcr:primaryType": "nt:unstructured",
+    "sling:resourceType": "slingPipes/acl",
+    "path":"/content/fruits",
+    "expr": "anonymous",
+    "deny":true
+  },
+  "acl": {
+    "jcr:primaryType": "nt:unstructured",
+    "sling:resourceType": "slingPipes/acl",
+    "path":"/content/fruits"
+  },
+  "aclAuthorizable": {
+    "jcr:primaryType": "nt:unstructured",
+    "sling:resourceType": "slingPipes/acl",
+    "path":"/rep:security/rep:authorizables/rep:users/a/an/anonymous"
+  }
+}
