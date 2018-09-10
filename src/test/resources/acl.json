@@ -38,10 +38,6 @@
   "aclAuthorizable": {
     "jcr:primaryType": "nt:unstructured",
     "sling:resourceType": "slingPipes/acl",
-    "path":"/rep:security/rep:authorizables/rep:users/a/an/anonymous",
-    "conf": {
-      "jcr:primaryType":"nt:unstructured",
-      "authorizable":true
-    }
+    "path":"/rep:security/rep:authorizables/rep:users/a/an/anonymous"
   }
 }

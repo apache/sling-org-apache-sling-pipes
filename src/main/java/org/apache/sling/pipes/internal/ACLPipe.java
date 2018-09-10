@@ -26,7 +26,6 @@ import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.commons.jackrabbit.authorization.AccessControlUtils;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.PipeBindings;
@@ -45,7 +44,6 @@ import javax.script.ScriptException;
 import java.security.Principal;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.stream.Collectors;
 
 public class ACLPipe extends BasePipe {
     private static Logger logger = LoggerFactory.getLogger(ACLPipe.class);
@@ -67,7 +65,6 @@ public class ACLPipe extends BasePipe {
     String[] privilegesInput;
     boolean allow;
     boolean deny;
-    boolean authorizable;
     Object outputBinding;
 
     @Override
@@ -97,10 +94,6 @@ public class ACLPipe extends BasePipe {
         privilegesInput = properties.get(JCR_PRIVILEGES_INPUT, new String[]{});
         allow = properties.get(PN_ALLOW, false);
         deny = properties.get(PN_DENY, false);
-        if (getConfiguration() != null) {
-            ValueMap conf = getConfiguration().adaptTo(ValueMap.class);
-            authorizable = conf.get(PN_AUTHORIZABLE, false);
-        }
     }
 
     @Override
@@ -141,11 +134,8 @@ public class ACLPipe extends BasePipe {
             Authorizable auth = checkIsAuthorizableResource(resource);
             if ( null != auth ) {
                 //get privileges for an auth on the repository , authorizable flag should be true if resource is an authorizable
-                if ( authorizable ) {
-                    bindAclsForAuthorizableResource(auth);
-                    return;
-                }
-                throw new Exception("authorizable flag should set to true for" + resource.getPath() + "if resource is an authorizable");
+                bindAclsForAuthorizableResource(auth);
+                return;
             }
             logger.info("binding acls for resource at path {}", resource.getPath());
             AccessControlList acl = AccessControlUtils.getAccessControlList(session, resource.getPath());
