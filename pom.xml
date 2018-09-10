@@ -114,7 +114,7 @@
             <groupId>*</groupId>
             <artifactId>*</artifactId>
         </exclusion>
-    </exclusions>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>javax.servlet</groupId>
@@ -224,6 +224,12 @@
       <version>3.1.44</version>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.jackrabbit</groupId>
+      <artifactId>jackrabbit-jcr-commons</artifactId>
+      <version>2.17.5</version>
+      <scope>provided</scope>
+    </dependency>
     <!-- testing -->
     <dependency>
       <groupId>junit</groupId>
@@ -246,6 +252,12 @@
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.testing.jcr-mock</artifactId>
       <version>1.3.2</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.testing.sling-mock-oak</artifactId>
+      <version>2.1.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
