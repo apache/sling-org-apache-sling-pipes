@@ -255,17 +255,16 @@ public interface PipeBuilder {
 
     /**
      * attach an ACL pipe to the current context
-     * @param conf configuration parameters
      * @return updated instance of PipeBuilder
      * @throws IllegalAccessException in case it's called with bad configuration
      */
     @PipeExecutor(command = "acls", resourceType = ACLPipe.RESOURCE_TYPE, pipeClass = ACLPipe.class,
             description = "output each acls on the resource or  acls for authorizable in repository in bindings")
-    PipeBuilder acls(Object... conf) throws IllegalAccessException;
+    PipeBuilder acls() throws IllegalAccessException;
 
     /**
      * attach an ACL pipe to the current context and sets allow acls on the resource
-     * @param conf configuration parameters
+     * @param expr prinicipalName/AuthorizableId of the user to give allow privileges to
      * @return updated instance of PipeBuilder
      * @throws IllegalAccessException in case it's called with bad configuration
      */
@@ -275,7 +274,7 @@ public interface PipeBuilder {
 
     /**
      * attach an ACL pipe to the current context and sets deny acls on the resource
-     * @param conf configuration parameters
+     * @param expr prinicipalName/AuthorizableId of the user/group to give deny privileges to
      * @return updated instance of PipeBuilder
      * @throws IllegalAccessException in case it's called with bad configuration
      */

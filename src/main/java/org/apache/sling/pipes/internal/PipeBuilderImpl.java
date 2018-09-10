@@ -245,8 +245,8 @@ public class PipeBuilderImpl implements PipeBuilder {
     }
 
     @Override
-    public PipeBuilder acls(Object... conf) throws IllegalAccessException{
-        return pipe(ACLPipe.RESOURCE_TYPE).conf(conf);
+    public PipeBuilder acls() throws IllegalAccessException{
+        return pipe(ACLPipe.RESOURCE_TYPE);
     }
 
     @Override

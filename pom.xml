@@ -111,8 +111,8 @@
       <scope>provided</scope>
       <exclusions>
         <exclusion>
-          <groupId>*</groupId>
-          <artifactId>*</artifactId>
+            <groupId>*</groupId>
+            <artifactId>*</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -208,9 +208,9 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.sling</groupId>
-      <artifactId>maven-sling-plugin</artifactId>
-      <version>2.1.0</version>
+        <groupId>org.apache.sling</groupId>
+        <artifactId>maven-sling-plugin</artifactId>
+        <version>2.1.0</version>
     </dependency>
     <dependency>
       <groupId>org.apache.sling</groupId>
