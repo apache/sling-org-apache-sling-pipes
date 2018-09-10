@@ -85,6 +85,7 @@ public class ACLPipe extends BasePipe {
      *
      * @param plumber  plumber instance
      * @param resource configuration resource
+     * @param upperBindings already set binding we want to initiate our pipe with
      * @throws Exception bad configuration handling
      */
     public ACLPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
@@ -166,7 +167,8 @@ public class ACLPipe extends BasePipe {
 
     /**
      * Binds ACLs of an Authorizable on repository
-     * @param authorizable current resource as an authorizable
+     * @param auth current resource as an authorizable
+     * @throws RepositoryException in case something goes wrong while executing xpath query
      */
 
     protected void bindAclsForAuthorizableResource(Authorizable auth) throws RepositoryException {
@@ -206,6 +208,7 @@ public class ACLPipe extends BasePipe {
     /**
      * get Principal for principal name set as an expression in the pipe
      * @param prinicipalName for which the principal has to be found
+     * @return Principal for the principalName
      */
 
     protected Principal getPrincipalFor(String prinicipalName) {
