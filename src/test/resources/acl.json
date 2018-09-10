@@ -5,42 +5,30 @@
     "sling:resourceType": "slingPipes/acl",
     "path":"/content/fruits",
     "expr": "anonymous",
-    "conf": {
-      "jcr:primaryType":"nt:unstructured",
-      "jcr:privileges":["jcr:read"],
-      "allow":true
-    }
+    "jcr:privileges":["jcr:read"],
+    "allow":true
   },
   "deny": {
     "jcr:primaryType": "nt:unstructured",
     "sling:resourceType": "slingPipes/acl",
     "path":"/content/fruits",
     "expr": "anonymous",
-    "conf": {
-      "jcr:primaryType":"nt:unstructured",
-      "jcr:privileges":["jcr:write"],
-      "deny":true
-    }
+    "jcr:privileges":["jcr:write"],
+    "deny":true
   },
   "allowDefault": {
     "jcr:primaryType": "nt:unstructured",
     "sling:resourceType": "slingPipes/acl",
     "path":"/content/fruits",
     "expr": "anonymous",
-    "conf": {
-      "jcr:primaryType":"nt:unstructured",
-      "allow":true
-    }
+    "allow":true
   },
   "denyDefault": {
     "jcr:primaryType": "nt:unstructured",
     "sling:resourceType": "slingPipes/acl",
     "path":"/content/fruits",
     "expr": "anonymous",
-    "conf": {
-      "jcr:primaryType":"nt:unstructured",
-      "deny":true
-    }
+    "deny":true
   },
   "acl": {
     "jcr:primaryType": "nt:unstructured",
