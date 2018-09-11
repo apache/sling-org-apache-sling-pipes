@@ -375,4 +375,12 @@ public interface PipeBuilder {
      * @throws PersistenceException in case something goes wrong in the job creation
      */
     Job runAsync(Map bindings) throws PersistenceException;
+
+    /**
+     * run referenced pipes in parallel
+     * @param numThreads number of threads to use for running the contained pipes
+     * @param bindings additional bindings for the execution (can be null)
+     * @return set of resource path, merged output of pipes execution (order is arbitrary)
+     */
+    ExecutionResult runParallel(int numThreads, Map bindings) throws Exception;
 }

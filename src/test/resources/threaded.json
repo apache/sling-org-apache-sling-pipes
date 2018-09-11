@@ -1,0 +1,165 @@
+{
+  "jcr:primaryType":"nt:unstructured",
+  "strainedExecutor": {
+    "jcr:primaryType":"nt:unstructured",
+    "sling:resourceType":"slingPipes/manifold",
+    "jcr:description":"10 sub-pipes to join output from; fewer threads than pipes, small queues",
+    "numThreads":2,
+    "queueSize":2,
+    "conf":{
+      "jcr:primaryType":"sling:OrderedFolder",
+      "pipe0":{
+        "sling:resourceType":"slingPipes/dummySearch",
+        "conf":{
+          "jcr:primaryType":"nt:unstructured",
+          "apple0":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"apple"},
+          "apricot0":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"apricot"},
+          "peach0":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"peach"},
+          "grape0":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"grape"},
+          "mango0":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"mango"},
+          "banana0":{"jcr:primaryType":"nt:unstructured", "color":"yellow", "name":"banana"}
+        }
+      },
+      "pipe1":{
+        "sling:resourceType":"slingPipes/dummySearch",
+        "conf":{
+          "jcr:primaryType":"nt:unstructured",
+          "apple1":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"apple"},
+          "apricot1":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"apricot"},
+          "peach1":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"peach"},
+          "grape1":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"grape"},
+          "mango1":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"mango"},
+          "banana1":{"jcr:primaryType":"nt:unstructured", "color":"yellow", "name":"banana"}
+        }
+      },
+      "pipe2":{
+        "sling:resourceType":"slingPipes/dummySearch",
+        "conf":{
+          "jcr:primaryType":"nt:unstructured",
+          "apple2":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"apple"},
+          "apricot2":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"apricot"},
+          "peach2":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"peach"},
+          "grape2":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"grape"},
+          "mango2":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"mango"},
+          "banana2":{"jcr:primaryType":"nt:unstructured", "color":"yellow", "name":"banana"}
+        }
+      },
+      "pipe3":{
+        "sling:resourceType":"slingPipes/dummySearch",
+        "conf":{
+          "jcr:primaryType":"nt:unstructured",
+          "apple3":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"apple"},
+          "apricot3":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"apricot"},
+          "peach3":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"peach"},
+          "grape3":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"grape"},
+          "mango3":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"mango"},
+          "banana3":{"jcr:primaryType":"nt:unstructured", "color":"yellow", "name":"banana"}
+        }
+      },
+      "pipe4":{
+        "sling:resourceType":"slingPipes/dummySearch",
+        "conf":{
+          "jcr:primaryType":"nt:unstructured",
+          "apple4":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"apple"},
+          "apricot4":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"apricot"},
+          "peach4":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"peach"},
+          "grape4":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"grape"},
+          "mango4":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"mango"},
+          "banana4":{"jcr:primaryType":"nt:unstructured", "color":"yellow", "name":"banana"}
+        }
+      },
+      "pipe5":{
+        "sling:resourceType":"slingPipes/dummySearch",
+        "conf":{
+          "jcr:primaryType":"nt:unstructured",
+          "apple5":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"apple"},
+          "apricot5":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"apricot"},
+          "peach5":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"peach"},
+          "grape5":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"grape"},
+          "mango5":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"mango"},
+          "banana5":{"jcr:primaryType":"nt:unstructured", "color":"yellow", "name":"banana"}
+        }
+      },
+      "pipe6":{
+        "sling:resourceType":"slingPipes/dummySearch",
+        "conf":{
+          "jcr:primaryType":"nt:unstructured",
+          "apple6":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"apple"},
+          "apricot6":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"apricot"},
+          "peach6":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"peach"},
+          "grape6":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"grape"},
+          "mango6":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"mango"},
+          "banana6":{"jcr:primaryType":"nt:unstructured", "color":"yellow", "name":"banana"}
+        }
+      },
+      "pipe7":{
+        "sling:resourceType":"slingPipes/dummySearch",
+        "conf":{
+          "jcr:primaryType":"nt:unstructured",
+          "apple7":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"apple"},
+          "apricot7":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"apricot"},
+          "peach7":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"peach"},
+          "grape7":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"grape"},
+          "mango7":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"mango"},
+          "banana7":{"jcr:primaryType":"nt:unstructured", "color":"yellow", "name":"banana"}
+        }
+      },
+      "pipe8":{
+        "sling:resourceType":"slingPipes/dummySearch",
+        "conf":{
+          "jcr:primaryType":"nt:unstructured",
+          "apple8":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"apple"},
+          "apricot8":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"apricot"},
+          "peach8":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"peach"},
+          "grape8":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"grape"},
+          "mango8":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"mango"},
+          "banana8":{"jcr:primaryType":"nt:unstructured", "color":"yellow", "name":"banana"}
+        }
+      },
+      "pipe9":{
+        "sling:resourceType":"slingPipes/dummySearch",
+        "conf":{
+          "jcr:primaryType":"nt:unstructured",
+          "apple9":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"apple"},
+          "apricot9":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"apricot"},
+          "peach9":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"peach"},
+          "grape9":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"grape"},
+          "mango9":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"mango"},
+          "banana9":{"jcr:primaryType":"nt:unstructured", "color":"yellow", "name":"banana"}
+        }
+      }
+    }
+  },
+  "defaultExecutor": {
+    "jcr:primaryType": "nt:unstructured",
+    "jcr:description": "more threads than pipes, sufficient queue capacity",
+    "sling:resourceType": "slingPipes/manifold",
+    "conf": {
+      "jcr:primaryType": "sling:OrderedFolder",
+      "pipe0":{
+        "sling:resourceType":"slingPipes/dummySearch",
+        "conf":{
+          "jcr:primaryType":"nt:unstructured",
+          "apple0":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"apple"},
+          "apricot0":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"apricot"},
+          "peach0":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"peach"},
+          "grape0":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"grape"},
+          "mango0":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"mango"},
+          "banana0":{"jcr:primaryType":"nt:unstructured", "color":"yellow", "name":"banana"}
+        }
+      },
+      "pipe1":{
+        "sling:resourceType":"slingPipes/dummySearch",
+        "conf":{
+          "jcr:primaryType":"nt:unstructured",
+          "apple1":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"apple"},
+          "apricot1":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"apricot"},
+          "peach1":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"peach"},
+          "grape1":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"grape"},
+          "mango1":{"jcr:primaryType":"nt:unstructured","color":"green", "name":"mango"},
+          "banana1":{"jcr:primaryType":"nt:unstructured", "color":"yellow", "name":"banana"}
+        }
+      }
+    }
+  }
+}
