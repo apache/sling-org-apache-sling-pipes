@@ -50,6 +50,7 @@ import java.util.UUID;
 import static org.apache.sling.jcr.resource.JcrResourceConstants.NT_SLING_FOLDER;
 import static org.apache.sling.jcr.resource.JcrResourceConstants.NT_SLING_ORDERED_FOLDER;
 import static org.apache.sling.jcr.resource.JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY;
+import static org.apache.sling.pipes.internal.ManifoldPipe.PN_NUM_THREADS;
 
 import static org.apache.sling.pipes.internal.CommandUtil.checkArguments;
 import static org.apache.sling.pipes.internal.CommandUtil.writeToMap;
@@ -376,6 +377,16 @@ public class PipeBuilderImpl implements PipeBuilder {
         return plumber.executeAsync(resolver, pipe.getResource().getPath(), bindings);
     }
 
+    @Override
+    public ExecutionResult runParallel(int numThreads, Map additionalBindings) throws Exception {
+        containerStep.setType(ManifoldPipe.RESOURCE_TYPE);
+        Map bindings = new HashMap() {{put(PN_NUM_THREADS, numThreads);}};
+        if (additionalBindings != null){
+            bindings.putAll(additionalBindings);
+        }
+        return run(bindings);
+    }
+
     /**
      * holds a subpipe set of informations
      */
@@ -385,6 +396,10 @@ public class PipeBuilderImpl implements PipeBuilder {
         Map<String, Map> confs = new HashMap<>();
         Step(String type){
             properties = new HashMap();
+            setType(type);
+        }
+
+        void setType(String type){
             properties.put(SLING_RESOURCE_TYPE_PROPERTY, type);
         }
     }
