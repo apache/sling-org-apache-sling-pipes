@@ -31,7 +31,6 @@ import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.StringReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -116,11 +115,11 @@ public class GogoCommands {
 
     /**
      * internal execution command handler
-     * @param resolver
-     * @param path
-     * @param optionTokens
+     * @param resolver resolver with which pipe will be executed
+     * @param path pipe path to execute, {@code INPUT} for getting last token's output as path for things like build some / pipe | execute -
+     * @param optionTokens different options tokens
      * @return Execution results
-     * @throws Exception
+     * @throws Exception exception in case something goes wrong
      */
     protected ExecutionResult executeInternal(ResourceResolver resolver, String path, String... optionTokens) throws Exception {
         Resource resource = resolver.getResource(path);
@@ -129,9 +128,9 @@ public class GogoCommands {
         }
         Options options = getOptions(optionTokens);
         Map bMap = null;
-        if (options.bindings != null) {
+        if (options.with != null) {
             bMap = new HashMap();
-            writeToMap(bMap, options.bindings);
+            writeToMap(bMap, options.with);
         }
         OutputWriter writer = new NopWriter();
         if (options.writer != null){
@@ -155,11 +154,11 @@ public class GogoCommands {
                                                     "\n\t'name pipeName' (used in bindings), " +
                                                     "\n\t'expr pipeExpression' (when not directly as <args>)" +
                                                     "\n\t'path pipePath' (when not directly as <args>)" +
-                                                    "\n\t'bindings key=value ...'" +
+                                                    "\n\t'with key=value ...'" +
                                                     "\n\t'outputs key=value ...'" +
                                                     "\n and <pipe> is one of the following :\n");
         for (Map.Entry<String, PipeExecutor> entry : getExecutorMap().entrySet()){
-            System.out.format("\t%s : %s\n", entry.getKey(), entry.getValue().description() );
+            System.out.format("\t%s\t\t:\t%s\n", entry.getKey(), entry.getValue().description() );
         }
     }
 
@@ -286,8 +285,10 @@ public class GogoCommands {
                         returnValue.add(currentToken);
                         break;
                     case GogoCommands.PARAMS:
-                        currentToken.args = currentList;
-                        currentList = new ArrayList();
+                        if (currentToken.args == null){
+                            currentToken.args = currentList;
+                            currentList = new ArrayList();
+                        }
                         currentList.add(PARAMS);
                         break;
                     default:
@@ -355,7 +356,7 @@ public class GogoCommands {
         String name;
         String path;
         String expr;
-        String[] bindings;
+        String[] with;
         OutputWriter writer;
 
         @Override
@@ -364,7 +365,7 @@ public class GogoCommands {
                     "name='" + name + '\'' +
                     ", path='" + path + '\'' +
                     ", expr='" + expr + '\'' +
-                    ", bindings=" + Arrays.toString(bindings) +
+                    ", with=" + Arrays.toString(with) +
                     ", writer=" + writer +
                     '}';
         }
@@ -404,7 +405,7 @@ public class GogoCommands {
                         break;
                     }
                     case "with" : {
-                        this.bindings = keyValuesToArray((List<String>)entry.getValue());
+                        this.with = keyValuesToArray((List<String>)entry.getValue());
                         break;
                     }
                     case "outputs" : {
@@ -454,8 +455,8 @@ public class GogoCommands {
             if (StringUtils.isNotBlank(expr)){
                 builder.expr(expr);
             }
-            if (bindings != null){
-                builder.with(bindings);
+            if (with != null){
+                builder.with(with);
             }
         }
     }

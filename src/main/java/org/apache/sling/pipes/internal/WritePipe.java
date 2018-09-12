@@ -114,6 +114,7 @@ public class WritePipe extends BasePipe {
      * @param key property to which value will be written
      * @param expression configured value to write
      * @return actual value to write to the resource
+     * @throws ScriptException in case value computation went wrong
      */
     protected Object computeValue(Resource resource, String key, Object expression) throws ScriptException {
         if (expression instanceof String) {

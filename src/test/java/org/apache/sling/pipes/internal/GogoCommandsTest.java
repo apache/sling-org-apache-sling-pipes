@@ -81,9 +81,9 @@ public class GogoCommandsTest extends AbstractPipeTest {
         assertEquals("check expr", expected, options.expr);
         assertEquals("check path", expected, options.path);
         Map bindings = new HashMap();
-        CommandUtil.writeToMap(bindings, options.bindings);
-        assertEquals("check bindings first", expected, bindings.get("one"));
-        assertEquals("check bindings second", expected, bindings.get("two"));
+        CommandUtil.writeToMap(bindings, options.with);
+        assertEquals("check with first", expected, bindings.get("one"));
+        assertEquals("check with second", expected, bindings.get("two"));
         assertNotNull("a writer should have been created", options.writer);
         Map outputs = options.writer.getCustomOutputs();
         assertEquals("check writer first", expected, outputs.get("one"));
@@ -96,8 +96,8 @@ public class GogoCommandsTest extends AbstractPipeTest {
         String optionString = "@ with one=works @ outputs one=works";
         GogoCommands.Options options = commands.getOptions(optionString.split("\\s"));
         Map bindings = new HashMap();
-        CommandUtil.writeToMap(bindings, options.bindings);
-        assertEquals("check bindings first", expected, bindings.get("one"));
+        CommandUtil.writeToMap(bindings, options.with);
+        assertEquals("check with first", expected, bindings.get("one"));
         assertNotNull("a writer should have been created", options.writer);
         Map outputs = options.writer.getCustomOutputs();
         assertEquals("check writer first", expected, outputs.get("one"));
@@ -111,6 +111,16 @@ public class GogoCommandsTest extends AbstractPipeTest {
         ValueMap props = context.currentResource(PATH_FRUITS).getValueMap();
         assertEquals("there should some=/content/fruits", PATH_FRUITS, props.get("some"));
         assertEquals("there should key=value", "value", props.get("key"));
+    }
+
+    @Test
+    public void adaptToDemoTest() throws Exception {
+        String url = "'http://99-bottles-of-beer.net/lyrics.html'";
+        String cmd = "egrep " + url + " @ name bottles @ with 'pattern=(?<number>\\d(\\d)?)' / mkdir '/var/bottles/${bottles.number}'";
+        PipeBuilder builder = commands.parse(context.resourceResolver(), cmd.split("\\s"));
+        ContainerPipe pipe = (ContainerPipe)builder.build();
+        ValueMap regexp = pipe.getResource().getChild("conf/bottles").getValueMap();
+        assertEquals("we expect expr to be the url", url, regexp.get("expr"));
     }
 
     @Test
