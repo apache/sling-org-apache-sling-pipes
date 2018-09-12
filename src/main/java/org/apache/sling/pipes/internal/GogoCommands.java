@@ -16,6 +16,7 @@
  */
 package org.apache.sling.pipes.internal;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -30,6 +31,7 @@ import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.StringReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -55,10 +57,12 @@ public class GogoCommands {
 
     protected final static String SEPARATOR = "/";
     protected final static String PARAMS = "@";
+    protected final static String INPUT = "-";
     protected final static String KEY_VALUE_SEP = "=";
     protected final static String KEY_NAME = "name";
     protected final static String KEY_PATH = "path";
     protected final static String KEY_EXPR = "expr";
+
 
     @Reference
     ResourceResolverFactory factory;
@@ -101,8 +105,9 @@ public class GogoCommands {
      * @throws Exception in case anything went wrong
      */
     public void execute(String path, String... options) throws Exception {
+        String computedPath = INPUT.equals(path) ? IOUtils.toString(System.in).trim() : path;
         try (ResourceResolver resolver = factory.getServiceResourceResolver(plumber.getServiceUser())) {
-            System.out.println(executeInternal(resolver, path, options));
+            System.out.println(executeInternal(resolver, computedPath, options));
         } catch(Exception e){
             log.error("Unable to execute {}", path, e);
             throw(e);
@@ -140,7 +145,7 @@ public class GogoCommands {
      * help command handler
      */
     public void help(){
-        System.out.format("Available commands are \n- execute <path> <options>(execute a pipe already built at a given path)" +
+        System.out.format("\nSling Pipes Help\nAvailable commands are \n\n- execute <path> <options>(execute a pipe already built at a given path), if path is '-' then previous pipe token is used," +
                                                     "\n- build (build pipe as configured in arguments)" +
                                                     "\n- run (run pipe as configured in arguments)" +
                                                     "\n- help (print this help)" +
