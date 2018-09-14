@@ -17,10 +17,10 @@
 package org.apache.sling.pipes.internal;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.pipes.SuperPipe;
 import org.apache.sling.pipes.Pipe;
 import org.apache.sling.pipes.PipeBindings;
 import org.apache.sling.pipes.Plumber;
+import org.apache.sling.pipes.SuperPipe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

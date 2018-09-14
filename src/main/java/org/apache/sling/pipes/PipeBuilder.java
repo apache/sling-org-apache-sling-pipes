@@ -18,6 +18,7 @@ package org.apache.sling.pipes;
 
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.event.jobs.Job;
+import org.apache.sling.pipes.internal.ACLPipe;
 import org.apache.sling.pipes.internal.AuthorizablePipe;
 import org.apache.sling.pipes.internal.FilterPipe;
 import org.apache.sling.pipes.internal.MovePipe;
@@ -30,7 +31,6 @@ import org.apache.sling.pipes.internal.RemovePipe;
 import org.apache.sling.pipes.internal.TraversePipe;
 import org.apache.sling.pipes.internal.WritePipe;
 import org.apache.sling.pipes.internal.XPathPipe;
-import org.apache.sling.pipes.internal.ACLPipe;
 import org.apache.sling.pipes.internal.inputstream.CsvPipe;
 import org.apache.sling.pipes.internal.inputstream.JsonPipe;
 import org.apache.sling.pipes.internal.inputstream.RegexpPipe;

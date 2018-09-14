@@ -26,7 +26,6 @@ import org.slf4j.LoggerFactory;
 import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.Value;
-import javax.script.ScriptException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;

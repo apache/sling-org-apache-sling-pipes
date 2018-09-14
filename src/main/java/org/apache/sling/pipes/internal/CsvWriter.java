@@ -16,7 +16,6 @@
  */
 package org.apache.sling.pipes.internal;
 
-import com.sun.org.apache.bcel.internal.generic.NEW;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -28,7 +27,6 @@ import org.slf4j.LoggerFactory;
 import javax.script.ScriptException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 

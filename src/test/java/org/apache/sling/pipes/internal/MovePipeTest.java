@@ -16,10 +16,6 @@
  */
 package org.apache.sling.pipes.internal;
 
-import java.util.Iterator;
-
-import javax.jcr.Session;
-
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.AbstractPipeTest;
@@ -27,6 +23,9 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import javax.jcr.Session;
+import java.util.Iterator;
 
 /**
  * testing moving nodes & properties

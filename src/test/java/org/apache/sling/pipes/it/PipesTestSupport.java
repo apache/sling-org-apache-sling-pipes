@@ -18,8 +18,6 @@
  */
 package org.apache.sling.pipes.it;
 
-import javax.inject.Inject;
-
 import org.apache.commons.codec.binary.Base64;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -33,6 +31,8 @@ import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.ProbeBuilder;
 import org.ops4j.pax.exam.TestProbeBuilder;
 import org.ops4j.pax.exam.util.Filter;
+
+import javax.inject.Inject;
 
 import static org.apache.sling.testing.paxexam.SlingOptions.slingCommonsHtml;
 import static org.apache.sling.testing.paxexam.SlingOptions.slingDistribution;

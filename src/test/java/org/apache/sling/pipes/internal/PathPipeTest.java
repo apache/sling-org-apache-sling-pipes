@@ -27,7 +27,10 @@ import org.junit.Test;
 import javax.jcr.Node;
 
 import static org.apache.sling.jcr.resource.JcrResourceConstants.NT_SLING_FOLDER;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Testing path pipe using pipe builder

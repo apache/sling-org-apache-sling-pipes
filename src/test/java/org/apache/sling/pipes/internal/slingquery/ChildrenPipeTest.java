@@ -16,12 +16,12 @@
  */
 package org.apache.sling.pipes.internal.slingquery;
 
-import static org.junit.Assert.assertTrue;
-
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.pipes.AbstractPipeTest;
 import org.junit.Before;
 import org.junit.Test;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * test the sling query pipe

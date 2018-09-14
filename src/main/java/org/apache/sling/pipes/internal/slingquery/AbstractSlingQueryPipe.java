@@ -21,6 +21,7 @@ import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.PipeBindings;
 import org.apache.sling.pipes.Plumber;
 import org.apache.sling.query.SlingQuery;
+
 import java.util.Iterator;
 
 /**

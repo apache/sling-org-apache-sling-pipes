@@ -50,10 +50,9 @@ import java.util.UUID;
 import static org.apache.sling.jcr.resource.JcrResourceConstants.NT_SLING_FOLDER;
 import static org.apache.sling.jcr.resource.JcrResourceConstants.NT_SLING_ORDERED_FOLDER;
 import static org.apache.sling.jcr.resource.JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY;
-import static org.apache.sling.pipes.internal.ManifoldPipe.PN_NUM_THREADS;
-
 import static org.apache.sling.pipes.internal.CommandUtil.checkArguments;
 import static org.apache.sling.pipes.internal.CommandUtil.writeToMap;
+import static org.apache.sling.pipes.internal.ManifoldPipe.PN_NUM_THREADS;
 /**
  * Implementation of the PipeBuilder interface
  */

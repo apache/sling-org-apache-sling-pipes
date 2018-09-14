@@ -21,7 +21,6 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.pipes.internal.JsonUtil;
 import org.junit.Test;
 
-import javax.json.JsonArray;
 import javax.json.JsonObject;
 import java.util.Arrays;
 import java.util.Collection;
