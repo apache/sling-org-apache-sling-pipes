@@ -48,6 +48,7 @@ import java.util.Map;
         property= {
                 ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES + "=" + Plumber.RESOURCE_TYPE,
                 ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES + "=" + ContainerPipe.RESOURCE_TYPE,
+                ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES + "=" + ManifoldPipe.RESOURCE_TYPE,
                 ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES + "=" + AuthorizablePipe.RESOURCE_TYPE,
                 ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES + "=" + WritePipe.RESOURCE_TYPE,
                 ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES + "=" + ChildrenPipe.RESOURCE_TYPE,
