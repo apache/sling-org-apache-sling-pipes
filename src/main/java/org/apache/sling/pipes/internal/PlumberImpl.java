@@ -243,6 +243,7 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
     public ExecutionResult execute(ResourceResolver resolver, Pipe pipe, Map additionalBindings, OutputWriter writer, boolean save) throws Exception {
         boolean success = false;
         PipeMonitor monitor = null;
+        long start = System.currentTimeMillis();
         try {
             if (additionalBindings != null){
                 pipe.getBindings().addBindings(additionalBindings);
@@ -291,7 +292,9 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
         } finally {
             writeStatus(pipe, STATUS_FINISHED);
             resolver.commit();
-            log.info("[{}] done executing.", pipe.getName());
+            long length = System.currentTimeMillis() - start;
+            String time = length < 1000 ? length + "ms" : (length / 1000) + "s";
+            log.info("[{}] done executing in {}.", pipe.getName(), time);
             log.debug("[{}] after execution hook is called", pipe);
             pipe.after();
             if (!success && monitor != null){
