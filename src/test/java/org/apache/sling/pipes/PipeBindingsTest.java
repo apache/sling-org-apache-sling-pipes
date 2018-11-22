@@ -35,7 +35,7 @@ import static org.junit.Assert.assertNull;
  */
 public class PipeBindingsTest extends AbstractPipeTest {
 
-    private static final String NN_MOREBINDINGS = "moreBindings";
+    private static final String MOREBINDINGS =PATH_PIPE + "/moreBindings";
 
     @Before
     public void setup() throws PersistenceException {
@@ -109,18 +109,18 @@ public class PipeBindingsTest extends AbstractPipeTest {
 
     @Test
     public void testAdditionalBindings() throws Exception {
-        Resource resource = context.resourceResolver().getResource(PATH_PIPE + "/" + NN_MOREBINDINGS);
-        PipeBindings bindings = new PipeBindings(resource);
-        String expression = bindings.instantiateExpression("${three}");
+        Resource resource = context.resourceResolver().getResource(MOREBINDINGS);
+        BasePipe pipe = (BasePipe)plumber.getPipe(resource);
+        String expression =  pipe.bindings.instantiateExpression("${three}");
         assertEquals("computed expression should be taking additional bindings 'three' in account", "3", expression);
     }
 
     @Test
     public void testAdditionalScript() throws Exception {
         context.load().binaryFile("/testSum.js", "/content/test/testSum.js");
-        Resource resource = context.resourceResolver().getResource(PATH_PIPE + "/" + NN_MOREBINDINGS);
-        PipeBindings bindings = new PipeBindings(resource);
-        Number expression = (Number)bindings.instantiateObject("${testSumFunction(1,2)}");
+        Resource resource = context.resourceResolver().getResource(MOREBINDINGS);
+        BasePipe pipe = (BasePipe)plumber.getPipe(resource);
+        Number expression = (Number)pipe.bindings.instantiateObject("${testSumFunction(1,2)}");
         assertEquals("computed expression have testSum script's functionavailable", 3, expression.intValue());
     }
 

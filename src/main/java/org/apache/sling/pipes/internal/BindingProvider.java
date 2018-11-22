@@ -14,7 +14,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@Version("3.1.0")
-package org.apache.sling.pipes;
+package org.apache.sling.pipes.internal;
 
-import org.osgi.annotation.versioning.Version;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.pipes.Pipe;
+
+import java.util.Iterator;
+import java.util.concurrent.Callable;
+
+public class BindingProvider implements Callable<ValueMap> {
+
+    public BindingProvider(Pipe pipe) {
+        this.pipe = pipe;
+    }
+
+    Pipe pipe;
+
+    @Override
+    public ValueMap call() {
+        Iterator<Resource> output = pipe.getOutput();
+        if (output != null && output.hasNext()) {
+            return output.next().adaptTo(ValueMap.class);
+        }
+        return null;
+    }
+
+    public Pipe getPipe() {
+        return pipe;
+    }
+}

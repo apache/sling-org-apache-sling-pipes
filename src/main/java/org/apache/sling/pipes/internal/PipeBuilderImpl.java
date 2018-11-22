@@ -17,6 +17,7 @@
 package org.apache.sling.pipes.internal;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -340,6 +341,9 @@ public class PipeBuilderImpl implements PipeBuilder {
      */
     protected Resource persistStep(String path, String parentType, Step step) throws PersistenceException {
         Resource resource = createResource(resolver, path, parentType, step.properties);
+        if (StringUtils.isNotBlank(step.name)){
+            resource.adaptTo(ModifiableValueMap.class).put(BasePipe.PN_NAME, step.name);
+        }
         for (Map.Entry<String, Map> entry : step.confs.entrySet()){
             createResource(resolver, path + "/" + entry.getKey(), NT_SLING_FOLDER, entry.getValue());
             logger.debug("built pipe {}'s {} node", path, entry.getKey());

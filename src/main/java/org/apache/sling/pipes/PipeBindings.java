@@ -60,6 +60,8 @@ public class PipeBindings {
 
     public static final String PN_ADDITIONALSCRIPTS = "additionalScripts";
 
+    public static final String NN_PROVIDERS = "providers";
+
     /**
      * add ${path.pipeName} binding allowing to retrieve pipeName's current resource path
      */
@@ -98,26 +100,6 @@ public class PipeBindings {
 
         //add name bindings where name.MyPipe will give MyPipe current resource name
         getBindings().put(NAME_BINDING, nameBindings);
-
-        //additional bindings (global variables to use in child pipes expressions)
-        Resource additionalBindings = resource.getChild(NN_ADDITIONALBINDINGS);
-        if (additionalBindings != null) {
-            ValueMap bindings = additionalBindings.adaptTo(ValueMap.class);
-            addBindings(bindings);
-            for (String ignoredProperty : BasePipe.IGNORED_PROPERTIES){
-                getBindings().remove(ignoredProperty);
-            }
-        }
-
-        Resource scriptsResource = resource.getChild(PN_ADDITIONALSCRIPTS);
-        if (scriptsResource != null) {
-            String[] scripts = scriptsResource.adaptTo(String[].class);
-            if (scripts != null) {
-                for (String script : scripts){
-                    addScript(resource.getResourceResolver(), script);
-                }
-            }
-        }
     }
 
     /**

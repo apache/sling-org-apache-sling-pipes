@@ -20,12 +20,14 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.pipes.internal.BindingProvider;
 import org.junit.Test;
 
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 import java.io.StringReader;
+import java.util.ArrayList;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -83,5 +85,16 @@ public class BasePipeTest extends AbstractPipeTest {
         ValueMap test = r.getResource(PATH_FRUITS).getValueMap();
         assertTrue("before hook should have been called", test.get(beforeFlag, false));
         assertTrue("after hook should have been called", test.get(afterFlag, false));
+    }
+
+    @Test
+    public void testSimpleBindingProviders() throws PersistenceException, IllegalAccessException {
+        ResourceResolver r = context.resourceResolver();
+        BasePipe pipe = (BasePipe)plumber.newPipe(r).echo(PATH_FRUITS).children("nt:unstructured[color=${test.color}]").build();
+        Pipe apple = plumber.newPipe(r).name("test").echo(PATH_APPLE).build();
+        assertEquals("name should be test", "test", apple.getName());
+        pipe.bindingProviders = new ArrayList<>();
+        pipe.bindingProviders.add(new BindingProvider(apple));
+        assertTrue("there should be outputs", pipe.getOutput().hasNext());
     }
 }
