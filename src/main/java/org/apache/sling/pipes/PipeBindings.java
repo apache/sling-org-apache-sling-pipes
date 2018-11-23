@@ -200,6 +200,14 @@ public class PipeBindings {
     }
 
     /**
+     * copy bindings
+     * @param original original bindings to copy
+     */
+    public void copyBindings(PipeBindings original){
+        getBindings().putAll(original.getBindings());
+    }
+
+    /**
      * evaluate a given expression
      * @param expr ecma like expression
      * @return object that is the result of the expression
