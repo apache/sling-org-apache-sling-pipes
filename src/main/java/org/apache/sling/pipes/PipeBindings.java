@@ -17,9 +17,9 @@
 package org.apache.sling.pipes;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ValueMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,8 +71,11 @@ public class PipeBindings {
      * add ${name.pipeName} binding allowing to retrieve pipeName's current resource name
      */
     public static final String NAME_BINDING = "name";
-    
-    private static final Pattern INJECTED_SCRIPT = Pattern.compile("\\$\\{(([^\\{^\\}]*(\\{[0-9,]+\\})?)*)\\}");
+
+    private static final String INJECTED_SCRIPT_REGEXP = "\\$\\{(([^\\{^\\}]*(\\{[0-9,]+\\})?)*)\\}";
+    private static final Pattern INJECTED_SCRIPT = Pattern.compile(INJECTED_SCRIPT_REGEXP);
+    protected static final String IF_PREFIX = "$if";
+    protected static final Pattern CONDITIONAL_STRING =  Pattern.compile("^\\" + IF_PREFIX + INJECTED_SCRIPT_REGEXP);
 
     ScriptEngine engine;
     
@@ -197,14 +200,6 @@ public class PipeBindings {
     }
 
     /**
-     * copy bindings
-     * @param original original bindings to copy
-     */
-    public void copyBindings(PipeBindings original){
-        getBindings().putAll(original.getBindings());
-    }
-
-    /**
      * evaluate a given expression
      * @param expr ecma like expression
      * @return object that is the result of the expression
@@ -252,6 +247,29 @@ public class PipeBindings {
     		}
     	}
     	engine.setContext(scriptContext);
+    }
+
+    /**
+     * Return expression, instantiated expression or null if the expression is conditional and evaluation is falsy
+     * @param conditionalExpression can be static, or dynamic, can be conditional in which case it must be of following
+     * format <code>$if${condition}someString</code>. someString will be returned if condition is true, otherwise null
+     * @return instantiated expression or null if expression is conditional (see above) and condition is falsy
+     * @throws ScriptException in case one of the evaluation went wrong
+     */
+    public String conditionalString(String conditionalExpression) throws ScriptException {
+        Matcher matcher = CONDITIONAL_STRING.matcher(conditionalExpression);
+        if (matcher.find()){
+            Object output = evaluate(StringUtils.substringAfter(matcher.group(0), IF_PREFIX));
+            if (output != null){
+                String s = output.toString().toLowerCase().trim();
+                if(StringUtils.isNotEmpty(s) && !"false".equals(s) && !"undefined".equals(s)){
+                    return instantiateExpression(conditionalExpression.substring(matcher.group(0).length()));
+                }
+            }
+        } else {
+            return instantiateExpression(conditionalExpression);
+        }
+        return null;
     }
 
     /**

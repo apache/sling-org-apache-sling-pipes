@@ -46,10 +46,12 @@ import java.util.regex.Pattern;
 public class WritePipe extends BasePipe {
     private static final Logger logger = LoggerFactory.getLogger(WritePipe.class);
     public static final String RESOURCE_TYPE = RT_PREFIX + "write";
+    protected static final Pattern ADD_PATCH = Pattern.compile("\\+\\[(.*)\\]");
+    protected static final Pattern MULTI = Pattern.compile("\\[(.*)\\]");
+
     Node confTree;
     private List<Resource> propertiesToRemove;
-    Pattern addPatch = Pattern.compile("\\+\\[(.*)\\]");
-    Pattern multi = Pattern.compile("\\[(.*)\\]");
+
 
     /**
      * public constructor
@@ -88,7 +90,7 @@ public class WritePipe extends BasePipe {
         if (value != null && value instanceof String) {
             //in that case we treat special case like MV or patches
             String sValue = (String)value;
-            Matcher patch = addPatch.matcher(sValue);
+            Matcher patch = ADD_PATCH.matcher(sValue);
             if (patch.matches()) {
                 String newValue = patch.group(1);
                 String[] actualValues = resource.adaptTo(ValueMap.class).get(key, String[].class);
@@ -98,7 +100,7 @@ public class WritePipe extends BasePipe {
                 }
                 return newValues.toArray(new String[newValues.size()]);
             }
-            Matcher multiMatcher = multi.matcher(sValue);
+            Matcher multiMatcher = MULTI.matcher(sValue);
             if (multiMatcher.matches()) {
                 return multiMatcher.group(1).split(",");
             }
@@ -194,8 +196,10 @@ public class WritePipe extends BasePipe {
             while (childrenConf.hasNext()){
                 Node childConf = childrenConf.nextNode();
                 String name = childConf.getName();
-                name = bindings.instantiateExpression(name);
-                if (!isDryRun()){
+                name = bindings.conditionalString(name);
+                if (name == null){
+                    logger.debug("name has been instantiated as null, not writing that tree");
+                } else if (!isDryRun()){
                     Node childTarget = targetNode.hasNode(name) ? targetNode.getNode(name) : targetNode.addNode(name, childConf.getPrimaryNodeType().getName());
                     logger.debug("writing tree {}", childTarget.getPath());
                     writeTree(childConf, resolver.getResource(childTarget.getPath()));

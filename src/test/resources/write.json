@@ -101,5 +101,16 @@
         "jcr:primaryType":"nt:unstructured"
       }
     }
+  },
+  "ifNode":{
+    "jcr:primaryType":"nt:unstructured",
+    "sling:resourceType":"slingPipes/write",
+    "path":"/content/fruits/apple",
+    "conf": {
+      "jcr:primaryType":"nt:unstructured",
+      "$if${addedTest}isTrue": {
+        "jcr:primaryType":"nt:unstructured"
+      }
+    }
   }
 }

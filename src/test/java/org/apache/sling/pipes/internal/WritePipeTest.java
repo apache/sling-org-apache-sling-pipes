@@ -29,6 +29,7 @@ import org.junit.Test;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
+import javax.jcr.RepositoryException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,6 +38,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -158,5 +160,33 @@ public class WritePipeTest extends AbstractPipeTest {
         it.next();
         context.resourceResolver().commit();
         assertNotNull("there should be a node created", context.resourceResolver().getResource(PATH_APPLE + "/testExpression"));
+    }
+
+
+    protected void testIfNode(Object bindingValue, boolean nodeExpected) throws PersistenceException, RepositoryException {
+        String expectedPath = PATH_APPLE + "/isTrue";
+        Pipe pipe = getPipe(PATH_PIPE + "/ifNode");
+        pipe.getBindings().addBinding("addedTest", bindingValue);
+        pipe.getOutput().next();
+        context.resourceResolver().commit();
+        Resource resource = context.resourceResolver().getResource(expectedPath);
+        if (nodeExpected){
+            assertNotNull("there should be isTrue node for test binding " + bindingValue, resource);
+        } else {
+            assertNull("there should be no isTrue node created for test binding " + bindingValue, resource);
+        }
+        if (resource != null){
+            resource.adaptTo(Node.class).remove();
+        }
+    }
+
+    @Test
+    public void testIfNode() throws PersistenceException, RepositoryException {
+        testIfNode(null, false);
+        testIfNode("undefined", false);
+        testIfNode("false", false);
+        testIfNode(false, false);
+        testIfNode("some random string", true);
+        testIfNode(true, true);
     }
 }

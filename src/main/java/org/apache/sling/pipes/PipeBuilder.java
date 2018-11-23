@@ -246,11 +246,11 @@ public interface PipeBuilder {
     PipeBuilder not(String expr);
 
     /**
-     * attach a multi value property pipe to the current context
+     * attach a MULTI value property pipe to the current context
      * @return updated instance of PipeBuilder
      */
     @PipeExecutor(command = "mp", resourceType = MultiPropertyPipe.RESOURCE_TYPE, pipeClass = MultiPropertyPipe.class,
-            description = "read multi property, and output each value in the bindings")
+            description = "read MULTI property, and output each value in the bindings")
     PipeBuilder mp();
 
     /**
