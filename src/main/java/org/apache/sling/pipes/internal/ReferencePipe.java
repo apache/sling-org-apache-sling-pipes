@@ -69,6 +69,7 @@ public class ReferencePipe extends SuperPipe {
 
     @Override
     protected Iterator<Resource> computeSubpipesOutput() throws Exception {
+        buildChildren();
         log.debug("getting {} output", reference);
         return reference.getOutput();
     }

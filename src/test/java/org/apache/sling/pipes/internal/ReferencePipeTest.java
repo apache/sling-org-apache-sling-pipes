@@ -18,6 +18,7 @@ package org.apache.sling.pipes.internal;
 
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.pipes.AbstractPipeTest;
+import org.apache.sling.pipes.ExecutionResult;
 import org.apache.sling.pipes.Pipe;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,6 +27,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -71,5 +73,19 @@ public class ReferencePipeTest  extends AbstractPipeTest {
                 .ref(pipe.getResource().getPath())
                 .run(bindings).getCurrentPathSet();
         assertTrue("paths should contain new path", paths.contains(newPath));
+    }
+
+    @Test
+    public void testDynamicBinding() throws Exception {
+        plumber.newPipe(context.resourceResolver()).echo(PATH_FRUITS + "/apple").build(PATH_PIPE + "/applePipe");
+        plumber.newPipe(context.resourceResolver()).echo(PATH_FRUITS + "/banana").build(PATH_PIPE + "/bananaPipe");
+
+        ExecutionResult result = plumber.newPipe(context.resourceResolver())
+                .json("['apple','banana']").name("fruit")
+                .ref(PATH_PIPE + "/${fruit}Pipe")
+                .run();
+        assertEquals("there should be two outputs", 2, result.size());
+        assertTrue("apple should be returned", result.getCurrentPathSet().contains(PATH_FRUITS + "/apple"));
+        assertTrue("banana should be returned", result.getCurrentPathSet().contains(PATH_FRUITS + "/banana"));
     }
 }
