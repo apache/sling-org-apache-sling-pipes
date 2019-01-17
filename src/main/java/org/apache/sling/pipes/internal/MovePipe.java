@@ -16,6 +16,7 @@
  */
 package org.apache.sling.pipes.internal;
 
+import org.apache.jackrabbit.api.JackrabbitNode;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.PipeBindings;
@@ -30,6 +31,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.UUID;
 
 /**
  * Does a JCR Move of a node, returns the resource corresponding to the moved node
@@ -38,9 +40,13 @@ public class MovePipe extends BasePipe {
     Logger logger = LoggerFactory.getLogger(MovePipe.class);
 
     public static final String RESOURCE_TYPE = RT_PREFIX + "mv";
+    public static final String PN_OVERWRITE_TARGET = "overwriteTarget";
+
+    private boolean overwriteTarget;
 
     public MovePipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
         super(plumber, resource, upperBindings);
+        overwriteTarget = properties.get(PN_OVERWRITE_TARGET, false);
     }
 
     @Override
@@ -57,7 +63,27 @@ public class MovePipe extends BasePipe {
             try {
                 Session session = resolver.adaptTo(Session.class);
                 if (session.itemExists(targetPath)){
-                    logger.warn("{} already exists, nothing will be done here, nothing outputed");
+                    if (overwriteTarget && !isDryRun()) {
+                        logger.debug("overwriting {}", targetPath);
+                        Node targetParent = session.getItem(targetPath).getParent();
+                        if (targetParent.getPrimaryNodeType().hasOrderableChildNodes()) {
+                            String targetPathNewNode = targetPath + UUID.randomUUID() ;
+                            session.move(resource.getPath(), targetPathNewNode);
+                            String newNodeName = targetPathNewNode.substring(targetPathNewNode.lastIndexOf("/") + 1);
+                            String oldNodeName = targetPath.substring(targetPath.lastIndexOf("/") + 1);
+                            targetParent.orderBefore(newNodeName, oldNodeName);
+                            session.removeItem(targetPath);
+                            // Need to use JackrabbitNode.rename() here, since session.move(targetPathNewNode, targetPath)
+                            // would move the new node back to the end of its siblings list
+                            JackrabbitNode newNode = (JackrabbitNode) session.getNode(targetPathNewNode);
+                            newNode.rename(oldNodeName);
+                        } else {
+                            session.removeItem(targetPath);
+                            session.move(resource.getPath(), targetPath);
+                        }
+                    } else {
+                        logger.warn("{} already exists, nothing will be done here, nothing outputed");
+                    }
                 } else {
                     logger.info("moving resource {} to {}", resource.getPath(), targetPath);
                     if (!isDryRun()) {
