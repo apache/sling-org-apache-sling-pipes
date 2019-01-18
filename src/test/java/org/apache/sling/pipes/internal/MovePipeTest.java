@@ -33,7 +33,10 @@ import java.util.Iterator;
 public class MovePipeTest extends AbstractPipeTest {
 
     static final String MOVENODE_PIPE = "/moveNode";
+    static final String MOVENODEOVERWRITE_PIPE = "/moveNodeOverwrite";
     static final String MOVEPROPERTY_PIPE = "/moveProperty";
+    static final String APPLE_NODE_PATH = "/apple";
+    static final String BANANA_NODE_PATH = "/banana";
     static final String MOVED_NODE_PATH = "/granny";
     static final String MOVED_PROPERTY_PATH = "/indexFruits";
 
@@ -52,6 +55,18 @@ public class MovePipeTest extends AbstractPipeTest {
         Session session = context.resourceResolver().adaptTo(Session.class);
         session.save();
         Assert.assertTrue("new node path should exists", session.nodeExists(PATH_FRUITS + MOVED_NODE_PATH));
+    }
+
+    @Ignore //move operation is not supported yet by MockSession
+    @Test
+    public void testMoveNodeWithOverwrite() throws Exception {
+        Iterator<Resource> output = getOutput(PATH_PIPE + MOVENODEOVERWRITE_PIPE);
+        Assert.assertTrue(output.hasNext());
+        output.next();
+        Session session = context.resourceResolver().adaptTo(Session.class);
+        session.save();
+        Assert.assertTrue("target node path should exist", session.nodeExists(PATH_FRUITS + BANANA_NODE_PATH));
+        Assert.assertFalse("source node path should have gone", session.nodeExists(PATH_FRUITS + APPLE_NODE_PATH));
     }
 
     @Ignore //move operation is not supported yet by MockSession
