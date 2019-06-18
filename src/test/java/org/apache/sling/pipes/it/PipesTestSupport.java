@@ -78,6 +78,7 @@ public abstract class PipesTestSupport extends TestSupport {
             factoryConfiguration("org.apache.sling.resource.presence.internal.ResourcePresenter")
                 .put("path", "/etc/pipes-it")
                 .asOption(),
+            mavenBundle().groupId("org.apache.servicemix.bundles").artifactId("org.apache.servicemix.bundles.commons-httpclient").versionAsInProject(),
             // testing
             slingResourcePresence(),
             newConfiguration("org.apache.sling.jcr.base.internal.LoginAdminWhitelist")
