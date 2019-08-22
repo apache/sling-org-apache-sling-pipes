@@ -34,11 +34,11 @@ public class MovePipeTest extends AbstractPipeTest {
 
     static final String MOVENODE_PIPE = "/moveNode";
     static final String MOVENODEOVERWRITE_PIPE = "/moveNodeOverwrite";
+    static final String MOVENODEORDER_PIPE = "/moveNodeOrder";
     static final String MOVEPROPERTY_PIPE = "/moveProperty";
     static final String APPLE_NODE_PATH = "/apple";
     static final String BANANA_NODE_PATH = "/banana";
     static final String MOVED_NODE_PATH = "/granny";
-    static final String MOVED_PROPERTY_PATH = "/indexFruits";
 
     @Before
     public void setup() throws PersistenceException {
@@ -67,6 +67,19 @@ public class MovePipeTest extends AbstractPipeTest {
         session.save();
         Assert.assertTrue("target node path should exist", session.nodeExists(PATH_FRUITS + BANANA_NODE_PATH));
         Assert.assertFalse("source node path should have gone", session.nodeExists(PATH_FRUITS + APPLE_NODE_PATH));
+    }
+
+    @Ignore //move operation is not supported yet by MockSession
+    @Test
+    public void testMoveNodeWithOrdering() throws Exception {
+        Iterator<Resource> output = getOutput(PATH_PIPE + MOVENODEORDER_PIPE);
+        Assert.assertTrue(output.hasNext());
+        output.next();
+        Session session = context.resourceResolver().adaptTo(Session.class);
+        session.save();
+        Assert.assertTrue("target node path should exist", session.nodeExists(PATH_FRUITS + BANANA_NODE_PATH));
+        Assert.assertTrue("source node path also should exist", session.nodeExists(PATH_FRUITS + APPLE_NODE_PATH));
+        Assert.assertEquals("difference in position should be 1", session.getNode(PATH_FRUITS + BANANA_NODE_PATH).getIndex() - session.getNode(PATH_FRUITS + APPLE_NODE_PATH).getIndex(), 1);
     }
 
     @Ignore //move operation is not supported yet by MockSession
