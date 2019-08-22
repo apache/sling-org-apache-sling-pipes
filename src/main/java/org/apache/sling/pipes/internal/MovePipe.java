@@ -67,7 +67,7 @@ public class MovePipe extends BasePipe {
             try {
                 Session session = resolver.adaptTo(Session.class);
                 if (session.itemExists(targetPath)){
-                    if (overwriteTarget || orderBefore && !isDryRun()) {
+                    if ((overwriteTarget || orderBefore) && !isDryRun()) {
                         Resource target = resolver.getResource(targetPath);
                         Resource parent = target.getParent();
                         Node targetParent = session.getItem(targetPath).getParent();
@@ -95,9 +95,11 @@ public class MovePipe extends BasePipe {
                                 // would move the new node back to the end of its siblings list
                                 JackrabbitNode newNode = (JackrabbitNode) session.getNode(targetPathNewNode);
                                 newNode.rename(oldNodeName);
+                                output = Collections.singleton(parent.getChild(oldNodeName)).iterator();
                             } else {
                                 session.removeItem(targetPath);
                                 session.move(resource.getPath(), targetPath);
+                                output = Collections.singleton(parent.getChild(resource.getName())).iterator();
                             }
                         }
                     } else {

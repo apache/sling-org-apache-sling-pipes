@@ -14,12 +14,12 @@
     "sling:resourceType":"slingPipes/mv",
     "path": "/content/fruits/apple",
     "expr": "/content/fruits/banana",
-    "overwrite": "true"
+    "overwriteTarget": true
   },
   "moveNodeOrder": {
     "sling:resourceType":"slingPipes/mv",
-    "path": "/content/fruits/apple",
-    "expr": "/content/fruits/banana",
-    "orderBeforeTarget": "true"
+    "path": "/content/fruits/banana",
+    "expr": "/content/fruits/apple",
+    "orderBeforeTarget": true
   }
 }
