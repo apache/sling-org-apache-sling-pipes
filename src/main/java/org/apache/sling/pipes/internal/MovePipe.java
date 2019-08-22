@@ -66,41 +66,39 @@ public class MovePipe extends BasePipe {
             String targetPath = getExpr();
             try {
                 Session session = resolver.adaptTo(Session.class);
-                if (session.itemExists(targetPath)){
-                    if ((overwriteTarget || orderBefore) && !isDryRun()) {
-                        Resource target = resolver.getResource(targetPath);
-                        Resource parent = target.getParent();
-                        Node targetParent = session.getItem(targetPath).getParent();
-                        String targetPathNewNode = targetPath + UUID.randomUUID();
-                        String newNodeName = targetPathNewNode.substring(targetPathNewNode.lastIndexOf("/") + 1);
-                        String oldNodeName = targetPath.substring(targetPath.lastIndexOf("/") + 1);
-                        if (orderBefore) {
-                            logger.debug("ordering {} before {}", resource.getPath(), targetPath);
-                            if (targetParent.getPrimaryNodeType().hasOrderableChildNodes()) {
-                                String targetNodeName = ResourceUtil.createUniqueChildName(parent, resource.getName());
-                                String targetNodePath = targetParent.getPath() + SLASH + targetNodeName;
-                                session.move(resource.getPath(), targetNodePath);
-                                targetParent.orderBefore(targetNodeName, oldNodeName);
-                                output = Collections.singleton(parent.getChild(targetNodeName)).iterator();
-                            } else {
-                                logger.warn("parent resource {} doesn't support ordering", target.getPath());
-                            }
+                if (session.itemExists(targetPath)) {
+                    //if target item exist then either it should overwrite or order the source before the target
+                    Resource parent = resolver.getResource(targetPath).getParent();
+                    Node targetParent = session.getItem(targetPath).getParent();
+                    String targetPathNewNode = targetPath + UUID.randomUUID();
+                    String newNodeName = targetPathNewNode.substring(targetPathNewNode.lastIndexOf("/") + 1);
+                    String oldNodeName = targetPath.substring(targetPath.lastIndexOf("/") + 1);
+                    if (orderBefore && !isDryRun()) {
+                        logger.debug("ordering {} before {}", resource.getPath(), targetPath);
+                        if (targetParent.getPrimaryNodeType().hasOrderableChildNodes()) {
+                            String targetNodeName = ResourceUtil.createUniqueChildName(parent, resource.getName());
+                            String targetNodePath = targetParent.getPath() + SLASH + targetNodeName;
+                            session.move(resource.getPath(), targetNodePath);
+                            targetParent.orderBefore(targetNodeName, oldNodeName);
+                            output = Collections.singleton(parent.getChild(targetNodeName)).iterator();
                         } else {
-                            logger.debug("overwriting {}", targetPath);
-                            if (targetParent.getPrimaryNodeType().hasOrderableChildNodes()) {
-                                session.move(resource.getPath(), targetPathNewNode);
-                                targetParent.orderBefore(newNodeName, oldNodeName);
-                                session.removeItem(targetPath);
-                                // Need to use JackrabbitNode.rename() here, since session.move(targetPathNewNode, targetPath)
-                                // would move the new node back to the end of its siblings list
-                                JackrabbitNode newNode = (JackrabbitNode) session.getNode(targetPathNewNode);
-                                newNode.rename(oldNodeName);
-                                output = Collections.singleton(parent.getChild(oldNodeName)).iterator();
-                            } else {
-                                session.removeItem(targetPath);
-                                session.move(resource.getPath(), targetPath);
-                                output = Collections.singleton(parent.getChild(resource.getName())).iterator();
-                            }
+                            logger.warn("parent resource {} doesn't support ordering", parent.getPath());
+                        }
+                    } else if (overwriteTarget && !isDryRun()) {
+                        logger.debug("overwriting {}", targetPath);
+                        if (targetParent.getPrimaryNodeType().hasOrderableChildNodes()) {
+                            session.move(resource.getPath(), targetPathNewNode);
+                            targetParent.orderBefore(newNodeName, oldNodeName);
+                            session.removeItem(targetPath);
+                            // Need to use JackrabbitNode.rename() here, since session.move(targetPathNewNode, targetPath)
+                            // would move the new node back to the end of its siblings list
+                            JackrabbitNode newNode = (JackrabbitNode) session.getNode(targetPathNewNode);
+                            newNode.rename(oldNodeName);
+                            output = Collections.singleton(parent.getChild(oldNodeName)).iterator();
+                        } else {
+                            session.removeItem(targetPath);
+                            session.move(resource.getPath(), targetPath);
+                            output = Collections.singleton(parent.getChild(resource.getName())).iterator();
                         }
                     } else {
                         logger.warn("{} already exists, nothing will be done here, nothing outputed");
