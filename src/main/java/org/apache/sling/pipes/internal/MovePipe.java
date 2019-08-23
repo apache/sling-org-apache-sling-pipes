@@ -70,8 +70,6 @@ public class MovePipe extends BasePipe {
                     //if target item exist then either it should overwrite or order the source before the target
                     Resource parent = resolver.getResource(targetPath).getParent();
                     Node targetParent = session.getItem(targetPath).getParent();
-                    String targetPathNewNode = targetPath + UUID.randomUUID();
-                    String newNodeName = targetPathNewNode.substring(targetPathNewNode.lastIndexOf("/") + 1);
                     String oldNodeName = targetPath.substring(targetPath.lastIndexOf("/") + 1);
                     if (orderBefore && !isDryRun()) {
                         logger.debug("ordering {} before {}", resource.getPath(), targetPath);
@@ -86,6 +84,8 @@ public class MovePipe extends BasePipe {
                         }
                     } else if (overwriteTarget && !isDryRun()) {
                         logger.debug("overwriting {}", targetPath);
+                        String targetPathNewNode = targetPath + UUID.randomUUID();
+                        String newNodeName = targetPathNewNode.substring(targetPathNewNode.lastIndexOf("/") + 1);
                         if (targetParent.getPrimaryNodeType().hasOrderableChildNodes()) {
                             session.move(resource.getPath(), targetPathNewNode);
                             targetParent.orderBefore(newNodeName, oldNodeName);
