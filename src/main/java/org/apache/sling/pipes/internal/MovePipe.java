@@ -75,10 +75,10 @@ public class MovePipe extends BasePipe {
                         logger.debug("overwriting {}", targetPath);
                         Resource parent = resolver.getResource(targetPath).getParent();
                         Node targetParent = session.getItem(targetPath).getParent();
-                        String oldNodeName = targetPath.substring(targetPath.lastIndexOf("/") + 1);
-                        String targetPathNewNode = targetPath + UUID.randomUUID();
-                        String newNodeName = targetPathNewNode.substring(targetPathNewNode.lastIndexOf("/") + 1);
                         if (targetParent.getPrimaryNodeType().hasOrderableChildNodes()) {
+                            String oldNodeName = targetPath.substring(targetPath.lastIndexOf("/") + 1);
+                            String targetPathNewNode = targetPath + UUID.randomUUID();
+                            String newNodeName = targetPathNewNode.substring(targetPathNewNode.lastIndexOf("/") + 1);
                             session.move(resource.getPath(), targetPathNewNode);
                             targetParent.orderBefore(newNodeName, oldNodeName);
                             session.removeItem(targetPath);
