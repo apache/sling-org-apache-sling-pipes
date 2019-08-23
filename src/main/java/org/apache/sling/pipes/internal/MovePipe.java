@@ -70,26 +70,28 @@ public class MovePipe extends BasePipe {
                 if (orderBefore) {
                     output = reorder(resource, targetPath, session);
                 } else if (session.itemExists(targetPath)) {
-                    if (overwriteTarget && !isDryRun()) {
-                        logger.debug("overwriting {}", targetPath);
-                        Resource parent = resolver.getResource(targetPath).getParent();
-                        Node targetParent = session.getItem(targetPath).getParent();
-                        if (targetParent.getPrimaryNodeType().hasOrderableChildNodes()) {
-                            String oldNodeName = targetPath.substring(targetPath.lastIndexOf("/") + 1);
-                            String targetPathNewNode = targetPath + UUID.randomUUID();
-                            String newNodeName = targetPathNewNode.substring(targetPathNewNode.lastIndexOf("/") + 1);
-                            session.move(resource.getPath(), targetPathNewNode);
-                            targetParent.orderBefore(newNodeName, oldNodeName);
-                            session.removeItem(targetPath);
-                            // Need to use JackrabbitNode.rename() here, since session.move(targetPathNewNode, targetPath)
-                            // would move the new node back to the end of its siblings list
-                            JackrabbitNode newNode = (JackrabbitNode) session.getNode(targetPathNewNode);
-                            newNode.rename(oldNodeName);
-                            return Collections.singleton(parent.getChild(oldNodeName)).iterator();
-                        } else {
-                            session.removeItem(targetPath);
-                            session.move(resource.getPath(), targetPath);
-                            return Collections.singleton(parent.getChild(resource.getName())).iterator();
+                    if (overwriteTarget) {
+                        logger.info("overwriting {}", targetPath);
+                        if (!isDryRun()) {
+                            Resource parent = resolver.getResource(targetPath).getParent();
+                            Node targetParent = session.getItem(targetPath).getParent();
+                            if (targetParent.getPrimaryNodeType().hasOrderableChildNodes()) {
+                                String oldNodeName = targetPath.substring(targetPath.lastIndexOf("/") + 1);
+                                String targetPathNewNode = targetPath + UUID.randomUUID();
+                                String newNodeName = targetPathNewNode.substring(targetPathNewNode.lastIndexOf("/") + 1);
+                                session.move(resource.getPath(), targetPathNewNode);
+                                targetParent.orderBefore(newNodeName, oldNodeName);
+                                session.removeItem(targetPath);
+                                // Need to use JackrabbitNode.rename() here, since session.move(targetPathNewNode, targetPath)
+                                // would move the new node back to the end of its siblings list
+                                JackrabbitNode newNode = (JackrabbitNode) session.getNode(targetPathNewNode);
+                                newNode.rename(oldNodeName);
+                                return Collections.singleton(parent.getChild(oldNodeName)).iterator();
+                            } else {
+                                session.removeItem(targetPath);
+                                session.move(resource.getPath(), targetPath);
+                                return Collections.singleton(parent.getChild(resource.getName())).iterator();
+                            }
                         }
                     } else {
                         logger.warn("{} already exists, nothing will be done here, nothing outputed");
@@ -128,7 +130,7 @@ public class MovePipe extends BasePipe {
     }
 
     private Iterator<Resource> reorder(Resource resource, String targetPath, Session session) throws Exception {
-        logger.debug("ordering {} before {}", resource.getPath(), targetPath);
+        logger.info("ordering {} before {}", resource.getPath(), targetPath);
         if (session.itemExists(targetPath) && !isDryRun()) {
             Resource parent = resolver.getResource(targetPath).getParent();
             Node targetParent = session.getItem(targetPath).getParent();
