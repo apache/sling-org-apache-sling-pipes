@@ -18,6 +18,7 @@ package org.apache.sling.pipes.internal;
 
 import org.apache.jackrabbit.api.JackrabbitNode;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.PipeBindings;
 import org.apache.sling.pipes.Plumber;
@@ -41,12 +42,16 @@ public class MovePipe extends BasePipe {
 
     public static final String RESOURCE_TYPE = RT_PREFIX + "mv";
     public static final String PN_OVERWRITE_TARGET = "overwriteTarget";
+    public static final String PN_ORDERBEFORE = "orderBeforeTarget";
 
     private boolean overwriteTarget;
+    private boolean orderBefore;
+
 
     public MovePipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
         super(plumber, resource, upperBindings);
         overwriteTarget = properties.get(PN_OVERWRITE_TARGET, false);
+        orderBefore = properties.get(PN_ORDERBEFORE, false);
     }
 
     @Override
@@ -62,24 +67,30 @@ public class MovePipe extends BasePipe {
             String targetPath = getExpr();
             try {
                 Session session = resolver.adaptTo(Session.class);
+                if (orderBefore) {
+                    output = reorder(resource, targetPath, session);
+                }
                 if (session.itemExists(targetPath)){
                     if (overwriteTarget && !isDryRun()) {
                         logger.debug("overwriting {}", targetPath);
+                        Resource parent = resolver.getResource(targetPath).getParent();
                         Node targetParent = session.getItem(targetPath).getParent();
+                        String oldNodeName = targetPath.substring(targetPath.lastIndexOf("/") + 1);
+                        String targetPathNewNode = targetPath + UUID.randomUUID();
+                        String newNodeName = targetPathNewNode.substring(targetPathNewNode.lastIndexOf("/") + 1);
                         if (targetParent.getPrimaryNodeType().hasOrderableChildNodes()) {
-                            String targetPathNewNode = targetPath + UUID.randomUUID() ;
                             session.move(resource.getPath(), targetPathNewNode);
-                            String newNodeName = targetPathNewNode.substring(targetPathNewNode.lastIndexOf("/") + 1);
-                            String oldNodeName = targetPath.substring(targetPath.lastIndexOf("/") + 1);
                             targetParent.orderBefore(newNodeName, oldNodeName);
                             session.removeItem(targetPath);
                             // Need to use JackrabbitNode.rename() here, since session.move(targetPathNewNode, targetPath)
                             // would move the new node back to the end of its siblings list
                             JackrabbitNode newNode = (JackrabbitNode) session.getNode(targetPathNewNode);
                             newNode.rename(oldNodeName);
+                            return Collections.singleton(parent.getChild(oldNodeName)).iterator();
                         } else {
                             session.removeItem(targetPath);
                             session.move(resource.getPath(), targetPath);
+                            return Collections.singleton(parent.getChild(resource.getName())).iterator();
                         }
                     } else {
                         logger.warn("{} already exists, nothing will be done here, nothing outputed");
@@ -115,5 +126,26 @@ public class MovePipe extends BasePipe {
             logger.warn("bad configuration of the pipe, will do nothing");
         }
         return output;
+    }
+
+    private Iterator<Resource> reorder(Resource resource, String targetPath, Session session) throws Exception {
+        logger.debug("ordering {} before {}", resource.getPath(), targetPath);
+        if (session.itemExists(targetPath) && !isDryRun()) {
+            Resource parent = resolver.getResource(targetPath).getParent();
+            Node targetParent = session.getItem(targetPath).getParent();
+            String oldNodeName = targetPath.substring(targetPath.lastIndexOf("/") + 1);
+            if (targetParent.getPrimaryNodeType().hasOrderableChildNodes()) {
+                String targetNodeName = ResourceUtil.createUniqueChildName(parent, resource.getName());
+                String targetNodePath = targetParent.getPath() + SLASH + targetNodeName;
+                session.move(resource.getPath(), targetNodePath);
+                targetParent.orderBefore(targetNodeName, oldNodeName);
+                return Collections.singleton(parent.getChild(targetNodeName)).iterator();
+            } else {
+                logger.warn("parent resource {} doesn't support ordering", parent.getPath());
+            }
+        } else {
+            logger.warn("target resource {} doesn't exist ordering not possible", targetPath);
+        }
+        return EMPTY_ITERATOR;
     }
 }
