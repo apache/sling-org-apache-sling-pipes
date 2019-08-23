@@ -69,8 +69,7 @@ public class MovePipe extends BasePipe {
                 Session session = resolver.adaptTo(Session.class);
                 if (orderBefore) {
                     output = reorder(resource, targetPath, session);
-                }
-                if (session.itemExists(targetPath)){
+                } else if (session.itemExists(targetPath)) {
                     if (overwriteTarget && !isDryRun()) {
                         logger.debug("overwriting {}", targetPath);
                         Resource parent = resolver.getResource(targetPath).getParent();
