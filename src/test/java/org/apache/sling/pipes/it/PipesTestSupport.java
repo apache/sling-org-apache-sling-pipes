@@ -113,10 +113,7 @@ public abstract class PipesTestSupport extends TestSupport {
 
     @ProbeBuilder
     public TestProbeBuilder probeConfiguration(final TestProbeBuilder testProbeBuilder) {
-        testProbeBuilder.setHeader("Sling-Initial-Content",
-            "SLING-INF/jcr_root/apps/pipes-it;path:=/apps/pipes-it;overwrite:=true," +
-                "SLING-INF/jcr_root/etc/pipes-it;path:=/etc/pipes-it;overwrite:=true," +
-                "SLING-INF/jcr_root/content;path:=/content;overwrite:=true"
+        testProbeBuilder.setHeader("Sling-Initial-Content","initial-content"
         );
         return testProbeBuilder;
     }

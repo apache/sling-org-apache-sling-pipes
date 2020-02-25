@@ -53,7 +53,7 @@ public class MovePipeTest extends AbstractPipeTest {
     public void setup() throws PersistenceException {
         super.setup();
         oak.load().json("/move.json", PATH_PIPE);
-        oak.load().json("/SLING-INF/jcr_root/content/fruits.json", PATH_FRUITS);
+        oak.load().json("/initial-content/content/fruits.json", PATH_FRUITS);
     }
 
     @Test

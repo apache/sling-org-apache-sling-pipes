@@ -36,7 +36,7 @@ public class PackagePipeTest extends AbstractPipeTest {
 
     @Test
     public void filterModeTest() throws Exception {
-        oak.load().json("/SLING-INF/jcr_root/content/fruits.json", PATH_FRUITS);
+        oak.load().json("/initial-content/content/fruits.json", PATH_FRUITS);
         String packagePath = "/content/package";
         ExecutionResult result = plumber.newPipe(oak.resourceResolver())
                 .echo("/content/fruits")

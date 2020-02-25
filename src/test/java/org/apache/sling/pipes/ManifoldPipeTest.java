@@ -43,7 +43,7 @@ public class ManifoldPipeTest extends AbstractPipeTest {
     public void setup() throws PersistenceException {
         super.setup();
         context = new SlingContext(ResourceResolverType.JCR_OAK);
-        context.load().json("/SLING-INF/jcr_root/content/fruits.json", PATH_FRUITS);
+        context.load().json("/initial-content/content/fruits.json", PATH_FRUITS);
         context.load().json("/threaded.json", PATH_PIPE);
     }
 

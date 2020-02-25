@@ -72,7 +72,7 @@ public class AbstractPipeTest {
         plumberImpl.registerPipe("slingPipes/dummyNull", DummyNull.class);
         plumberImpl.registerPipe("slingPipes/dummySearch", DummySearch.class);
         plumber = plumberImpl;
-        context.load().json("/SLING-INF/jcr_root/content/fruits.json", PATH_FRUITS);
+        context.load().json("/initial-content/content/fruits.json", PATH_FRUITS);
     }
 
     protected Pipe getPipe(String path){
