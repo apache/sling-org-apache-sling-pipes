@@ -36,7 +36,7 @@
 
   <properties>
     <sling.java.version>8</sling.java.version>
-    <org.ops4j.pax.exam.version>4.13.1</org.ops4j.pax.exam.version>
+    <org.ops4j.pax.exam.version>4.13.2</org.ops4j.pax.exam.version>
   </properties>
 
   <scm>
@@ -75,6 +75,9 @@
   <profiles>
     <profile>
       <id>integration-tests</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
       <build>
         <plugins>
           <plugin>
