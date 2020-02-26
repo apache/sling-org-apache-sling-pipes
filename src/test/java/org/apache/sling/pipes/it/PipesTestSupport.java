@@ -18,6 +18,8 @@
  */
 package org.apache.sling.pipes.it;
 
+import javax.inject.Inject;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -32,8 +34,6 @@ import org.ops4j.pax.exam.ProbeBuilder;
 import org.ops4j.pax.exam.TestProbeBuilder;
 import org.ops4j.pax.exam.util.Filter;
 
-import javax.inject.Inject;
-
 import static org.apache.sling.testing.paxexam.SlingOptions.slingCommonsHtml;
 import static org.apache.sling.testing.paxexam.SlingOptions.slingDistribution;
 import static org.apache.sling.testing.paxexam.SlingOptions.slingEvent;
@@ -44,6 +44,7 @@ import static org.apache.sling.testing.paxexam.SlingOptions.slingScriptingSightl
 import static org.ops4j.pax.exam.CoreOptions.composite;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
+import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.factoryConfiguration;
 import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
 
@@ -70,9 +71,9 @@ public abstract class PipesTestSupport extends TestSupport {
 
     @Configuration
     public Option[] configuration() {
-        return new Option[]{
+        return options(
             baseConfiguration(),
-            launchpad(),
+            quickstart(),
             // Sling Pipes
             testBundle("bundle.filename"),
             factoryConfiguration("org.apache.sling.resource.presence.internal.ResourcePresenter")
@@ -88,7 +89,7 @@ public abstract class PipesTestSupport extends TestSupport {
             mavenBundle().groupId("org.jsoup").artifactId("jsoup").versionAsInProject(),
             mavenBundle().groupId("org.apache.servicemix.bundles").artifactId("org.apache.servicemix.bundles.hamcrest").versionAsInProject(),
             junitBundles()
-        };
+        );
     }
 
     protected String basicAuthorizationHeader(final String credentials) {
@@ -99,7 +100,7 @@ public abstract class PipesTestSupport extends TestSupport {
         plumber.newPipe(resolver).mkdir(path).run();
     }
 
-    protected Option launchpad() {
+    protected Option quickstart() {
         final String workingDirectory = workingDirectory();
         return composite(
             slingQuickstartOakTar(workingDirectory, httpPort),
