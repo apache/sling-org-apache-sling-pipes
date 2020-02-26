@@ -16,6 +16,9 @@
  */
 package org.apache.sling.pipes.it;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -28,8 +31,6 @@ import org.ops4j.pax.exam.spi.reactors.PerClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -38,15 +39,19 @@ import static org.junit.Assert.assertEquals;
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
 public class PipeModelIT extends PipesTestSupport {
+
+    private static final String AUTH_HEADER = String.format("Basic %s", Base64.getEncoder().encodeToString("admin:admin".getBytes(StandardCharsets.ISO_8859_1)));
+
     private static final Logger LOGGER = LoggerFactory.getLogger(PipeModelIT.class);
 
     @Test
     public void testListComponent() throws IOException {
         final String url = String.format("http://localhost:%s/content/list-component.html", httpPort());
         LOGGER.info("fetching {}", url);
-        Document document = Jsoup.connect(url).get();
+        Document document = Jsoup.connect(url).header("Authorization", AUTH_HEADER).get();
         LOGGER.info("retrieved following response {}", document.toString());
         Elements elements = document.getElementsByClass("fruit");
         assertEquals("there should be 2 elements", 2, elements.size());
     }
+
 }
