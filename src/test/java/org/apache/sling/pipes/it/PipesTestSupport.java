@@ -66,7 +66,7 @@ public abstract class PipesTestSupport extends TestSupport {
     final protected int httpPort = findFreePort();
 
     @Inject
-    @Filter(value = "(path=/etc/pipes-it)")
+    @Filter(value = "(path=/etc/pipes-it/fruit-list)")
     private ResourcePresence resourcePresence;
 
     @Configuration
@@ -77,7 +77,7 @@ public abstract class PipesTestSupport extends TestSupport {
             // Sling Pipes
             testBundle("bundle.filename"),
             factoryConfiguration("org.apache.sling.resource.presence.internal.ResourcePresenter")
-                .put("path", "/etc/pipes-it")
+                .put("path", "/etc/pipes-it/fruit-list")
                 .asOption(),
             mavenBundle().groupId("org.apache.servicemix.bundles").artifactId("org.apache.servicemix.bundles.commons-httpclient").versionAsInProject(),
             // testing
