@@ -35,6 +35,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.sling.pipes.PipeBindings.NN_ADDITIONALBINDINGS;
 import static org.apache.sling.pipes.PipeBindings.NN_PROVIDERS;
 import static org.apache.sling.pipes.PipeBindings.PN_ADDITIONALSCRIPTS;
@@ -154,6 +155,7 @@ public class BasePipe implements Pipe {
                 }
             }
         }
+        bindings.addBinding(getName(), EMPTY);
     }
 
     @Override
@@ -275,13 +277,14 @@ public class BasePipe implements Pipe {
         if (StringUtils.isNotBlank(path)){
             input = resolver.getResource(path);
             if (input == null) {
-                logger.warn("configured path {} is not found, expect some troubles...", path);
+                logger.warn("configured path {} for {} is not found, expect some troubles...", path, getName());
             }
         } else {
             //no input has been configured: we explicitly expect input to come from previous resource
             input = getPreviousResource();
             if (input == null) {
-                logger.warn("no path has been configured, and no previous resource to bind on, expect some troubles...");
+                logger.warn("no valid path has been configured for {}, and no previous resource to bind on, expect some troubles...",
+                    getName());
             }
         }
         logger.debug("input for this pipe is {}", input != null ? input.getPath() : null);

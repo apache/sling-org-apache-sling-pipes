@@ -131,19 +131,23 @@ public abstract class SuperPipe extends BasePipe {
 
     @Override
     public void before() throws Exception {
+        LOG.debug("entering {} before", getName());
         super.before();
         if (subpipes.size() == 0){
             buildChildren();
         }
         for (Pipe pipe : subpipes){
+            LOG.debug("calling {} before", getName());
             pipe.before();
         }
     }
 
     @Override
     public void after() throws Exception {
+        LOG.debug("entering {} after", getName());
         super.after();
         for (Pipe pipe : subpipes){
+            LOG.debug("calling {} after", pipe.getName());
             pipe.after();
         }
     }

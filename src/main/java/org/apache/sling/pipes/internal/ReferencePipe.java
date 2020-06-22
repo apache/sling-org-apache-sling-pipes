@@ -73,15 +73,4 @@ public class ReferencePipe extends SuperPipe {
         log.debug("getting {} output", reference);
         return reference.getOutput();
     }
-
-    @Override
-    public void before() throws Exception {
-        if (bindings.isPlainString(getRawExpression())){
-            //we only support raw references, as there are good chances
-            //compute fails at that stage
-            super.before();
-        } else {
-            log.warn("before hook configured for this pipe's reference (and descendants) will be ignored as we can't figure them out right now");
-        }
-    }
 }

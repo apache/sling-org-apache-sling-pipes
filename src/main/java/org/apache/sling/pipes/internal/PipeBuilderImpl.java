@@ -216,6 +216,11 @@ public class PipeBuilderImpl implements PipeBuilder {
     }
 
     @Override
+    public PipeBuilder shallowRef(String expr) {
+        return pipeWithExpr(ShallowReferencePipe.RESOURCE_TYPE, expr);
+    }
+
+    @Override
     public PipeBuilder mp() {
         return pipe(MultiPropertyPipe.RESOURCE_TYPE);
     }

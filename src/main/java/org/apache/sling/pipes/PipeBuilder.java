@@ -28,6 +28,7 @@ import org.apache.sling.pipes.internal.PackagePipe;
 import org.apache.sling.pipes.internal.PathPipe;
 import org.apache.sling.pipes.internal.ReferencePipe;
 import org.apache.sling.pipes.internal.RemovePipe;
+import org.apache.sling.pipes.internal.ShallowReferencePipe;
 import org.apache.sling.pipes.internal.TraversePipe;
 import org.apache.sling.pipes.internal.WritePipe;
 import org.apache.sling.pipes.internal.XPathPipe;
@@ -226,6 +227,15 @@ public interface PipeBuilder {
     @PipeExecutor(command = "ref", resourceType = ReferencePipe.RESOURCE_TYPE, pipeClass = ReferencePipe.class,
             description = "reference passed pipe")
     PipeBuilder ref(String expr);
+
+    /**
+     * attach a shallow reference pipe to the current context
+     * @param expr reference
+     * @return updated instance of PipeBuilder
+     */
+    @PipeExecutor(command = "shallowRef", resourceType = ShallowReferencePipe.RESOURCE_TYPE, pipeClass = ShallowReferencePipe.class,
+        description = "shallow reference passed pipe, to be used for recursive usage")
+    PipeBuilder shallowRef(String expr);
 
     /**
      * attach a package pipe, in filter collection mode as default
