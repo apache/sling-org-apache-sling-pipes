@@ -16,6 +16,7 @@
  */
 package org.apache.sling.pipes.internal;
 
+import org.apache.commons.collections.IteratorUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.pipes.BasePipe;
@@ -41,6 +42,8 @@ public class FilterPipe extends BasePipe {
     public static final String PN_NOT = PREFIX_FILTER + "not";
     public static final String PN_NOCHILDREN = PREFIX_FILTER + "noChildren";
     public static final String PN_TEST = PREFIX_FILTER + "test";
+    public static final String PN_INJECTCHILDRENCOUNT = PREFIX_FILTER + "injectChildrenCount";
+    public static final String BINDING_CHILDREN_COUNT = "childrenCount";
 
     public FilterPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
         super(plumber, resource, upperBindings);
@@ -69,6 +72,12 @@ public class FilterPipe extends BasePipe {
     boolean filterPasses(Resource currentResource, Resource filterResource) throws ScriptException, RepositoryException {
         ValueMap current = currentResource.adaptTo(ValueMap.class);
         ValueMap filter = filterResource.adaptTo(ValueMap.class);
+        boolean injectChildrenCount = (Boolean) bindings.instantiateObject(filter.get(PN_INJECTCHILDRENCOUNT, "${false}"));
+        if (injectChildrenCount) {
+            Node currentNode = currentResource.adaptTo(Node.class);
+            int childrenCount = IteratorUtils.toList(currentNode.getNodes()).size();
+            bindings.addBinding(BINDING_CHILDREN_COUNT, childrenCount);
+        }
         if (propertiesPass(current, filter)) {
             Node currentNode = currentResource.adaptTo(Node.class);
             boolean noChildren = (Boolean) bindings.instantiateObject(filter.get(PN_NOCHILDREN, "${false}"));

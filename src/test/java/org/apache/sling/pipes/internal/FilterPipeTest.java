@@ -115,4 +115,13 @@ public class FilterPipeTest extends AbstractPipeTest {
                 .grep("jcr:description",".*https://en.wikipedia.org.*").run().getCurrentPathSet();
         assertEquals("there should be an item", 1, outputs.size());
     }
+
+    @Test
+    public void testChildrenCount() throws Exception {
+        Collection<String> outputs = plumber.newPipe(context.resourceResolver())
+            .echo(PATH_APPLE)
+            .grep("slingPipesFilter_injectChildrenCount","${true}","slingPipesFilter_test","${childrenCount==1}")
+            .run().getCurrentPathSet();
+        assertEquals("there should be one output", 1, outputs.size());
+    }
 }
