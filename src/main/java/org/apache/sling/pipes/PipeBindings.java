@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.pipes.internal.JxltEngine;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,13 +86,11 @@ public class PipeBindings {
      * @param resource pipe's configuration resource
      * @throws ScriptException in case scripts associated with the bindings are not assessable
      */
-    public PipeBindings(Resource resource) throws ScriptException {
+    public PipeBindings(@NotNull Resource resource) throws ScriptException {
     	//Setup script engines
-        if (resource.getChild(PN_ENGINE) != null) {
-            String engineName = resource.getChild(PN_ENGINE).adaptTo(String.class);
-            if (StringUtils.isNotBlank(engineName)) {
-                initializeScriptEngine(engineName);
-            }
+        String engineName = resource.getValueMap().get(PN_ENGINE, String.class);
+        if (StringUtils.isNotBlank(engineName)) {
+            initializeScriptEngine(engineName);
         }
     	
         //add path bindings where path.MyPipe will give MyPipe current resource path

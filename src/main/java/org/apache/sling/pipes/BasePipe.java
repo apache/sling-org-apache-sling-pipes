@@ -21,6 +21,8 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.pipes.internal.BindingProvider;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -101,9 +103,9 @@ public class BasePipe implements Pipe {
      * @param upperBindings already set bindings, can be null
      * @throws Exception in case configuration is not working
      */
-    public BasePipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
+    public BasePipe(@NotNull Plumber plumber, @NotNull Resource resource, @Nullable PipeBindings upperBindings) throws Exception {
         this.resource = resource;
-        properties = resource.adaptTo(ValueMap.class);
+        properties = resource.getValueMap();
         resolver = resource.getResourceResolver();
         this.plumber = plumber;
         name = properties.get(PN_NAME, resource.getName());
@@ -119,7 +121,7 @@ public class BasePipe implements Pipe {
      * @param upperBindings
      * @throws ScriptException
      */
-    private void extractAdditionalBindings(Resource resource, PipeBindings upperBindings) throws ScriptException {
+    private void extractAdditionalBindings(@NotNull Resource resource, @Nullable PipeBindings upperBindings) throws ScriptException {
         bindings = upperBindings == null ? new PipeBindings(resource) : upperBindings;
         //additional bindings (global variables to use in child pipes expressions)
         Resource additionalBindings = resource.getChild(NN_ADDITIONALBINDINGS);

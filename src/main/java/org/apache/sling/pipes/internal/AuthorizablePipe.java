@@ -79,7 +79,7 @@ public class AuthorizablePipe extends BasePipe {
         resolver = resource.getResourceResolver();
         userManager = resolver.adaptTo(UserManager.class);
         if (getConfiguration() != null) {
-            ValueMap properties = getConfiguration().adaptTo(ValueMap.class);
+            ValueMap properties = getConfiguration().getValueMap();
             createGroup = properties.get(PN_CREATEGROUP, false);
             bindMembers = properties.get(PN_BINDMEMBERS, false);
             addToGroup = properties.get(PN_ADDTOGROUP, String.class);

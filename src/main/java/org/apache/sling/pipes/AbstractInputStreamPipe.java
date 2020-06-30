@@ -73,6 +73,14 @@ public abstract class AbstractInputStreamPipe extends BasePipe {
         client.getParams().setAuthenticationPreemptive(false);
     }
 
+    InputStream getInputStreamFromResource(String expr) {
+        Resource resource = resolver.getResource(expr);
+        if (resource != null) {
+            return resource.adaptTo(InputStream.class);
+        }
+        return null;
+    }
+
     InputStream getInputStream() throws Exception {
         String expr = getExpr();
         if (expr.startsWith(REMOTE_START)) {
@@ -88,11 +96,14 @@ public abstract class AbstractInputStreamPipe extends BasePipe {
                     return method.getResponseBodyAsStream();
                 }
             }
-        } else if (VALID_PATH.matcher(expr).find()
-                && resolver.getResource(expr) != null
-                && resolver.getResource(expr).adaptTo(InputStream.class) != null) {
-            return resolver.getResource(expr).adaptTo(InputStream.class);
-        } else if (getBindings().getBindings().get(BINDING_IS) != null){
+        }
+        if (VALID_PATH.matcher(expr).find()) {
+            InputStream is = getInputStreamFromResource(expr);
+            if (is != null) {
+                return is;
+            }
+        }
+        if (getBindings().getBindings().get(BINDING_IS) != null) {
             return (InputStream)getBindings().getBindings().get(BINDING_IS);
         }
         return new ByteArrayInputStream(expr.getBytes(StandardCharsets.UTF_8));
