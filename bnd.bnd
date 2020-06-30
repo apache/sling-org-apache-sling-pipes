@@ -18,7 +18,8 @@ Sling-Model-Packages:\
 -exportcontents: ${packages;VERSIONED}
 
 -includeresource:\
-  @org.apache.sling.jcr.contentparser-*.jar!/org/apache/sling/jcr/contentparser/impl/JsonTicksConverter.*
+  @org.apache.sling.jcr.contentparser-*.jar!/org/apache/sling/jcr/contentparser/impl/JsonTicksConverter.*,\
+  @target/dependency/commons-jexl3-3.0.jar
 
 -removeheaders:\
   Include-Resource,\

@@ -14,7 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@Version("4.0.0")
-package org.apache.sling.pipes;
+package org.apache.sling.pipes.internal;
 
-import org.osgi.annotation.versioning.Version;
+import java.util.Map;
+
+import org.apache.commons.jexl3.JexlBuilder;
+import org.apache.commons.jexl3.JexlContext;
+import org.apache.commons.jexl3.JexlEngine;
+import org.apache.commons.jexl3.JexlExpression;
+import org.apache.commons.jexl3.MapContext;
+
+public class JxltEngine {
+
+
+    JexlEngine jexl;
+    JexlContext jc;
+
+    public JxltEngine(Map context) {
+        jexl = new JexlBuilder().create();
+        jc = new MapContext(context);
+    }
+
+    public Object parse(String expression) {
+        JexlExpression e = jexl.createExpression(expression);
+        return e.evaluate(jc);
+    }
+}

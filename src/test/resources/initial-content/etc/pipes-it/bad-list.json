@@ -13,7 +13,7 @@
     },
     "echo": {
       "sling:resourceType":"slingPipes/base",
-      "path":"${name.list === 'apple' ? path.apple : unexistingVariable}"
+      "path":"${name.list == 'apple' ? path.apple : unexistingVariable.length()}"
     }
   }
 }

@@ -81,6 +81,7 @@
   "moreBindings": {
     "jcr:primaryType":"nt:unstructured",
     "sling:resourceType":"slingPipes/container",
+    "engine": "nashorn",
     "jcr:description":"1 parent, additional bindings",
     "conf":{
       "jcr:primaryType":"sling:OrderedFolder",

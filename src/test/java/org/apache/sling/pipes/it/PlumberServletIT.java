@@ -19,6 +19,7 @@ package org.apache.sling.pipes.it;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import org.jsoup.Jsoup;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
@@ -60,6 +61,7 @@ public class PlumberServletIT extends PipesTestSupport {
     }
 
     @Test
+    @Ignore
     public void testErrors() throws IOException {
         final String url = String.format("http://localhost:%s/etc/pipes-it/bad-list.json", httpPort());
         LOGGER.info("fetching {}", url);

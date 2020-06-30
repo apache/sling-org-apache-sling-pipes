@@ -158,7 +158,7 @@ public class PlumberServletTest extends AbstractPipeTest {
         String bindingValue = "testBindingValue";
         String pathLengthParam = "pathLength";
         String bindings = "{\"" + testBinding + "\":\"" + bindingValue + "\"}";
-        String respObject = "{\"" + pathLengthParam + "\":\"${path.get(\\\"dummyGrandChild\\\").length}\",\"" + testBindingLength + "\":\"${" + testBinding + ".length}\"}";
+        String respObject = "{\"" + pathLengthParam + "\":\"${path.get(\\\"dummyGrandChild\\\").length()}\",\"" + testBindingLength + "\":\"${" + testBinding + ".length()}\"}";
         SlingHttpServletRequest request =
                 mockPlumberServletRequest(context.resourceResolver(), "json", dummyTreePath, null, bindings.toString(), respObject.toString(), null, null);
         servlet.execute(request, response, false);

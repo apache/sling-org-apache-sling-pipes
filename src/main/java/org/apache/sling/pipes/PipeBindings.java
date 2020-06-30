@@ -20,11 +20,11 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.pipes.internal.JxltEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.script.Bindings;
-import javax.script.Invocable;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
@@ -33,8 +33,6 @@ import javax.script.SimpleScriptContext;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -44,23 +42,16 @@ import java.util.regex.Pattern;
  * Execution bindings of a pipe, and all expression related
  */
 public class PipeBindings {
-    /**
-     * interface mapping a javascript date
-     */
-    public interface JsDate {
-        long getTime();
-        int getTimezoneOffset();
-    }
 
     private static final Logger log = LoggerFactory.getLogger(PipeBindings.class);
 
-    public static final String NASHORNSCRIPTENGINE = "nashorn";
-    
     public static final String NN_ADDITIONALBINDINGS = "additionalBindings";
 
     public static final String PN_ADDITIONALSCRIPTS = "additionalScripts";
 
     public static final String NN_PROVIDERS = "providers";
+
+    public static final String PN_ENGINE = "engine";
 
     /**
      * add ${path.pipeName} binding allowing to retrieve pipeName's current resource path
@@ -96,7 +87,12 @@ public class PipeBindings {
      */
     public PipeBindings(Resource resource) throws ScriptException {
     	//Setup script engines
-    	initializeScriptEngine();
+        if (resource.getChild(PN_ENGINE) != null) {
+            String engineName = resource.getChild(PN_ENGINE).adaptTo(String.class);
+            if (StringUtils.isNotBlank(engineName)) {
+                initializeScriptEngine(engineName);
+            }
+        }
     	
         //add path bindings where path.MyPipe will give MyPipe current resource path
         getBindings().put(PATH_BINDING, pathBindings);
@@ -158,19 +154,11 @@ public class PipeBindings {
     }
 
     /**
-     * @param expr expression with or without ${} use
-     * @return true if the expression is 'just' a plain string
-     */
-    public boolean isPlainString(String expr){
-        return computeECMA5Expression(expr) == null;
-    }
-
-    /**
      * Doesn't look like nashorn likes template strings :-(
      * @param expr ECMA like expression <code>blah${'some' + 'ecma' + 'expression'}</code>
      * @return computed expression, null if the expression is a plain string
      */
-    protected String computeECMA5Expression(String expr){
+    String computeTemplateExpression(String expr) {
         Matcher matcher = INJECTED_SCRIPT.matcher(expr);
         if (INJECTED_SCRIPT.matcher(expr).find()) {
             StringBuilder expression = new StringBuilder();
@@ -199,12 +187,17 @@ public class PipeBindings {
         return null;
     }
 
-    /**
-     * copy bindings
-     * @param original original bindings to copy
-     */
-    public void copyBindings(PipeBindings original){
-        getBindings().putAll(original.getBindings());
+    private ScriptEngine getEngine() {
+        if (engine == null) {
+            if (getBindings().containsKey(PN_ENGINE)){
+                try {
+                    initializeScriptEngine((String) getBindings().get(PN_ENGINE));
+                } catch(ScriptException e) {
+                    log.error("unable to initialize script engine", e);
+                }
+            }
+        }
+        return engine;
     }
 
     /**
@@ -214,12 +207,26 @@ public class PipeBindings {
      * @throws ScriptException in case the script fails, an exception is thrown (to let call code the opportunity to stop the execution)
      */
     protected Object evaluate(String expr) throws ScriptException {
-        String computed = computeECMA5Expression(expr);
-        if (computed != null){
-            //computed is null in case expr is a simple string
-            return engine.eval(computed, scriptContext);
+        String computed = computeTemplateExpression(expr);
+        if (computed != null) {
+            return getEngine() != null ? engine.eval(computed, scriptContext) : internalEvaluate(computed);
         }
         return expr;
+    }
+
+    /**
+     * Instantiate object from expression
+     * @param expr ecma expression
+     * @return instantiated object
+     * @throws ScriptException in case object computing went wrong
+     */
+    public Object instantiateObject(String expr) throws ScriptException {
+        return evaluate(expr);
+    }
+
+    private Object internalEvaluate(String expr) {
+        JxltEngine engine = new JxltEngine(getBindings());
+        return engine.parse(expr);
     }
 
     /**
@@ -244,17 +251,17 @@ public class PipeBindings {
      * In some contexts the nashorn engine cannot be obtained from thread's class loader. Do fallback to system classloader.
      * @throws ScriptException
      */
-    private void initializeScriptEngine() throws ScriptException{
-    	engine = new ScriptEngineManager().getEngineByName(PipeBindings.NASHORNSCRIPTENGINE);
-    	if(engine == null){
-        	//Fallback to system classloader
-    		engine = new ScriptEngineManager(null).getEngineByName(PipeBindings.NASHORNSCRIPTENGINE);
-    		//Check if nashorn can still not be instantiated
-    		if(engine == null){
-    			throw new ScriptException("Can not instantiate nashorn scriptengine. Check JVM version & capabilities.");
-    		}
-    	}
-    	engine.setContext(scriptContext);
+    public void initializeScriptEngine(String engineName) throws ScriptException {
+        engine = new ScriptEngineManager().getEngineByName(engineName);
+        if(engine == null){
+            //Fallback to system classloader
+            engine = new ScriptEngineManager(null).getEngineByName(engineName);
+            //Check if engine can still not be instantiated
+            if(engine == null){
+                throw new ScriptException("Can not instantiate " + engineName + " scriptengine. Check JVM version & capabilities.");
+            }
+        }
+        engine.setContext(scriptContext);
     }
 
     /**
@@ -288,29 +295,8 @@ public class PipeBindings {
      * @throws ScriptException in case expression computing went wrong
      */
     public String instantiateExpression(String expr) throws ScriptException {
-        return (String)evaluate(expr);
-    }
-
-    /**
-     * Instantiate object from expression
-     * @param expr ecma expression
-     * @return instantiated object
-     * @throws ScriptException in case object computing went wrong
-     */
-    public Object instantiateObject(String expr) throws ScriptException {
-        Object result = evaluate(expr);
-        if (result != null && ! result.getClass().getName().startsWith("java.lang.")) {
-            //special case of the date in which case jdk.nashorn.api.scripting.ScriptObjectMirror will
-            //be returned
-            JsDate jsDate = ((Invocable) engine).getInterface(result, JsDate.class);
-            if (jsDate != null ) {
-                Date date = new Date(jsDate.getTime() + jsDate.getTimezoneOffset() * 60 * 1000);
-                Calendar cal = Calendar.getInstance();
-                cal.setTime(date);
-                return cal;
-            }
-        }
-        return result;
+        Object obj = evaluate(expr);
+        return obj != null ? obj.toString() : null;
     }
 
     /**

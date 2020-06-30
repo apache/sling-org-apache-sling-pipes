@@ -50,6 +50,7 @@ public class BasePipe implements Pipe {
     public static final String RT_PREFIX = "slingPipes/";
     public static final String RESOURCE_TYPE = RT_PREFIX + "base";
     public static final String DRYRUN_KEY = "dryRun";
+    public static final String DRYRUN_EXPR = "${" + DRYRUN_KEY + "}";
     public static final String READ_ONLY = "readOnly";
     public static final String PN_STATUS = "status";
     public static final String PN_STATUS_MODIFIED = "statusModified";
@@ -57,7 +58,6 @@ public class BasePipe implements Pipe {
     public static final String PN_AFTERHOOK = "afterHook";
     public static final String STATUS_STARTED = "started";
     public static final String STATUS_FINISHED = "finished";
-    protected static final String DRYRUN_EXPR = String.format("${%s}", DRYRUN_KEY);
 
     protected ResourceResolver resolver;
     protected ValueMap properties;
