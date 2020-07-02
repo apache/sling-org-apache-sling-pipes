@@ -54,6 +54,8 @@ public class PipeBindings {
 
     public static final String PN_ENGINE = "engine";
 
+    public static final String FALSE_BINDING = "${false}";
+
     /**
      * add ${path.pipeName} binding allowing to retrieve pipeName's current resource path
      */
@@ -84,9 +86,8 @@ public class PipeBindings {
     /**
      * public constructor, built from pipe's resource
      * @param resource pipe's configuration resource
-     * @throws ScriptException in case scripts associated with the bindings are not assessable
      */
-    public PipeBindings(@NotNull Resource resource) throws ScriptException {
+    public PipeBindings(@NotNull Resource resource) {
     	//Setup script engines
         String engineName = resource.getValueMap().get(PN_ENGINE, String.class);
         if (StringUtils.isNotBlank(engineName)) {
@@ -114,7 +115,7 @@ public class PipeBindings {
      * adds additional bindings (global variables to use in child pipes expressions)
      * @param bindings key/values bindings to add to the existing bindings
      */
-    public void addBindings(Map bindings) {
+    public void addBindings(Map<String, Object> bindings) {
         log.info("Adding bindings {}", bindings);
         getBindings().putAll(bindings);
     }
@@ -152,6 +153,24 @@ public class PipeBindings {
         }
     }
 
+    private int processMatcher(int start, String expr, StringBuilder expression, Matcher matcher) {
+        if (matcher.start() > start) {
+            if (expression.length() == 0) {
+                expression.append("'");
+            }
+            expression.append(expr, start, matcher.start());
+        }
+        if (expression.length() > 0) {
+            expression.append("' + ");
+        }
+        expression.append(matcher.group(1));
+        start = matcher.end();
+        if (start < expr.length()) {
+            expression.append(" + '");
+        }
+        return start;
+    }
+
     /**
      * Doesn't look like nashorn likes template strings :-(
      * @param expr ECMA like expression <code>blah${'some' + 'ecma' + 'expression'}</code>
@@ -163,20 +182,7 @@ public class PipeBindings {
             StringBuilder expression = new StringBuilder();
             int start = 0;
             while (matcher.find()) {
-                if (matcher.start() > start) {
-                    if (expression.length() == 0) {
-                        expression.append("'");
-                    }
-                    expression.append(expr.substring(start, matcher.start()));
-                }
-                if (expression.length() > 0) {
-                    expression.append("' + ");
-                }
-                expression.append(matcher.group(1));
-                start = matcher.end();
-                if (start < expr.length()) {
-                    expression.append(" + '");
-                }
+                start = processMatcher(start, expr, expression, matcher);
             }
             if (start < expr.length()) {
                 expression.append(expr.substring(start) + "'");
@@ -187,14 +193,8 @@ public class PipeBindings {
     }
 
     private ScriptEngine getEngine() {
-        if (engine == null) {
-            if (getBindings().containsKey(PN_ENGINE)){
-                try {
-                    initializeScriptEngine((String) getBindings().get(PN_ENGINE));
-                } catch(ScriptException e) {
-                    log.error("unable to initialize script engine", e);
-                }
-            }
+        if (engine == null && getBindings().containsKey(PN_ENGINE)){
+            initializeScriptEngine((String) getBindings().get(PN_ENGINE));
         }
         return engine;
     }
@@ -203,12 +203,15 @@ public class PipeBindings {
      * evaluate a given expression
      * @param expr ecma like expression
      * @return object that is the result of the expression
-     * @throws ScriptException in case the script fails, an exception is thrown (to let call code the opportunity to stop the execution)
      */
-    protected Object evaluate(String expr) throws ScriptException {
-        String computed = computeTemplateExpression(expr);
-        if (computed != null) {
-            return getEngine() != null ? engine.eval(computed, scriptContext) : internalEvaluate(computed);
+    protected Object evaluate(String expr) {
+        try {
+            String computed = computeTemplateExpression(expr);
+            if (computed != null) {
+                return getEngine() != null ? engine.eval(computed, scriptContext) : internalEvaluate(computed);
+            }
+        } catch (ScriptException e) {
+            throw new IllegalArgumentException(e);
         }
         return expr;
     }
@@ -217,15 +220,14 @@ public class PipeBindings {
      * Instantiate object from expression
      * @param expr ecma expression
      * @return instantiated object
-     * @throws ScriptException in case object computing went wrong
      */
-    public Object instantiateObject(String expr) throws ScriptException {
+    public Object instantiateObject(String expr) {
         return evaluate(expr);
     }
 
     private Object internalEvaluate(String expr) {
-        JxltEngine engine = new JxltEngine(getBindings());
-        return engine.parse(expr);
+        JxltEngine internalEngine = new JxltEngine(getBindings());
+        return internalEngine.parse(expr);
     }
 
     /**
@@ -248,16 +250,16 @@ public class PipeBindings {
     /**
      * Initialize the ScriptEngine.
      * In some contexts the nashorn engine cannot be obtained from thread's class loader. Do fallback to system classloader.
-     * @throws ScriptException
+     * @param engineName name of the engine as registered in the JVM
      */
-    public void initializeScriptEngine(String engineName) throws ScriptException {
+    public void initializeScriptEngine(String engineName) {
         engine = new ScriptEngineManager().getEngineByName(engineName);
         if(engine == null){
             //Fallback to system classloader
             engine = new ScriptEngineManager(null).getEngineByName(engineName);
             //Check if engine can still not be instantiated
             if(engine == null){
-                throw new ScriptException("Can not instantiate " + engineName + " scriptengine. Check JVM version & capabilities.");
+                throw new IllegalArgumentException("Can not instantiate " + engineName + " scriptengine. Check JVM version & capabilities.");
             }
         }
         engine.setContext(scriptContext);
@@ -268,9 +270,8 @@ public class PipeBindings {
      * @param conditionalExpression can be static, or dynamic, can be conditional in which case it must be of following
      * format <code>$if${condition}someString</code>. someString will be returned if condition is true, otherwise null
      * @return instantiated expression or null if expression is conditional (see above) and condition is falsy
-     * @throws ScriptException in case one of the evaluation went wrong
      */
-    public String conditionalString(String conditionalExpression) throws ScriptException {
+    public String conditionalString(String conditionalExpression) {
         Matcher matcher = CONDITIONAL_STRING.matcher(conditionalExpression);
         if (matcher.find()){
             Object output = evaluate(StringUtils.substringAfter(matcher.group(0), IF_PREFIX));
@@ -291,9 +292,8 @@ public class PipeBindings {
      * we implement here as a String
      * @param expr ecma like expression
      * @return String that is the result of the expression
-     * @throws ScriptException in case expression computing went wrong
      */
-    public String instantiateExpression(String expr) throws ScriptException {
+    public String instantiateExpression(String expr) {
         Object obj = evaluate(expr);
         return obj != null ? obj.toString() : null;
     }

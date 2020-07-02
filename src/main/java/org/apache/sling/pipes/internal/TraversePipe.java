@@ -46,15 +46,14 @@ public class TraversePipe extends BasePipe {
      * @param plumber  plumber
      * @param resource configuration resource
      * @param upperBindings super pipe's bindings
-     * @throws Exception in case configuration is not working
      */
-    public TraversePipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
+    public TraversePipe(Plumber plumber, Resource resource, PipeBindings upperBindings) {
         super(plumber, resource, upperBindings);
     }
 
 
     @Override
-    protected Iterator<Resource> computeOutput() throws Exception {
+    protected Iterator<Resource> computeOutput() {
         return new TraversingIterator(getInput(), getResource().getValueMap());
     }
 
@@ -62,10 +61,10 @@ public class TraversePipe extends BasePipe {
      * iterative DFS or BFS jcr node tree iterator, transforming each visited node in a configured set of resources
      */
     public class TraversingIterator implements Iterator<Resource>{
-        protected final static String PN_PROPERTIES = "properties";
-        protected final static String PN_NAMEGLOBS = "nameGlobs";
-        protected final static String PN_BREADTH = "breadthFirst";
-        protected final static String PN_DEPTH = "depth";
+        protected static final String PN_PROPERTIES = "properties";
+        protected static final String PN_NAMEGLOBS = "nameGlobs";
+        protected static final String PN_BREADTH = "breadthFirst";
+        protected static final String PN_DEPTH = "depth";
         boolean properties;
         int initialLevel;
         int maxLevel;
@@ -128,7 +127,7 @@ public class TraversePipe extends BasePipe {
          */
         boolean goToNextElligibleNode() {
             try {
-                while ((currentResources == null || !currentResources.hasNext()) && nodesToVisit.size() > 0) {
+                while ((currentResources == null || !currentResources.hasNext()) && !nodesToVisit.isEmpty()) {
                     Node node = nodesToVisit.remove(0);
                     LOGGER.debug("visiting {}", node.getPath());
                     refreshResourceIterator(node);

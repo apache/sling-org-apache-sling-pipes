@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.jackrabbit.vault.fs.api.PathFilterSet;
 import org.apache.jackrabbit.vault.fs.config.DefaultWorkspaceFilter;
 import org.apache.jackrabbit.vault.packaging.JcrPackage;
+import org.apache.jackrabbit.vault.packaging.JcrPackageDefinition;
 import org.apache.jackrabbit.vault.packaging.JcrPackageManager;
 import org.apache.jackrabbit.vault.packaging.PackagingService;
 import org.apache.jackrabbit.vault.util.Text;
@@ -34,7 +35,6 @@ import org.slf4j.LoggerFactory;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.script.ScriptException;
 import java.io.IOException;
 import java.util.Iterator;
 
@@ -60,6 +60,8 @@ public class PackagePipe extends BasePipe {
 
     boolean checkExistence;
 
+    boolean filterCollectionMode;
+
     /**
      * Pipe Constructor
      *
@@ -72,6 +74,7 @@ public class PackagePipe extends BasePipe {
         super(plumber, resource, upperBindings);
         assemble = properties.get(PN_ASSEMBLE, true);
         checkExistence = properties.get(PN_CHECKEXISTENCE, true);
+        filterCollectionMode = properties.get(PN_FILTERCOLLECTIONMODE, false);
     }
 
     @Override
@@ -79,25 +82,38 @@ public class PackagePipe extends BasePipe {
         return true;
     }
 
-    @Override
-    protected Iterator<Resource> computeOutput() throws Exception {
-        Iterator<Resource> output = EMPTY_ITERATOR;
-        init();
-        if (properties.get(PN_FILTERCOLLECTIONMODE, false)){
-            Resource filterResource = getInput();
-            if (filterResource != null || !checkExistence){
-                if (filters == null){
-                    filters = new DefaultWorkspaceFilter();
-                }
-                //we take as a filter either computed resource, either configured path, as if resource,
-                //is null, check existence has been configured to be false
-                String filter = filterResource != null ? filterResource.getPath() : getComputedPath();
-                filters.add(new PathFilterSet(filter));
-                jcrPackage.getDefinition().setFilter(filters, true);
-                output = IteratorUtils.singletonIterator(getInput());
+    private Iterator<Resource> collectFilter() throws RepositoryException {
+        Resource filterResource = getInput();
+        if (filterResource != null || !checkExistence) {
+            if (jcrPackage == null) {
+                throw new IllegalArgumentException("Something went wrong while initiating the package");
+            }
+            if (filters == null) {
+                filters = new DefaultWorkspaceFilter();
+            }
+            //we take as a filter either computed resource, either configured path, as if resource,
+            //is null, check existence has been configured to be false
+            String filter = filterResource != null ? filterResource.getPath() : getComputedPath();
+            filters.add(new PathFilterSet(filter));
+            JcrPackageDefinition definition = jcrPackage.getDefinition();
+            if (definition == null) {
+                LOGGER.warn("package {} definition is null", jcrPackage);
+            } else {
+                definition.setFilter(filters, true);
+                return IteratorUtils.singletonIterator(getInput());
             }
         }
-        return output;
+        return EMPTY_ITERATOR;
+    }
+
+    @Override
+    protected Iterator<Resource> computeOutput() {
+        try {
+            init();
+            return filterCollectionMode ? collectFilter() : EMPTY_ITERATOR;
+        } catch (RepositoryException | IOException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
 
@@ -106,16 +122,16 @@ public class PackagePipe extends BasePipe {
      * @throws IOException problem with binary
      * @throws RepositoryException problem with package persistence
      * @throws IOException problem with package build
-     * @throws ScriptException problem with some expression/path compute
      */
-    protected void init() throws IOException, RepositoryException, ScriptException {
+    protected void init() throws IOException, RepositoryException {
         if (jcrPackage == null){
             String packagePath = getExpr();
-            if (StringUtils.isNotBlank(packagePath)) {
-                JcrPackageManager mgr = PackagingService.getPackageManager(resolver.adaptTo(Session.class));
-                Resource packageResource = resolver.getResource(packagePath);
-                if (packageResource != null) {
-                    jcrPackage = mgr.open(packageResource.adaptTo(Node.class));
+            Session session = resolver.adaptTo(Session.class);
+            if (StringUtils.isNotBlank(packagePath) && session != null) {
+                JcrPackageManager mgr = PackagingService.getPackageManager(session);
+                Node pkgNode = session.getNode(packagePath);
+                if (pkgNode != null) {
+                    jcrPackage = mgr.open(pkgNode);
                 } else {
                     String parent = Text.getRelativeParent(packagePath, 1);
                     Resource folderResource = resolver.getResource(parent);

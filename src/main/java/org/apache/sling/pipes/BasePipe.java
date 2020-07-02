@@ -26,7 +26,6 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.script.ScriptException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -73,9 +72,9 @@ public class BasePipe implements Pipe {
     protected String afterHook;
 
     // used by pipes using complex JCR configurations
-    public static final List<String> IGNORED_PROPERTIES = Arrays.asList(new String[]{"jcr:lastModified", "jcr:primaryType", "jcr:created", "jcr:createdBy", "jcr:uuid"});
+    protected static final List<String> IGNORED_PROPERTIES = Arrays.asList("jcr:lastModified", "jcr:primaryType", "jcr:created", "jcr:createdBy", "jcr:uuid");
 
-    protected Boolean dryRunObject;
+    Boolean dryRunObject = null;
 
     @Override
     public SuperPipe getParent() {
@@ -101,9 +100,8 @@ public class BasePipe implements Pipe {
      * @param plumber plumber
      * @param resource configuration resource
      * @param upperBindings already set bindings, can be null
-     * @throws Exception in case configuration is not working
      */
-    public BasePipe(@NotNull Plumber plumber, @NotNull Resource resource, @Nullable PipeBindings upperBindings) throws Exception {
+    public BasePipe(@NotNull Plumber plumber, @NotNull Resource resource, @Nullable PipeBindings upperBindings) {
         this.resource = resource;
         properties = resource.getValueMap();
         resolver = resource.getResourceResolver();
@@ -115,13 +113,30 @@ public class BasePipe implements Pipe {
         extractAdditionalBindings(resource, upperBindings);
     }
 
+    private void fillInProviders(@NotNull Resource additionalBindings) {
+        Resource providers = additionalBindings.getChild(NN_PROVIDERS);
+        if (providers != null){
+            logger.debug("bindings provider are detected");
+            bindingProviders = new ArrayList<>();
+            for (Resource provider : providers.getChildren()){
+                Pipe pipe = plumber.getPipe(provider, bindings);
+                if (pipe == null) {
+                    logger.error("pipe provided in {} is not correct", provider.getPath());
+                } else if (pipe.modifiesContent()) {
+                    logger.error("content modifiers like {} are not usable as binding providers", provider.getPath());
+                } else {
+                    bindingProviders.add(new BindingProvider(pipe));
+                }
+            }
+        }
+    }
+
     /**
-     * because additional bindings or scripts can be defined at a subpipe level
+     * because additional bindings or scripts can be defined at a sub-pipe level
      * @param resource
      * @param upperBindings
-     * @throws ScriptException
      */
-    private void extractAdditionalBindings(@NotNull Resource resource, @Nullable PipeBindings upperBindings) throws ScriptException {
+    private void extractAdditionalBindings(@NotNull Resource resource, @Nullable PipeBindings upperBindings) {
         bindings = upperBindings == null ? new PipeBindings(resource) : upperBindings;
         //additional bindings (global variables to use in child pipes expressions)
         Resource additionalBindings = resource.getChild(NN_ADDITIONALBINDINGS);
@@ -132,21 +147,7 @@ public class BasePipe implements Pipe {
             for (String ignoredProperty : BasePipe.IGNORED_PROPERTIES){
                 bindings.getBindings().remove(ignoredProperty);
             }
-            Resource providers = additionalBindings.getChild(NN_PROVIDERS);
-            if (providers != null){
-                logger.debug("bindings provider are detected");
-                bindingProviders = new ArrayList<>();
-                for (Resource provider : providers.getChildren()){
-                    Pipe pipe = plumber.getPipe(provider, bindings);
-                    if (pipe == null) {
-                        logger.error("pipe provided in {} is not correct", provider.getPath());
-                    } else if (pipe.modifiesContent()) {
-                        logger.error("content modifiers like {} are not usable as binding providers", provider.getPath());
-                    } else {
-                        bindingProviders.add(new BindingProvider(pipe));
-                    }
-                }
-            }
+            fillInProviders(additionalBindings);
         }
         Resource scriptsResource = resource.getChild(PN_ADDITIONALSCRIPTS);
         if (scriptsResource != null) {
@@ -164,19 +165,16 @@ public class BasePipe implements Pipe {
     public boolean isDryRun() {
         if (dryRunObject == null) {
             dryRunObject = false;
-            try {
-                Object run = bindings.isBindingDefined(DRYRUN_KEY) ? bindings.instantiateObject(DRYRUN_EXPR) : false;
-                if (run != null) {
-                    dryRunObject = true;
-                    if (run instanceof Boolean) {
-                        dryRunObject = (Boolean) run;
-                    } else if (run instanceof String && String.format("%s", Boolean.FALSE).equals(run)) {
-                        dryRunObject = false;
-                    }
+            if ( bindings.isBindingDefined(DRYRUN_KEY)) {
+                Object run = bindings.instantiateObject(DRYRUN_EXPR);
+                dryRunObject = true;
+                if (run instanceof Boolean) {
+                    dryRunObject = (Boolean) run;
+                } else if (run == null || (run instanceof String && Boolean.FALSE.toString().equals(run))) {
+                    dryRunObject = false;
                 }
-            } catch (ScriptException e){
-                logger.error("error evaluating {}, assuming dry run", DRYRUN_EXPR, e);
             }
+            logger.debug("setting dryrun object to {}", dryRunObject);
         }
         return dryRunObject;
     }
@@ -206,9 +204,8 @@ public class BasePipe implements Pipe {
     /**
      * Get pipe's expression, instanciated or not
      * @return configured expression
-     * @throws ScriptException in case computed expression goes wrong
      */
-    public String getExpr() throws ScriptException {
+    public String getExpr() {
         return bindings.instantiateExpression(getRawExpression());
     }
 
@@ -222,23 +219,19 @@ public class BasePipe implements Pipe {
     /**
      * Get pipe's path, instanciated or not
      * @return configured path (can be empty)
-     * @throws ScriptException in case computed path goes wrong
      */
-    public String getPath() throws ScriptException {
+    public String getPath() {
         String rawPath = getRawPath();
         return bindings.instantiateExpression(rawPath);
     }
 
     /**
      * @return computed path: getPath, with relative path taken in account
-     * @throws ScriptException in case computed path goes wrong
      */
-    protected String getComputedPath() throws ScriptException {
+    protected String getComputedPath() {
         String path = getPath();
-        if (StringUtils.isNotBlank(path)) {
-            if (!isRootPath(path) && getPreviousResource() != null) {
-                path = getPreviousResource().getPath() + SLASH + path;
-            }
+        if (StringUtils.isNotBlank(path) && !isRootPath(path) && getPreviousResource() != null) {
+            path = getPreviousResource().getPath() + SLASH + path;
         }
         return path;
     }
@@ -273,7 +266,7 @@ public class BasePipe implements Pipe {
     }
 
     @Override
-    public Resource getInput() throws ScriptException {
+    public @Nullable Resource getInput() {
         String path = getComputedPath();
         Resource input = null;
         if (StringUtils.isNotBlank(path)){
@@ -311,21 +304,19 @@ public class BasePipe implements Pipe {
 
     /**
      * will execute in parallel binding providers if any, and updated Pipe bindings with returned values
+     * @throws InterruptedException can happen while a binding provider is executed
+     * @throws ExecutionException can happen when a binding provider is executed
      */
-    protected void provideAdditionalBindings(){
-        if (bindingProviders != null && bindingProviders.size() > 0){
-            try {
-                ExecutorService executor = Executors.newWorkStealingPool();
-                List<Future<ValueMap>> additionalBindings = executor.invokeAll(bindingProviders);
-                for (Future<ValueMap> additionalBinding : additionalBindings){
-                    ValueMap binding = additionalBinding.get();
-                    Pipe pipe = bindingProviders.get(additionalBindings.indexOf(additionalBinding)).getPipe();
-                    logger.debug("adding binding " +
-                            "{}={}", pipe.getName(), binding);
-                    bindings.addBinding(pipe.getName(), binding);
-                }
-            } catch (InterruptedException | ExecutionException e){
-                logger.error("unable to provide additional bindings", e);
+    protected void provideAdditionalBindings() throws InterruptedException, ExecutionException {
+        if (bindingProviders != null && !bindingProviders.isEmpty()){
+            ExecutorService executor = Executors.newWorkStealingPool();
+            List<Future<ValueMap>> additionalBindings = executor.invokeAll(bindingProviders);
+            for (Future<ValueMap> additionalBinding : additionalBindings){
+                ValueMap binding = additionalBinding.get();
+                Pipe pipe = bindingProviders.get(additionalBindings.indexOf(additionalBinding)).getPipe();
+                logger.debug("adding binding " +
+                        "{}={}", pipe.getName(), binding);
+                bindings.addBinding(pipe.getName(), binding);
             }
         }
     }
@@ -368,9 +359,8 @@ public class BasePipe implements Pipe {
 
     /**
      * @return outputs of the pipe, as an iterator of resources
-     * @throws ScriptException if any exception has occured
      */
-    protected Iterator<Resource> computeOutput() throws Exception {
+    protected Iterator<Resource> computeOutput() {
         Resource input = getInput();
         if (input != null) {
             return Collections.singleton(input).iterator();

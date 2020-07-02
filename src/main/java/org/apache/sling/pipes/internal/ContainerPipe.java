@@ -64,7 +64,7 @@ public class ContainerPipe extends SuperPipe {
 
     @Override
     protected Iterator<Resource> computeSubpipesOutput() {
-        if (subpipes.size() > 0) {
+        if (!subpipes.isEmpty()) {
             return new ContainerResourceIterator(this);
         }
         return EMPTY_ITERATOR;
@@ -173,6 +173,7 @@ public class ContainerPipe extends SuperPipe {
                 }
             } catch (InterruptedException e){
                 log.error("interrupted while sleeping", e);
+                Thread.currentThread().interrupt();
             }
             return null;
         }
@@ -182,5 +183,4 @@ public class ContainerPipe extends SuperPipe {
             throw new UnsupportedOperationException();
         }
     }
-
 }

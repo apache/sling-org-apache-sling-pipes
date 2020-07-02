@@ -24,14 +24,13 @@ import org.apache.sling.pipes.OutputWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.script.ScriptException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class CsvWriter extends OutputWriter {
-    private static final Logger LOG = LoggerFactory.getLogger(CsvWriter.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CsvWriter.class);
 
     private static final String CSV_EXTENSION = "csv";
 
@@ -45,7 +44,7 @@ public class CsvWriter extends OutputWriter {
 
     @Override
     public boolean handleRequest(SlingHttpServletRequest request) {
-        return request.getRequestPathInfo().getExtension().equals(CSV_EXTENSION);
+        return CSV_EXTENSION.equals(request.getRequestPathInfo().getExtension());
     }
 
     @Override
@@ -56,7 +55,20 @@ public class CsvWriter extends OutputWriter {
 
     @Override
     public void starts() {
+        //nothing to start with
+    }
 
+    void writeCell(Resource resource, List<String> elts, String key) {
+        if (key.equals(PATH_KEY)){
+            elts.add(resource.getPath());
+        } else if (customOutputs != null) {
+            try {
+                elts.add(pipe.getBindings().instantiateExpression((String)customOutputs.get(key)));
+            } catch (RuntimeException e){
+                LOGGER.error("unable to evaluate {}, will write empty value", customOutputs.get(key), e);
+                elts.add(StringUtils.EMPTY);
+            }
+        }
     }
 
     @Override
@@ -70,36 +82,25 @@ public class CsvWriter extends OutputWriter {
             try {
                 writer.write(headers.stream().collect(Collectors.joining(SEPARATOR)) + NEW_LINE);
             } catch (IOException e) {
-                LOG.error("unable to write header");
+                LOGGER.error("unable to write header");
             }
         }
-        if (headers != null){
-            try {
-                List<String> elts = new ArrayList<>();
-                for (String key : headers){
-                    if (key.equals(PATH_KEY)){
-                        elts.add(resource.getPath());
-                    } else {
-                        try {
-                            elts.add(pipe.getBindings().instantiateExpression((String)customOutputs.get(key)));
-                        } catch (ScriptException e){
-                            LOG.error("unable to evalutate {}, will write empty value", customOutputs.get(key), e);
-                            elts.add(StringUtils.EMPTY);
-                        }
-                    }
-                }
-                String line = elts.stream().collect(Collectors.joining(SEPARATOR));
-                writer.write(line + NEW_LINE);
-            } catch (IOException e) {
-                LOG.error("unable to write header", e);
+        try {
+            List<String> elts = new ArrayList<>();
+            for (String key : headers){
+                writeCell(resource, elts, key);
             }
+            String line = elts.stream().collect(Collectors.joining(SEPARATOR));
+            writer.write(line + NEW_LINE);
+        } catch (IOException e) {
+            LOGGER.error("unable to write header", e);
         }
     }
 
     @Override
     public void ends() {
         try {
-            if (errors.size() > 0){
+            if (!errors.isEmpty()){
                 writer.write(HEADER_ERROR + NEW_LINE);
                 for (String error : errors){
                     writer.write(error + NEW_LINE);
@@ -107,7 +108,7 @@ public class CsvWriter extends OutputWriter {
             }
             writer.flush();
         } catch (IOException e) {
-            LOG.error("unable to flush", e);
+            LOGGER.error("unable to flush", e);
         }
     }
 }

@@ -26,7 +26,7 @@ import static org.apache.sling.query.SlingQuery.$;
 public class ClosestPipe extends AbstractExpressionSlingQueryPipe {
     public static final String RESOURCE_TYPE = RT_PREFIX + "closest";
 
-    public ClosestPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
+    public ClosestPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) {
         super(plumber, resource, upperBindings);
     }
 

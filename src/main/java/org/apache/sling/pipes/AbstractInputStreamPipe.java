@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
@@ -40,13 +41,13 @@ import java.util.regex.Pattern;
  * binding is updated by the returned iterator
  */
 public abstract class AbstractInputStreamPipe extends BasePipe {
-    private static Logger LOGGER = LoggerFactory.getLogger(AbstractInputStreamPipe.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractInputStreamPipe.class);
 
-    public final String REMOTE_START = "http";
+    public static final String REMOTE_START = "http";
 
-    protected final Pattern VALID_PATH = Pattern.compile("/([\\w\\d\\.-_]+/)+[\\w\\d\\.-_]+");
+    protected static final Pattern VALID_PATH = Pattern.compile("/([\\w\\d\\.-_]+/)+[\\w\\d\\.-_]+");
 
-    public static final Object BINDING_IS = "org.apache.sling.pipes.RequestInputStream";
+    public static final String BINDING_IS = "org.apache.sling.pipes.RequestInputStream";
 
     HttpClient client;
 
@@ -56,7 +57,7 @@ public abstract class AbstractInputStreamPipe extends BasePipe {
 
     InputStream is;
 
-    public AbstractInputStreamPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
+    public AbstractInputStreamPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) {
         super(plumber, resource, upperBindings);
         configureHttpClient();
         binding = null;
@@ -81,7 +82,7 @@ public abstract class AbstractInputStreamPipe extends BasePipe {
         return null;
     }
 
-    InputStream getInputStream() throws Exception {
+    InputStream getInputStream() throws IOException {
         String expr = getExpr();
         if (expr.startsWith(REMOTE_START)) {
             //first look at
@@ -98,9 +99,9 @@ public abstract class AbstractInputStreamPipe extends BasePipe {
             }
         }
         if (VALID_PATH.matcher(expr).find()) {
-            InputStream is = getInputStreamFromResource(expr);
-            if (is != null) {
-                return is;
+            InputStream resourceIs = getInputStreamFromResource(expr);
+            if (resourceIs != null) {
+                return resourceIs;
             }
         }
         if (getBindings().getBindings().get(BINDING_IS) != null) {
@@ -114,14 +115,16 @@ public abstract class AbstractInputStreamPipe extends BasePipe {
         return binding;
     }
 
-    abstract public Iterator<Resource> getOutput(InputStream inputStream) throws Exception;
+    public abstract Iterator<Resource> getOutput(InputStream inputStream);
 
     @Override
-    public Iterator<Resource> computeOutput() throws Exception {
+    public Iterator<Resource> computeOutput() {
         try {
             is = getInputStream();
             return getOutput(is);
-        }  finally {
+        }  catch (IOException e) {
+            throw new IllegalArgumentException(e);
+        } finally {
             IOUtils.closeQuietly(is);
             if (method != null){
                 method.releaseConnection();

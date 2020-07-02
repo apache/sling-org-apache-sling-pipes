@@ -24,7 +24,6 @@ import org.apache.sling.pipes.Plumber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.script.ScriptException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -47,7 +46,7 @@ public class RegexpPipe extends AbstractInputStreamPipe {
     private static final Pattern PATTERN_NAME = Pattern.compile("\\?<([\\w]+)>");
     private static final short PATTERN_IDX_NAME = 1;
 
-    public RegexpPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
+    public RegexpPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) {
         super(plumber, resource, upperBindings);
     }
 
@@ -57,7 +56,7 @@ public class RegexpPipe extends AbstractInputStreamPipe {
         try {
             String patternString = properties.get(PN_PATTERN, String.class);
             final Collection<String> names = getGroupNames(patternString);
-            if (names.size() == 0){
+            if (names.isEmpty()){
                 logger.debug("no name defined, will take the whole match");
             }
             Pattern pattern = Pattern.compile(patternString);
@@ -75,8 +74,8 @@ public class RegexpPipe extends AbstractInputStreamPipe {
 
                     @Override
                     public Resource next() {
-                        if (names.size() > 0){
-                            Map map = new HashMap();
+                        if (!names.isEmpty()){
+                            Map<String, Object> map = new HashMap<>();
                             for (String name : names) {
                                 map.put(name, matcher.group(name));
                             }
@@ -90,8 +89,8 @@ public class RegexpPipe extends AbstractInputStreamPipe {
                     }
                 };
             }
-        } catch (ScriptException | IOException e) {
-            logger.error("unable to open input stream", e);
+        } catch (IOException e) {
+            throw new IllegalArgumentException(e);
         }
         return output;
     }

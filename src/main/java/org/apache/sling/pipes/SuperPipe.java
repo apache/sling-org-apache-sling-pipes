@@ -45,28 +45,24 @@ public abstract class SuperPipe extends BasePipe {
      * @param plumber       plumber
      * @param resource      configuration resource
      * @param upperBindings already set bindings, can be null
-     *
-     * @throws Exception in case configuration is not working
      */
-    public SuperPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
+    public SuperPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) {
         super(plumber, resource, upperBindings);
         sleep = properties.get(PN_SLEEP, 0L);
     }
 
     /**
      * build the subpipes pipes list
-     * @throws Exception in case one of the child building has went wrong
      */
-    public abstract void buildChildren() throws Exception;
+    public abstract void buildChildren();
 
     /**
      * @return output of this super pipe's subpipes
-     * @throws Exception in case one of the outputs computation went wrong
      */
-    protected abstract Iterator<Resource> computeSubpipesOutput() throws Exception;
+    protected abstract Iterator<Resource> computeSubpipesOutput();
 
     @Override
-    protected Iterator<Resource> computeOutput() throws Exception {
+    protected Iterator<Resource> computeOutput() {
         if (subpipes.isEmpty()){
             buildChildren();
         }
@@ -78,7 +74,7 @@ public abstract class SuperPipe extends BasePipe {
      * @return first pipe of the container
      */
     protected Pipe getFirstPipe() {
-        return subpipes.size() > 0 ? subpipes.get(0) : null;
+        return !subpipes.isEmpty() ? subpipes.get(0) : null;
     }
 
     /**
@@ -86,7 +82,7 @@ public abstract class SuperPipe extends BasePipe {
      * @return pipe in the last position of the container's pipes
      */
     protected Pipe getLastPipe() {
-        return subpipes.size() > 0 ? subpipes.get(subpipes.size() - 1) : null;
+        return !subpipes.isEmpty() ? subpipes.get(subpipes.size() - 1) : null;
     }
 
     /**
@@ -133,7 +129,7 @@ public abstract class SuperPipe extends BasePipe {
     public void before() throws Exception {
         LOG.debug("entering {} before", getName());
         super.before();
-        if (subpipes.size() == 0){
+        if (subpipes.isEmpty()){
             buildChildren();
         }
         for (Pipe pipe : subpipes){

@@ -21,7 +21,6 @@ import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.PipeBindings;
@@ -29,6 +28,7 @@ import org.apache.sling.pipes.Plumber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.RepositoryException;
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
@@ -47,7 +47,6 @@ public class AuthorizablePipe extends BasePipe {
     public static final String PN_BINDMEMBERS = "bindMembers";
 
     UserManager userManager;
-    ResourceResolver resolver;
     boolean createGroup;
     boolean bindMembers;
     String addToGroup;
@@ -72,11 +71,9 @@ public class AuthorizablePipe extends BasePipe {
      * @param plumber plumber instance
      * @param resource configuration resource
      * @param upperBindings bindings coming from super pipe
-     * @throws Exception bad configuration handling
      */
-    public AuthorizablePipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
+    public AuthorizablePipe(Plumber plumber, Resource resource, PipeBindings upperBindings) {
         super(plumber, resource, upperBindings);
-        resolver = resource.getResourceResolver();
         userManager = resolver.adaptTo(UserManager.class);
         if (getConfiguration() != null) {
             ValueMap properties = getConfiguration().getValueMap();
@@ -88,21 +85,25 @@ public class AuthorizablePipe extends BasePipe {
     }
 
     @Override
-    public Iterator<Resource> computeOutput() throws Exception {
-        Authorizable auth = getAuthorizable();
-        if (auth != null) {
-            logger.debug("Retrieved authorizable {}", auth.getID());
-            if (StringUtils.isNotBlank(addToGroup)){
-                addToGroup(auth);
+    public Iterator<Resource> computeOutput() {
+        try {
+            Authorizable auth = getAuthorizable();
+            if (auth != null) {
+                logger.debug("Retrieved authorizable {}", auth.getID());
+                if (StringUtils.isNotBlank(addToGroup)) {
+                    addToGroup(auth);
+                }
+                if (StringUtils.isNotBlank(addMembers)) {
+                    addMembers(auth);
+                }
+                if (bindMembers) {
+                    bindMembers(auth);
+                }
+                Resource resource = resolver.getResource(auth.getPath());
+                return Collections.singleton(resource).iterator();
             }
-            if (StringUtils.isNotBlank(addMembers)){
-                addMembers(auth);
-            }
-            if (bindMembers){
-                bindMembers(auth);
-            }
-            Resource resource = resolver.getResource(auth.getPath());
-            return Collections.singleton(resource).iterator();
+        } catch (RepositoryException e) {
+            throw new IllegalStateException(e);
         }
         return EMPTY_ITERATOR;
     }
@@ -112,28 +113,25 @@ public class AuthorizablePipe extends BasePipe {
      * not present and if <code>createGroup</code> is set to true, or, if
      * no expression, tries to resolve getInput() as an authorizable
      * @return corresponding authorizable
+     * @throws RepositoryException can happen with any JCR operation
      */
-    protected Authorizable getAuthorizable() {
+    protected Authorizable getAuthorizable() throws RepositoryException {
         Authorizable auth = null;
-        try {
-            String authId = getExpr();
-            if (StringUtils.isNotBlank(authId)) {
-                logger.debug("try to find authorizable {}", authId);
-                auth = userManager.getAuthorizable(authId);
-                if (auth == null && createGroup) {
-                    logger.info("authorizable {} does not exist, and createGroup flag is set, creating it", authId);
-                    if (! isDryRun()) {
-                        auth = userManager.createGroup(authId);
-                    }
-                }
-            } else {
-                Resource resource = getInput();
-                if (resource != null) {
-                    auth = userManager.getAuthorizableByPath(resource.getPath());
+        String authId = getExpr();
+        if (StringUtils.isNotBlank(authId)) {
+            logger.debug("try to find authorizable {}", authId);
+            auth = userManager.getAuthorizable(authId);
+            if (auth == null && createGroup) {
+                logger.info("authorizable {} does not exist, and createGroup flag is set, creating it", authId);
+                if (! isDryRun()) {
+                    auth = userManager.createGroup(authId);
                 }
             }
-        } catch (Exception e){
-            logger.error("unable to output authorizable based on configuration", e);
+        } else {
+            Resource resource = getInput();
+            if (resource != null) {
+                auth = userManager.getAuthorizableByPath(resource.getPath());
+            }
         }
         return auth;
     }
@@ -147,9 +145,9 @@ public class AuthorizablePipe extends BasePipe {
             //if addToGroup is set to true, we try to find the corresponding
             //group and to add current auth to it as a member
             String groupId = bindings.instantiateExpression(addToGroup);
-            Authorizable groupAuth = (Group) userManager.getAuthorizable(groupId);
+            Authorizable groupAuth = userManager.getAuthorizable(groupId);
             if (groupAuth != null && groupAuth.isGroup()) {
-                logger.info("adding {} to {}", auth.getID(), groupId);
+                logger.info("adding {} to {}", auth.getID(), groupId);
                 if (! isDryRun()) {
                     ((Group) groupAuth).addMember(auth);
                 }
@@ -182,7 +180,7 @@ public class AuthorizablePipe extends BasePipe {
                     }
                 }
             } else {
-                logger.error("{} is not a group, can't add members", auth.getID());
+                logger.error("{} is not a group, can't add members", auth.getID());
             }
         } catch (Exception e){
             logger.error("unable to add members {}", addMembers, e);
@@ -204,7 +202,7 @@ public class AuthorizablePipe extends BasePipe {
                 }
                 outputBinding = JsonUtil.toString(array);
             } else {
-                logger.error("{} is not a group, unable to bind members", auth.getID());
+                logger.error("{} is not a group, unable to bind members", auth.getID());
             }
         } catch (Exception e){
             logger.error("unable to bind members");

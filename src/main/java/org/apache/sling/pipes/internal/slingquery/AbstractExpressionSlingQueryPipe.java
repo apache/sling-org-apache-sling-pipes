@@ -23,14 +23,12 @@ import org.apache.sling.query.SlingQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.script.ScriptException;
-
 /**
  * deals with sling query pipe code that takes an expression as input
  */
 public abstract class AbstractExpressionSlingQueryPipe extends AbstractSlingQueryPipe {
     Logger logger = LoggerFactory.getLogger(AbstractExpressionSlingQueryPipe.class);
-    public AbstractExpressionSlingQueryPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
+    public AbstractExpressionSlingQueryPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) {
         super(plumber, resource, upperBindings);
     }
 
@@ -48,7 +46,7 @@ public abstract class AbstractExpressionSlingQueryPipe extends AbstractSlingQuer
             String expression = getExpr();
             logger.debug("executing sling query pipe with expression {}", expression);
             return getQuery(resource, expression);
-        } catch (ScriptException e){
+        } catch (RuntimeException e){
             logger.error("please check pipe expressions", e);
         }
         return null;

@@ -35,9 +35,9 @@ import java.util.Map;
  * default output writer, that outputs JSON with size and output resources' path
  */
 public class JsonWriter extends OutputWriter {
-    private static Logger logger = LoggerFactory.getLogger(JsonWriter.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(JsonWriter.class);
 
-    protected JsonGenerator jsonWriter;
+    protected JsonGenerator jsonGenerator;
 
     public static final String JSON_EXTENSION = "json";
 
@@ -47,7 +47,7 @@ public class JsonWriter extends OutputWriter {
 
     @Override
     public boolean handleRequest(SlingHttpServletRequest request) {
-        return request.getRequestPathInfo().getExtension().equals(JSON_EXTENSION);
+        return JSON_EXTENSION.equals(request.getRequestPathInfo().getExtension());
     }
 
     @Override
@@ -58,49 +58,49 @@ public class JsonWriter extends OutputWriter {
 
     @Override
     public void starts() {
-        jsonWriter = Json.createGenerator(writer);
-        jsonWriter.writeStartObject();
-        jsonWriter.writeStartArray(KEY_ITEMS);
+        jsonGenerator = Json.createGenerator(writer);
+        jsonGenerator.writeStartObject();
+        jsonGenerator.writeStartArray(KEY_ITEMS);
     }
 
     @Override
     public void writeItem(Resource resource) {
         if (customOutputs == null) {
-            jsonWriter.write(resource.getPath());
+            jsonGenerator.write(resource.getPath());
         } else {
-            jsonWriter.writeStartObject();
-            jsonWriter.write(PATH_KEY, resource.getPath());
+            jsonGenerator.writeStartObject();
+            jsonGenerator.write(PATH_KEY, resource.getPath());
             for (Map.Entry<String, Object> entry : customOutputs.entrySet()) {
                 Object o = null;
                 try {
                     o = pipe.getBindings().instantiateObject((String) entry.getValue());
                     if (o instanceof JsonValue) {
-                        jsonWriter.write(entry.getKey(), (JsonValue) o);
+                        jsonGenerator.write(entry.getKey(), (JsonValue) o);
                     } else {
-                        jsonWriter.write(entry.getKey(), o.toString());
+                        jsonGenerator.write(entry.getKey(), o.toString());
                     }
-                } catch (ScriptException e) {
-                    logger.error("unable to write entry {}, will write empty value", entry, e);
-                    jsonWriter.write(StringUtils.EMPTY);
+                } catch (RuntimeException e) {
+                    LOGGER.error("unable to write entry {}, will write empty value", entry, e);
+                    jsonGenerator.write(StringUtils.EMPTY);
                 }
             }
-            jsonWriter.writeEnd();
+            jsonGenerator.writeEnd();
         }
     }
 
     @Override
     public void ends() {
-        jsonWriter.writeEnd();
-        jsonWriter.write(KEY_SIZE,size);
+        jsonGenerator.writeEnd();
+        jsonGenerator.write(KEY_SIZE,size);
         if (nbErrors > 0) {
-            jsonWriter.write(KEY_NB_ERRORS, nbErrors);
-            jsonWriter.writeStartArray(KEY_ERRORS);
+            jsonGenerator.write(KEY_NB_ERRORS, nbErrors);
+            jsonGenerator.writeStartArray(KEY_ERRORS);
             for (String error : errors){
-                jsonWriter.write(error);
+                jsonGenerator.write(error);
             }
-            jsonWriter.writeEnd();
+            jsonGenerator.writeEnd();
         }
-        jsonWriter.writeEnd();
-        jsonWriter.flush();
+        jsonGenerator.writeEnd();
+        jsonGenerator.flush();
     }
 }

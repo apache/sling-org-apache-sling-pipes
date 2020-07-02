@@ -30,7 +30,7 @@ public class JxltEngine {
     JexlEngine jexl;
     JexlContext jc;
 
-    public JxltEngine(Map context) {
+    public JxltEngine(Map<String, Object> context) {
         jexl = new JexlBuilder().create();
         jc = new MapContext(context);
     }

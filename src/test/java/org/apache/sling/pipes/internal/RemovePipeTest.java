@@ -79,8 +79,9 @@ public class RemovePipeTest extends AbstractPipeTest {
         ResourceResolver resolver = context.resourceResolver();
         Resource resource = resolver.getResource(PATH_PIPE + "/" + NN_COMPLEX);
         Pipe pipe = plumber.getPipe(resource);
-        assertTrue("resource should be solved", pipe.getOutput().hasNext());
-        pipe.getOutput().next();
+        Iterator<Resource> output = pipe.getOutput();
+        assertTrue("resource should be solved", output.hasNext());
+        output.next();
         resolver.commit();
         assertNull("isnota carrot should be removed", resolver.getResource(PATH_APPLE + "/isnota/carrot"));
         Resource isNotAPea = resolver.getResource(PATH_APPLE + "/isnota/pea");

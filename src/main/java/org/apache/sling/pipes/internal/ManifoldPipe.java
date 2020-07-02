@@ -66,9 +66,8 @@ public class ManifoldPipe extends SuperPipe {
      * @param plumber plumber
      * @param resource container's configuration resource
      * @param upperBindings pipe bindings
-     * @throws Exception bad configuration handling
      */
-    public ManifoldPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception{
+    public ManifoldPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) {
         super(plumber, resource, upperBindings);
         int queueSize = properties.get(PN_QUEUE_SIZE, QUEUE_SIZE_DEFAULT);
         numThreads = properties.get(PN_NUM_THREADS, NUM_THREADS_DEFAULT);
@@ -77,7 +76,7 @@ public class ManifoldPipe extends SuperPipe {
     }
 
     @Override
-    public void buildChildren() throws Exception {
+    public void buildChildren() {
         for (Iterator<Resource> childPipeResources = getConfiguration().listChildren(); childPipeResources.hasNext();){
             Resource pipeResource = childPipeResources.next();
             Pipe pipe = plumber.getPipe(pipeResource, bindings);
@@ -91,7 +90,7 @@ public class ManifoldPipe extends SuperPipe {
     }
 
     @Override
-    protected Iterator<Resource> computeSubpipesOutput() throws Exception {
+    protected Iterator<Resource> computeSubpipesOutput() {
         return new ConcurrentIterator(numThreads);
     }
 
@@ -120,6 +119,7 @@ public class ManifoldPipe extends SuperPipe {
                 outputQueue.put(resource);
             } catch (InterruptedException e) {
                 log.error("Interrupted while running pipe %s", pipe.getName(), e);
+                Thread.currentThread().interrupt();
             }
         }
 
@@ -129,19 +129,18 @@ public class ManifoldPipe extends SuperPipe {
         }
 
         @Override
-        protected void initResponse(SlingHttpServletResponse response) {}
+        protected void initResponse(SlingHttpServletResponse response) {/*no handling here*/}
 
         @Override
-        public void starts() {}
+        public void starts() {/*no handling here*/}
 
         @Override
-        public void ends() {}
+        public void ends() {/*no handling here*/}
     }
 
     private class ConcurrentIterator implements Iterator<Resource> {
 
         private ExecutorService executorService;
-        private Callable<ExecutionResult> callables;
         private Resource nextItem = null;
 
         private class StreamTerminator implements Runnable {
@@ -152,6 +151,7 @@ public class ManifoldPipe extends SuperPipe {
                     outputQueue.put(END_OF_STREAM);
                 } catch (InterruptedException e) {
                     log.error("Interrupted while waiting for input exhaustion", e);
+                    Thread.currentThread().interrupt();
                 }
             }
         }
@@ -188,6 +188,7 @@ public class ManifoldPipe extends SuperPipe {
                     nextItem = outputQueue.take();
                 } catch (InterruptedException e) {
                     log.error("Interrupted while retrieving output", e);
+                    Thread.currentThread().interrupt();
                 }
             }
         }

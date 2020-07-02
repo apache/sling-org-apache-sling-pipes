@@ -342,7 +342,7 @@ public class GogoCommands {
     }
 
     /**
-     * @param tokens  list of toekns
+     * @param tokens list of tokens
      * @return options from token list
      */
     protected Options getOptions(List<String> tokens){

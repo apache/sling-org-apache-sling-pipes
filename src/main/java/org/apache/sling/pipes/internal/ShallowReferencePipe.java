@@ -26,7 +26,7 @@ import org.apache.sling.pipes.Plumber;
 public class ShallowReferencePipe extends ReferencePipe {
     public static final String RESOURCE_TYPE = "slingPipes/shallow";
 
-    public ShallowReferencePipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
+    public ShallowReferencePipe(Plumber plumber, Resource resource, PipeBindings upperBindings) {
         super(plumber, resource, upperBindings);
     }
 
@@ -37,10 +37,10 @@ public class ShallowReferencePipe extends ReferencePipe {
     }
 
     @Override
-    public void before() throws Exception {
+    public void before() {
     }
 
     @Override
-    public void after() throws Exception {
+    public void after() {
     }
 }

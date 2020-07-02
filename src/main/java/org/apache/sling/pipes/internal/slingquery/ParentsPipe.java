@@ -29,7 +29,7 @@ import static org.apache.sling.query.SlingQuery.$;
 public class ParentsPipe extends AbstractExpressionSlingQueryPipe {
     public static final String RESOURCE_TYPE = RT_PREFIX + "parents";
 
-    public ParentsPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
+    public ParentsPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) {
         super(plumber, resource, upperBindings);
     }
 

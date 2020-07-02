@@ -25,18 +25,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 /**
  * Csv input stream pipe, similar at what
  */
 public class CsvPipe extends AbstractInputStreamPipe {
-    private static Logger logger = LoggerFactory.getLogger(JsonPipe.class);
+    private static Logger logger = LoggerFactory.getLogger(CsvPipe.class);
     public static final String RESOURCE_TYPE = RT_PREFIX + "csv";
 
     protected static final String PN_SEPARATOR = "separator";
@@ -49,45 +51,50 @@ public class CsvPipe extends AbstractInputStreamPipe {
 
     int index = 0;
 
-    public CsvPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
+    public CsvPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) {
         super(plumber, resource, upperBindings);
     }
 
     @Override
-    public Iterator<Resource> getOutput(InputStream inputStream) throws Exception{
+    public Iterator<Resource> getOutput(InputStream inputStream) {
         Iterator<Resource> output = EMPTY_ITERATOR;
         String separator = properties.get(PN_SEPARATOR, DEFAULT_SEPARATOR);
         reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
-        String headersLine = reader.readLine();
-        final String[] headers = headersLine.split(separator);
-        if (headers.length > 0){
-            nextLine = reader.readLine();
-            final Resource inputResource = getInput();
-            output = new Iterator<Resource>() {
-                @Override
-                public boolean hasNext() {
-                    return StringUtils.isNotBlank(nextLine);
-                }
-                @Override
-                public Resource next() {
-                    try {
-                        String[] values = nextLine.split(separator);
-                        if (values.length < headers.length){
-                            throw new IllegalArgumentException("wrong format line " + index + " should have at least the same number of columns than the headers");
-                        }
-                        Map<String, String> map = new HashMap<>();
-                        for (int i = 0; i < headers.length; i ++){
-                            map.put(headers[i], values[i]);
-                        }
-                        binding = map;
-                        nextLine = reader.readLine();
-                    } catch (Exception e) {
-                        logger.error("Unable to retrieve {}nth line of csv file", index, e);
-                        nextLine = null;
+        try {
+            String headersLine = reader.readLine();
+            final String[] headers = headersLine.split(separator);
+            if (headers.length > 0){
+                nextLine = reader.readLine();
+                final Resource inputResource = getInput();
+                output = new Iterator<Resource>() {
+                    @Override
+                    public boolean hasNext() {
+                        return StringUtils.isNotBlank(nextLine);
                     }
-                    return inputResource;
-                }
-            };
+                    @Override
+                    public Resource next() {
+                        try {
+                            String[] values = nextLine.split(separator);
+                            if (values.length < headers.length){
+                                throw new IllegalArgumentException("wrong format line " + index + " should have at least the same number of columns than the headers");
+                            }
+                            Map<String, String> map = new HashMap<>();
+                            for (int i = 0; i < headers.length; i ++){
+                                map.put(headers[i], values[i]);
+                            }
+                            binding = map;
+                            nextLine = reader.readLine();
+                        } catch (IOException e) {
+                            logger.error("Unable to retrieve {}nth line of csv file", index, e);
+                            nextLine = null;
+                            throw new NoSuchElementException();
+                        }
+                        return inputResource;
+                    }
+                };
+            }
+        } catch (IOException e) {
+            throw new IllegalArgumentException(e);
         }
         return output;
     }

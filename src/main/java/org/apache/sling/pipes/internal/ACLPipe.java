@@ -40,7 +40,6 @@ import javax.jcr.security.Privilege;
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObjectBuilder;
-import javax.script.ScriptException;
 import java.security.Principal;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -86,9 +85,8 @@ public class ACLPipe extends BasePipe {
      * @param plumber  plumber instance
      * @param resource configuration resource
      * @param upperBindings already set binding we want to initiate our pipe with
-     * @throws Exception bad configuration handling
      */
-    public ACLPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
+    public ACLPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) {
         super(plumber, resource, upperBindings);
         session = resolver.adaptTo(Session.class);
         userManager = resolver.adaptTo(UserManager.class);
@@ -97,29 +95,37 @@ public class ACLPipe extends BasePipe {
         deny = properties.get(PN_DENY, false);
     }
 
+    Iterator<Resource> computeAllowDenyOutput(Resource resource) throws RepositoryException {
+        logger.debug("Going to changing ACL for the resource at path {}", resource.getPath());
+        if (StringUtils.isEmpty(getExpr())) {
+            throw new IllegalArgumentException("expression for the principal or authorizable Id should be provided or provided correctly for privileges to be set");
+        }
+        Principal principal = getPrincipalFor(getExpr());
+        if (ArrayUtils.isEmpty(privilegesInput)) {
+            // create a privilege set with jcr:all if allow or jcr:read if deny
+            privileges = allow ? AccessControlUtils.privilegesFromNames(session, Privilege.JCR_ALL) : AccessControlUtils.privilegesFromNames(session, Privilege.JCR_READ);
+        } else {
+            privilegesInput = processPrivilegesInput(privilegesInput);
+            privileges = AccessControlUtils.privilegesFromNames(session, privilegesInput);
+        }
+        addAccessControlEntry(resource, principal);
+        return super.computeOutput();
+    }
+
     @Override
-    public Iterator<Resource> computeOutput() throws Exception {
+    public Iterator<Resource> computeOutput()  {
         Resource resource = getInput();
-        if (resource != null) {
-            if (allow || deny) {
-                logger.debug("Going to changing ACL for the resource at path {}", resource.getPath());
-                if (StringUtils.isEmpty(getExpr())) {
-                    throw new IllegalArgumentException("expression for the principal or authorizable Id should be provided or provided correctly for privileges to be set");
+        try {
+            if (resource != null) {
+                if (allow || deny) {
+                    return computeAllowDenyOutput(resource);
+                } else {
+                    bindACLs(resource);
+                    return super.computeOutput();
                 }
-                Principal principal = getPrincipalFor(getExpr());
-                if (ArrayUtils.isEmpty(privilegesInput)) {
-                    // create a privilege set with jcr:all if allow or jcr:read if deny
-                    privileges = allow ? AccessControlUtils.privilegesFromNames(session, Privilege.JCR_ALL) : AccessControlUtils.privilegesFromNames(session, Privilege.JCR_READ);
-                }
-                else {
-                    privilegesInput = processPrivilegesInput(privilegesInput);
-                    privileges = AccessControlUtils.privilegesFromNames(session, privilegesInput);
-                }
-                addAccessControlEntry(resource, principal);
-                return super.computeOutput();
             }
-            bindACLs(resource);
-            return super.computeOutput();
+        } catch (RepositoryException e) {
+            logger.error("unable to properly treat ACLs, returning empty iterator", e);
         }
         return EMPTY_ITERATOR;
     }
@@ -141,23 +147,23 @@ public class ACLPipe extends BasePipe {
             logger.info("binding acls for resource at path {}", resource.getPath());
             AccessControlList acl = AccessControlUtils.getAccessControlList(session, resource.getPath());
             JackrabbitAccessControlEntry[] entries = (JackrabbitAccessControlEntry[]) acl.getAccessControlEntries();
-            JsonArrayBuilder principal_Privileges_Array = Json.createArrayBuilder();
+            JsonArrayBuilder principalPrivilegesArray = Json.createArrayBuilder();
             for (JackrabbitAccessControlEntry entry : entries) {
-                JsonObjectBuilder principal_Privileges_Mappings = Json.createObjectBuilder();
-                JsonArrayBuilder privileges = Json.createArrayBuilder();
+                JsonObjectBuilder principalPrivilegesMappings = Json.createObjectBuilder();
+                JsonArrayBuilder privilegeSet = Json.createArrayBuilder();
                 for ( Privilege privilege : entry.getPrivileges() ){
-                    privileges.add(privilege.getName());
+                    privilegeSet.add(privilege.getName());
                 }
-                principal_Privileges_Mappings.add(PN_AUTHORIZABLE, entry.getPrincipal().getName());
-                principal_Privileges_Mappings.add(PRIVILEGES_JSON_KEY, privileges);
+                principalPrivilegesMappings.add(PN_AUTHORIZABLE, entry.getPrincipal().getName());
+                principalPrivilegesMappings.add(PRIVILEGES_JSON_KEY, privilegeSet);
                 if (entry.isAllow()) {
-                    principal_Privileges_Mappings.add(PN_ALLOW, true);
+                    principalPrivilegesMappings.add(PN_ALLOW, true);
                 } else {
-                    principal_Privileges_Mappings.add(PN_DENY, true);
+                    principalPrivilegesMappings.add(PN_DENY, true);
                 }
-                principal_Privileges_Array.add(principal_Privileges_Mappings);
+                principalPrivilegesArray.add(principalPrivilegesMappings);
             }
-            outputBinding = JsonUtil.toString(principal_Privileges_Array);
+            outputBinding = JsonUtil.toString(principalPrivilegesArray);
         } catch ( Exception e ) {
             outputBinding = JsonUtil.toString(Json.createObjectBuilder());
             logger.error("unable to bind acls", e);
@@ -179,20 +185,20 @@ public class ACLPipe extends BasePipe {
         JsonObjectBuilder authPermisions = Json.createObjectBuilder();
         JsonArrayBuilder allowArray = Json.createArrayBuilder();
         JsonArrayBuilder denyArray = Json.createArrayBuilder();
-        resources.forEachRemaining((res) -> {
-            String[] privileges = res.adaptTo(ValueMap.class).get(PRIVILEGES_KEY, String[].class);
+        resources.forEachRemaining(res -> {
+            String[] privilegeSet = res.adaptTo(ValueMap.class).get(PRIVILEGES_KEY, String[].class);
             JsonArrayBuilder privilegesArray = Json.createArrayBuilder();
-            for(String privilege: privileges){
+            for(String privilege: privilegeSet){
                 privilegesArray.add(privilege);
             }
-            JsonObjectBuilder ACEObject = Json.createObjectBuilder();
-            ACEObject.add(PATH_KEY, res.getParent().getParent().getPath());
-            ACEObject.add(PRIVILEGES_JSON_KEY, privilegesArray);
+            JsonObjectBuilder aceObj = Json.createObjectBuilder();
+            aceObj.add(PATH_KEY, res.getParent().getParent().getPath());
+            aceObj.add(PRIVILEGES_JSON_KEY, privilegesArray);
             if (res.getResourceType().equals(ACE_GRANT_KEY) ){
-                allowArray.add(ACEObject);
+                allowArray.add(aceObj);
             }
             else if (res.getResourceType().equals(ACE_DENY_KEY)) {
-                denyArray.add(ACEObject);
+                denyArray.add(aceObj);
             }
         });
         authPermisions.add(PN_AUTHORIZABLE, auth.getID());
@@ -226,8 +232,11 @@ public class ACLPipe extends BasePipe {
         return principal;
     }
 
-    private void addAccessControlEntry(Resource resource, Principal principal) throws Exception{
-        logger.info("adding privileges {} for principal {} allow {} deny {} with dryRun {} ",ArrayUtils.toString(privileges), principal.getName(), allow, deny, isDryRun());
+    private void addAccessControlEntry(Resource resource, Principal principal) throws RepositoryException {
+        if (logger.isInfoEnabled()) {
+            logger.info("adding privileges {} for principal {} allow {} deny {} with dryRun {} ",
+                ArrayUtils.toString(privileges), principal.getName(), allow, deny, isDryRun());
+        }
         if (!isDryRun()) {
             if (allow) {
                 AccessControlUtils.addAccessControlEntry(session, resource.getPath(), principal, this.privileges, true);
@@ -237,10 +246,11 @@ public class ACLPipe extends BasePipe {
         }
     }
 
-    private String[] processPrivilegesInput(String[] privilegesInput) throws ScriptException {
+    private String[] processPrivilegesInput(String[] privilegesInput) {
         String expr = bindings.instantiateExpression(ArrayUtils.toString(privilegesInput));
         if ( expr.indexOf("[") > -1 && expr.indexOf("]") > -1) {
-            return Arrays.stream(expr.substring(expr.indexOf("[") + 1, expr.indexOf("]")).split(",")).map((s) -> s.trim()).toArray(size->new String[size]);
+            return Arrays.stream(expr.substring(expr.indexOf("[") + 1, expr.indexOf("]")).split(","))
+                .map(String::trim).toArray(size->new String[size]);
         }
         return privilegesInput;
     }

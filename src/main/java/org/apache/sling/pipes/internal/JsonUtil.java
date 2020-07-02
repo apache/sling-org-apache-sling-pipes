@@ -25,10 +25,13 @@ import javax.json.JsonException;
 import javax.json.JsonNumber;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
+import javax.json.JsonReader;
 import javax.json.JsonString;
 import javax.json.JsonStructure;
 import javax.json.JsonValue;
 import javax.json.JsonValue.ValueType;
+import javax.json.stream.JsonGenerator;
+
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.AbstractMap;
@@ -37,19 +40,25 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class JsonUtil {
-    public static JsonStructure parse(String input) throws JsonException {
-        return Json.createReader(new StringReader(JsonTicksConverter.tickToDoubleQuote(input))).read();
+
+    private JsonUtil() {
     }
 
-    public static JsonObject parseObject(String input) throws JsonException{
+    public static JsonStructure parse(String input) {
+        try (JsonReader reader = Json.createReader(new StringReader(JsonTicksConverter.tickToDoubleQuote(input)))) {
+            return reader.read();
+        }
+    }
+
+    public static JsonObject parseObject(String input) {
         return (JsonObject) parse(input);
     }
 
-    public static JsonArray parseArray(String input) throws JsonException {
+    public static JsonArray parseArray(String input) {
         return (JsonArray) parse(input);
     }
 
-    public static Object unbox(JsonValue value, Function<JsonStructure, Object> convert) throws JsonException {
+    public static Object unbox(JsonValue value, Function<JsonStructure, Object> convert) {
         switch (value.getValueType()) {
             case ARRAY:
             case OBJECT:
@@ -85,7 +94,9 @@ public class JsonUtil {
 
     public static String toString(JsonValue value) {
         StringWriter writer = new StringWriter();
-        Json.createGenerator(writer).write(value).close();
+        try(JsonGenerator generator = Json.createGenerator(writer)) {
+            generator.write(value);
+        }
         return writer.toString();
     }
 

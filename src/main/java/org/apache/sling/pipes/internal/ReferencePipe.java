@@ -42,22 +42,22 @@ public class ReferencePipe extends SuperPipe {
      */
     String referencePath;
 
-    public ReferencePipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
+    public ReferencePipe(Plumber plumber, Resource resource, PipeBindings upperBindings) {
         super(plumber, resource, upperBindings);
     }
 
     @Override
-    public void buildChildren() throws Exception {
+    public void buildChildren() {
         String expression = getExpr();
         if (StringUtils.isNotBlank(expression) && !expression.equals(referencePath)) {
             referencePath = expression;
             Resource pipeResource = resolver.getResource(referencePath);
             if (pipeResource == null) {
-                throw new Exception("Reference configuration error: There is no resource at " + getExpr());
+                throw new IllegalArgumentException("Reference configuration error: There is no resource at " + getExpr());
             }
             reference = plumber.getPipe(pipeResource, bindings);
             if (reference == null) {
-                throw new Exception("Unable to build out pipe out of " + getPath());
+                throw new IllegalArgumentException("Unable to build out pipe out of " + getPath());
             }
             reference.setParent(this);
             log.info("set reference to {}", reference);
@@ -68,9 +68,9 @@ public class ReferencePipe extends SuperPipe {
     }
 
     @Override
-    protected Iterator<Resource> computeSubpipesOutput() throws Exception {
+    protected Iterator<Resource> computeSubpipesOutput() {
         buildChildren();
-        log.debug("getting {} output", reference);
+        log.debug("getting {} output", reference);
         return reference.getOutput();
     }
 }

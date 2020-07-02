@@ -38,14 +38,14 @@ public class MultiPropertyPipe extends BasePipe {
     private static Logger logger = LoggerFactory.getLogger(MultiPropertyPipe.class);
     public static final String RESOURCE_TYPE = RT_PREFIX + "multiProperty";
 
-    public MultiPropertyPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
+    public MultiPropertyPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) {
         super(plumber, resource, upperBindings);
     }
 
     MVResourceIterator iterator;
 
     @Override
-    protected Iterator<Resource> computeOutput() throws Exception {
+    protected Iterator<Resource> computeOutput() {
         iterator = new MVResourceIterator(getInput());
         return iterator;
     }
@@ -54,19 +54,15 @@ public class MultiPropertyPipe extends BasePipe {
     public Object getOutputBinding() {
         if (iterator != null) {
             Value value = iterator.getCurrentValue();
+            String output = value.toString();
             try {
-                switch (value.getType()) {
-                    case PropertyType.STRING: {
-                        return value.getString();
-                    }
-                    default: {
-                        return value.toString();
-                    }
+                if (PropertyType.STRING == value.getType()) {
+                    output = value.getString();
                 }
             } catch (Exception e) {
                 logger.error("current value format is not supported", e);
             }
-            return value.toString();
+            return output;
         }
         return null;
     }
@@ -78,17 +74,19 @@ public class MultiPropertyPipe extends BasePipe {
 
         public MVResourceIterator(Resource resource){
             this.resource = resource;
-            try {
-                Property mvProperty = resource.adaptTo(Property.class);
-                if (mvProperty == null) {
-                    throw new Exception("input resource " + resource.getPath() + " is supposed to be a property");
+            if (this.resource != null) {
+                try {
+                    Property mvProperty = resource.adaptTo(Property.class);
+                    if (mvProperty == null) {
+                        throw new IllegalArgumentException("input resource " + resource.getPath() + " is supposed to be a property");
+                    }
+                    if (!mvProperty.isMultiple()) {
+                        throw new IllegalArgumentException("given property " + resource.getPath() + " is supposed to be multiple");
+                    }
+                    itValue = Arrays.asList(mvProperty.getValues()).iterator();
+                } catch (Exception e) {
+                    logger.warn("unable to setup mv iterator for resource, will return nothing", e);
                 }
-                if (!mvProperty.isMultiple()) {
-                    throw new Exception("given property " + resource.getPath() + " is supposed to be multiple");
-                }
-                itValue = Arrays.asList(mvProperty.getValues()).iterator();
-            } catch (Exception e) {
-                logger.warn("unable to setup mv iterator for resource, will return nothing", e);
             }
         }
 
@@ -111,7 +109,7 @@ public class MultiPropertyPipe extends BasePipe {
 
         @Override
         public void remove() {
-
+            throw new UnsupportedOperationException();
         }
     }
 }

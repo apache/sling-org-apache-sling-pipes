@@ -19,6 +19,7 @@ package org.apache.sling.pipes.internal;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.servlets.ServletResolverConstants;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.event.jobs.Job;
@@ -96,9 +97,9 @@ public class PlumberServlet extends SlingAllMethodsServlet {
         String path = request.getResource().getResourceType().equals(Plumber.RESOURCE_TYPE) ? request.getParameter(PARAM_PATH) : request.getResource().getPath();
         try {
             if (StringUtils.isBlank(path)) {
-                throw new Exception("path should be provided");
+                throw new IllegalArgumentException("path should be provided");
             }
-            Map bindings = getBindingsFromRequest(request, writeAllowed);
+            Map<String, Object> bindings = getBindingsFromRequest(request, writeAllowed);
             String asyncParam = request.getParameter(PARAM_ASYNC);
             if (StringUtils.isNotBlank(asyncParam) && asyncParam.equals(Boolean.TRUE.toString())){
                 Job job = plumber.executeAsync(request.getResourceResolver(), path, bindings);
@@ -124,8 +125,8 @@ public class PlumberServlet extends SlingAllMethodsServlet {
      * @return map of bindings
      * @throws IOException in case something turns wrong with an input stream
      */
-    protected Map getBindingsFromRequest(SlingHttpServletRequest request, boolean writeAllowed) throws IOException{
-        Map bindings = new HashMap<>();
+    protected Map<String, Object> getBindingsFromRequest(SlingHttpServletRequest request, boolean writeAllowed) throws IOException{
+        Map<String, Object> bindings = new HashMap<>();
         String dryRun = request.getParameter(BasePipe.DRYRUN_KEY);
         if (StringUtils.isNotBlank(dryRun) && !dryRun.equals(Boolean.FALSE.toString())) {
             bindings.put(BasePipe.DRYRUN_KEY, true);
@@ -138,9 +139,9 @@ public class PlumberServlet extends SlingAllMethodsServlet {
                 log.error("Unable to retrieve bindings information", e);
             }
         }
-
-        if (request.getRequestParameterMap() != null && request.getRequestParameterMap().containsKey(PARAM_FILE)){
-            bindings.put(AbstractInputStreamPipe.BINDING_IS, request.getRequestParameter(PARAM_FILE).getInputStream());
+        RequestParameter fileParameter = request.getRequestParameter(PARAM_FILE);
+        if (fileParameter != null){
+            bindings.put(AbstractInputStreamPipe.BINDING_IS, fileParameter.getInputStream());
         }
 
         bindings.put(BasePipe.READ_ONLY, !writeAllowed);

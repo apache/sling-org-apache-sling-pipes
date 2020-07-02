@@ -46,7 +46,7 @@ public class BasePipeTest extends AbstractPipeTest {
     public void dryRunTest() throws Exception {
         assertFalse("Is dry run should be false with flag set to text false", resetDryRun("false").isDryRun());
         assertFalse("Is dry run should be false with flag set to boolean false", resetDryRun(false).isDryRun());
-        assertFalse("Is dry run should be true with no dry run flag", resetDryRun(null).isDryRun());
+        assertFalse("Is dry run should be false with no dry run flag", resetDryRun(null).isDryRun());
         assertTrue("Is dry run should be true with flag set to boolean true", resetDryRun(true).isDryRun());
         assertTrue("Is dry run should be true with flag set to text true", resetDryRun("true").isDryRun());
         assertTrue("Is dry run should be true with flag set to something that is not false or 'false'", resetDryRun("other").isDryRun());

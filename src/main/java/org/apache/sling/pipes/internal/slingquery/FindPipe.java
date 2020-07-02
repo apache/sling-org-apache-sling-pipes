@@ -26,7 +26,7 @@ import static org.apache.sling.query.SlingQuery.$;
 public class FindPipe extends AbstractExpressionSlingQueryPipe {
     public static final String RESOURCE_TYPE = RT_PREFIX + "find";
 
-    public FindPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
+    public FindPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) {
         super(plumber, resource, upperBindings);
     }
 

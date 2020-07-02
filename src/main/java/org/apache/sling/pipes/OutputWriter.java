@@ -35,7 +35,7 @@ import java.util.Map;
  * defines how pipe's output get written to a servlet response or output stream
  */
 public abstract class OutputWriter {
-    Logger log = LoggerFactory.getLogger(OutputWriter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(OutputWriter.class);
 
     public static final String KEY_SIZE = "size";
 
@@ -89,7 +89,7 @@ public abstract class OutputWriter {
             try {
                 customOutputs = JsonUtil.unbox(JsonUtil.parseObject(writerParam));
             } catch(Exception e){
-                log.error("requested attributes can't be parsed", e);
+                LOG.error("requested attributes can't be parsed", e);
             }
         }
         setWriter(response.getWriter());

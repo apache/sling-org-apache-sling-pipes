@@ -28,7 +28,6 @@ import org.slf4j.LoggerFactory;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
-import javax.script.ScriptException;
 import java.util.Iterator;
 import java.util.regex.Pattern;
 
@@ -45,15 +44,15 @@ public class FilterPipe extends BasePipe {
     public static final String PN_INJECTCHILDRENCOUNT = PREFIX_FILTER + "injectChildrenCount";
     public static final String BINDING_CHILDREN_COUNT = "childrenCount";
 
-    public FilterPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
+    public FilterPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) {
         super(plumber, resource, upperBindings);
     }
 
-    boolean propertiesPass(ValueMap current, ValueMap filter) throws ScriptException {
+    boolean propertiesPass(ValueMap current, ValueMap filter) {
         if (filter.containsKey(PN_TEST)){
-            Object test = bindings.instantiateObject(filter.get(PN_TEST, "${false}"));
+            Object test = bindings.instantiateObject(filter.get(PN_TEST, PipeBindings.FALSE_BINDING));
             if (! (test instanceof Boolean)){
-                logger.error("instatiated test {} is not a boolean, filtering out", test);
+                logger.error("instatiated test {} is not a boolean, filtering out", test);
                 return false;
             }
             return (Boolean) test;
@@ -69,51 +68,77 @@ public class FilterPipe extends BasePipe {
         return true;
     }
 
-    boolean filterPasses(Resource currentResource, Resource filterResource) throws ScriptException, RepositoryException {
-        ValueMap current = currentResource.adaptTo(ValueMap.class);
-        ValueMap filter = filterResource.adaptTo(ValueMap.class);
-        boolean injectChildrenCount = (Boolean) bindings.instantiateObject(filter.get(PN_INJECTCHILDRENCOUNT, "${false}"));
-        if (injectChildrenCount) {
-            Node currentNode = currentResource.adaptTo(Node.class);
-            int childrenCount = IteratorUtils.toList(currentNode.getNodes()).size();
-            bindings.addBinding(BINDING_CHILDREN_COUNT, childrenCount);
+    boolean hasNoChildrenFilter(ValueMap filter) {
+        return (Boolean) bindings.instantiateObject(filter.get(PN_NOCHILDREN, PipeBindings.FALSE_BINDING));
+    }
+
+    boolean iterateOverChildren(Resource currentResource, Resource filterResource) throws RepositoryException {
+        Node filterNode = filterResource.adaptTo(Node.class);
+        Node currentNode = currentResource.adaptTo(Node.class);
+        if (filterNode != null) {
+            boolean returnValue = true;
+            for (NodeIterator children = filterNode.getNodes(); returnValue && children.hasNext(); ) {
+                String childName = children.nextNode().getName();
+                if (currentNode != null && !currentNode.hasNode(childName)) {
+                    return false;
+                } else {
+                    returnValue &= filterPasses(currentResource.getChild(childName), filterResource.getChild(childName));
+                }
+            }
+            return returnValue;
         }
-        if (propertiesPass(current, filter)) {
-            Node currentNode = currentResource.adaptTo(Node.class);
-            boolean noChildren = (Boolean) bindings.instantiateObject(filter.get(PN_NOCHILDREN, "${false}"));
-            if (noChildren) {
+        return false;
+    }
+
+    boolean childrenPass(Resource currentResource, Resource filterResource) throws RepositoryException {
+        Node currentNode = currentResource.adaptTo(Node.class);
+        if (currentNode != null) {
+            if (hasNoChildrenFilter(filterResource.getValueMap())) {
                 return !currentNode.hasNodes();
             } else {
-                Node filterNode = filterResource.adaptTo(Node.class);
-                boolean returnValue = true;
-                for (NodeIterator children = filterNode.getNodes(); returnValue && children.hasNext();){
-                    String childName = children.nextNode().getName();
-                    if (!currentNode.hasNode(childName)){
-                        return false;
-                    } else {
-                        returnValue &= filterPasses(currentResource.getChild(childName), filterResource.getChild(childName));
-                    }
+                return iterateOverChildren(currentResource, filterResource);
+            }
+        }
+        return false;
+    }
+
+    boolean filterPasses(Resource currentResource, Resource filterResource) throws RepositoryException {
+        if (currentResource != null && filterResource != null) {
+            ValueMap current = currentResource.getValueMap();
+            ValueMap filter = filterResource.getValueMap();
+            boolean injectChildrenCount = (Boolean) bindings.instantiateObject(filter.get(PN_INJECTCHILDRENCOUNT, PipeBindings.FALSE_BINDING));
+            if (injectChildrenCount) {
+                Node currentNode = currentResource.adaptTo(Node.class);
+                if (currentNode != null) {
+                    int childrenCount = IteratorUtils.toList(currentNode.getNodes()).size();
+                    bindings.addBinding(BINDING_CHILDREN_COUNT, childrenCount);
                 }
-                return returnValue;
+            }
+            if (propertiesPass(current, filter)) {
+                return childrenPass(currentResource, filterResource);
             }
         }
         return false;
     }
 
     @Override
-    protected Iterator<Resource> computeOutput() throws Exception {
+    protected Iterator<Resource> computeOutput() {
         Resource resource = getInput();
-        if (resource != null){
-            boolean not = properties.get(PN_NOT, false);
-            //the not does a exclusive or with the filter:
-            // - true filter with "true" not is false,
-            // - false filter with false not is false,
-            // - all the other combinations should pass
-            if (filterPasses(resource, getConfiguration()) ^ not){
-                logger.debug("filter passes for {}", resource.getPath());
-                return super.computeOutput();
-            } else {
-                logger.debug("{} got filtered out", resource.getPath());
+        if (resource != null) {
+            try {
+                boolean not = properties.get(PN_NOT, false);
+                //the not does a exclusive or with the filter:
+                // - true filter with "true" not is false,
+                // - false filter with false not is false,
+                // - all the other combinations should pass
+                if (filterPasses(resource, getConfiguration()) ^ not) {
+                    logger.debug("filter passes for {}", resource.getPath());
+                    return super.computeOutput();
+                } else {
+                    logger.debug("{} got filtered out", resource.getPath());
+                }
+            } catch (RepositoryException e) {
+                logger.error("unable to filter the input", e);
             }
         }
         return EMPTY_ITERATOR;

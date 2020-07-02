@@ -27,7 +27,7 @@ public class SiblingsPipe extends AbstractExpressionSlingQueryPipe {
 
     public static final String RESOURCE_TYPE = RT_PREFIX + "siblings";
 
-    public SiblingsPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
+    public SiblingsPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) {
         super(plumber, resource, upperBindings);
     }
 

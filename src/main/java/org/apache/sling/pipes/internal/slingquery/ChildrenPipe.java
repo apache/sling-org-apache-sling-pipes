@@ -27,9 +27,9 @@ import static org.apache.sling.query.SlingQuery.$;
  * a resource (defined in the path property)
  */
 public class ChildrenPipe extends AbstractExpressionSlingQueryPipe {
-    public final static String RESOURCE_TYPE = RT_PREFIX + "children";
+    public static final String RESOURCE_TYPE = RT_PREFIX + "children";
 
-    public ChildrenPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
+    public ChildrenPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) {
         super(plumber, resource, upperBindings);
     }
 

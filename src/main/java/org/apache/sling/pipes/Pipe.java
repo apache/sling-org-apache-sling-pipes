@@ -17,6 +17,7 @@
 package org.apache.sling.pipes;
 
 import org.apache.sling.api.resource.Resource;
+import org.jetbrains.annotations.Nullable;
 import org.osgi.annotation.versioning.ConsumerType;
 
 import javax.script.ScriptException;
@@ -85,9 +86,8 @@ public interface Pipe {
      * Get pipe current's resource *before* next execution, meaning either the
      * configured resource, either previous' pipe output resource
      * @return input, configured or previous pipe
-     * @throws ScriptException in case computed input goes wrong
      */
-    Resource getInput() throws ScriptException;
+    @Nullable Resource getInput();
 
 
     /**

@@ -35,16 +35,16 @@ public class XPathPipe extends BasePipe {
     private static final Logger logger = LoggerFactory.getLogger(XPathPipe.class);
     public static final String RESOURCE_TYPE = RT_PREFIX + "xpath";
 
-    public XPathPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
+    public XPathPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) {
         super(plumber, resource, upperBindings);
     }
 
     @Override
-    protected Iterator<Resource> computeOutput() throws Exception {
+    protected Iterator<Resource> computeOutput() {
         String query = getExpr();
         if (StringUtils.isNotBlank(query)){
             logger.info("Executing query: {}", query);
-            return resource.getResourceResolver().findResources(query, Query.XPATH);
+            return resolver.findResources(query, Query.XPATH);
         }
         return EMPTY_ITERATOR;
     }

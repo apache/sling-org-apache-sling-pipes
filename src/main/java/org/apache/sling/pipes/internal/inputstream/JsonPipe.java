@@ -27,14 +27,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.json.JsonArray;
-import javax.json.JsonException;
 import javax.json.JsonObject;
 import javax.json.JsonStructure;
 import javax.json.JsonValue.ValueType;
+
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -43,7 +45,7 @@ import java.util.regex.Pattern;
  */
 public class JsonPipe extends AbstractInputStreamPipe {
     private static Logger logger = LoggerFactory.getLogger(JsonPipe.class);
-    public final static String RESOURCE_TYPE = RT_PREFIX + "json";
+    public static final String RESOURCE_TYPE = RT_PREFIX + "json";
 
     /**
      * property specifying the json path where to fetched the used value
@@ -57,11 +59,9 @@ public class JsonPipe extends AbstractInputStreamPipe {
     protected static final String OBJ_START = ".";
 
     protected static final Pattern JSONPATH_FIRSTTOKEN = Pattern.compile("^\\" + JSONPATH_ROOT + "([\\" + OBJ_START + "\\" + ARRAY_START + "])([^\\" + OBJ_START + "\\]\\" + ARRAY_START + "]+)\\]?");
+    ArrayBasedIterator internalIterator;
 
-    JsonArray array;
-    int index = -1;
-
-    public JsonPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
+    public JsonPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) {
         super(plumber, resource, upperBindings);
     }
 
@@ -70,54 +70,65 @@ public class JsonPipe extends AbstractInputStreamPipe {
      * @return input resource of the pipe, can be reouputed N times in case output json binding is an array of
      * N element (output binding would be here each time the Nth element of the array)
      */
-    public Iterator<Resource> getOutput(InputStream is) throws Exception {
+    public Iterator<Resource> getOutput(InputStream is) {
         Iterator<Resource> output = EMPTY_ITERATOR;
         Iterator<Resource> inputSingletonIterator = Collections.singleton(getInput()).iterator();
-        String jsonString = IOUtils.toString(is, StandardCharsets.UTF_8);
-        if (StringUtils.isNotBlank(jsonString)) {
-            JsonStructure json;
-            try {
+        try {
+            String jsonString = IOUtils.toString(is, StandardCharsets.UTF_8);
+            if (StringUtils.isNotBlank(jsonString)) {
+                JsonStructure json;
                 json = JsonUtil.parse(jsonString);
-
-            } catch (JsonException ex) {
-                json = null;
-            }
-            if (json == null) {
-                binding = jsonString.trim();
-                output = inputSingletonIterator;
-            } else {
-                String valuePath = properties.get(PN_VALUEPATH, String.class);
-                if (StringUtils.isNotBlank(valuePath)){
-                    json = getValue(json, valuePath);
-                }
-                if (json.getValueType() != ValueType.ARRAY) {
-                    binding = JsonUtil.unbox(json);
+                if (json == null) {
+                    binding = jsonString.trim();
                     output = inputSingletonIterator;
                 } else {
-                    binding = array = (JsonArray) json;
-                    index = 0;
-                    final Resource inputResource = getInput();
-                    output = new Iterator<Resource>() {
-                        @Override
-                        public boolean hasNext() {
-                            return index < array.size();
-                        }
-
-                        @Override
-                        public Resource next() {
-                            try {
-                                binding = JsonUtil.unbox(array.get(index));
-                            } catch (Exception e) {
-                                logger.error("Unable to retrieve {}nth item of jsonarray", index, e);
-                            }
-                            index++;
-                            return inputResource;
-                        }
-                    };
+                    String valuePath = properties.get(PN_VALUEPATH, String.class);
+                    if (StringUtils.isNotBlank(valuePath)) {
+                        json = getValue(json, valuePath);
+                    }
+                    if (json.getValueType() != ValueType.ARRAY) {
+                        binding = JsonUtil.unbox(json);
+                        output = inputSingletonIterator;
+                    } else {
+                        binding = json;
+                        output = internalIterator = new ArrayBasedIterator((JsonArray)binding, getInput());
+                    }
                 }
             }
+        } catch (IOException e) {
+            throw new IllegalArgumentException(e);
         }
         return output;
+    }
+
+    private class ArrayBasedIterator implements Iterator<Resource> {
+        int index = 0;
+        JsonArray array;
+
+        final Resource inputResource;
+
+        ArrayBasedIterator(JsonArray array, Resource inputResource) {
+            this.array = array;
+            this.inputResource = inputResource;
+        }
+        @Override
+        public boolean hasNext() {
+            return index < array.size();
+        }
+
+        @Override
+        public Resource next() {
+            try {
+                if (index >= array.size()) {
+                    throw new NoSuchElementException();
+                }
+                binding = JsonUtil.unbox(array.get(index));
+            } catch (Exception e) {
+                logger.error("Unable to retrieve {}nth item of jsonarray", index, e);
+            }
+            index++;
+            return inputResource;
+        }
     }
 
     /**

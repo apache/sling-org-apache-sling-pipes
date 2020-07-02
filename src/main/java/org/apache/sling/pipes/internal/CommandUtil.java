@@ -22,12 +22,16 @@ import java.util.Map;
  * utilities for user input
  */
 public class CommandUtil {
+
+    private CommandUtil() {
+    }
+
     /**
      * Checks arguments and throws exception if there is an issue
      * @param params arguments to check
      * @throws IllegalArgumentException exception thrown in case arguments are wrong
      */
-    public static void checkArguments(Object... params) throws IllegalArgumentException {
+    public static void checkArguments(Object... params) {
         if (params.length % 2 > 0){
             throw new IllegalArgumentException("there should be an even number of arguments");
         }
@@ -38,9 +42,9 @@ public class CommandUtil {
      * @param map target map
      * @param params key/value pairs to write into the map
      */
-    public static void writeToMap(Map map, Object... params){
+    public static void writeToMap(Map<String, Object> map, Object... params){
         for (int i = 0; i < params.length - 1; i += 2){
-            map.put(params[i], params[i + 1]);
+            map.put(params[i].toString(), params[i + 1]);
         }
     }
 

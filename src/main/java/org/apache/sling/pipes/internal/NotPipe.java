@@ -31,12 +31,12 @@ public class NotPipe extends ReferencePipe {
 
     public static final String RESOURCE_TYPE = RT_PREFIX + "not";
 
-    public NotPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
+    public NotPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) {
         super(plumber, resource, upperBindings);
     }
 
     @Override
-    protected Iterator<Resource> computeSubpipesOutput() throws Exception {
+    protected Iterator<Resource> computeSubpipesOutput() {
         if (reference.getOutput().hasNext()){
             return EMPTY_ITERATOR;
         }
