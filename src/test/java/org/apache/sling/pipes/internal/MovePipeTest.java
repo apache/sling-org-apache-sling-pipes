@@ -16,10 +16,14 @@
  */
 package org.apache.sling.pipes.internal;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.AbstractPipeTest;
+import org.apache.sling.pipes.ExecutionResult;
 import org.apache.sling.pipes.Pipe;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
@@ -38,7 +42,6 @@ import java.util.List;
 public class MovePipeTest extends AbstractPipeTest {
 
     static final String MOVENODE_PIPE = "/moveNode";
-    static final String MOVENODEOVERWRITE_PIPE = "/moveNodeOverwrite";
     static final String MOVENODEORDER_PIPE = "/moveNodeOrder";
     static final String MOVEPROPERTY_PIPE = "/moveProperty";
     static final String APPLE_NODE_PATH = "/apple";
@@ -57,40 +60,50 @@ public class MovePipeTest extends AbstractPipeTest {
     }
 
     @Test
+    public void modifiesContent() {
+        assertTrue(plumber.getPipe(oak.resourceResolver().getResource(PATH_PIPE + MOVEPROPERTY_PIPE)).modifiesContent());
+    }
+
+    @Test
     public void testMoveNode() throws Exception {
         Pipe pipe = plumber.getPipe(oak.resourceResolver().getResource(PATH_PIPE + MOVENODE_PIPE));
         Iterator<Resource> output = pipe.getOutput();
-        Assert.assertTrue(output.hasNext());
+        assertTrue(output.hasNext());
         output.next();
         Session session = oak.resourceResolver().adaptTo(Session.class);
         session.save();
-        Assert.assertTrue("new node path should exists", session.nodeExists(PATH_FRUITS + MOVED_NODE_PATH));
+        assertTrue("new node path should exists", session.nodeExists(PATH_FRUITS + MOVED_NODE_PATH));
     }
 
     @Test
     public void testMoveNodeWithOverwrite() throws Exception {
-        Pipe pipe = plumber.getPipe(oak.resourceResolver().getResource(PATH_PIPE + MOVENODEOVERWRITE_PIPE));
-        Iterator<Resource> output = pipe.getOutput();
-        Assert.assertTrue(output.hasNext());
-        output.next();
+        String bananaPath = PATH_FRUITS + BANANA_NODE_PATH;
+        String applePath = PATH_FRUITS + APPLE_NODE_PATH;
+        ExecutionResult result = plumber.newPipe(oak.resourceResolver())
+            .echo(applePath)
+            .mv(bananaPath).run();
+        assertEquals("there should be no overwrite if not specified", 0, result.size());
+        result = plumber.newPipe(oak.resourceResolver())
+            .echo(applePath)
+            .mv(bananaPath).with("overwriteTarget", true).run();
+        assertEquals("there should be no overwrite if not specified", 1, result.size());
         Session session = oak.resourceResolver().adaptTo(Session.class);
-        session.save();
-        Assert.assertTrue("target node path should exist", session.nodeExists(PATH_FRUITS + BANANA_NODE_PATH));
-        Assert.assertFalse("source node path should have gone", session.nodeExists(PATH_FRUITS + APPLE_NODE_PATH));
+        assertTrue("target node path should exist", session.nodeExists(bananaPath));
+        Assert.assertFalse("source node path should have gone", session.nodeExists(applePath));
     }
 
     @Test
     public void testMoveNodeWithOrdering() throws Exception {
         Pipe pipe = plumber.getPipe(oak.resourceResolver().getResource(PATH_PIPE + MOVENODEORDER_PIPE));
         Iterator<Resource> output = pipe.getOutput();
-        Assert.assertTrue(output.hasNext());
+        assertTrue(output.hasNext());
         Resource resource = output.next();
         Resource parent = resource.getParent();
         List<Resource> allFruits = IteratorUtils.toList(parent.listChildren());
         Session session = oak.resourceResolver().adaptTo(Session.class);
         session.save();
-        Assert.assertTrue("target node path should exist", session.nodeExists(PATH_FRUITS + APPLE_NODE_PATH));
-        Assert.assertTrue("source node path also should exist", session.nodeExists(resource.getPath()));
+        assertTrue("target node path should exist", session.nodeExists(PATH_FRUITS + APPLE_NODE_PATH));
+        assertTrue("source node path also should exist", session.nodeExists(resource.getPath()));
         Assert.assertEquals("banana should be at first position", allFruits.get(0).getName(), resource.getName());
         Assert.assertEquals("apple should be at first position", allFruits.get(1).getName(), "apple");
     }
@@ -99,11 +112,11 @@ public class MovePipeTest extends AbstractPipeTest {
     public void testMoveProperty() throws Exception {
         Pipe pipe = plumber.getPipe(oak.resourceResolver().getResource(PATH_PIPE + MOVEPROPERTY_PIPE));
         Iterator<Resource> output = pipe.getOutput();
-        Assert.assertTrue(output.hasNext());
+        assertTrue(output.hasNext());
         output.next();
         Session session = oak.resourceResolver().adaptTo(Session.class);
         session.save();
-        Assert.assertTrue("new property path should exists", session.propertyExists(PATH_FRUITS + MOVED_PROPERTY_PATH));
+        assertTrue("new property path should exists", session.propertyExists(PATH_FRUITS + MOVED_PROPERTY_PATH));
         Assert.assertFalse("old property path should not", session.propertyExists(PATH_FRUITS + PN_INDEX));
     }
 }

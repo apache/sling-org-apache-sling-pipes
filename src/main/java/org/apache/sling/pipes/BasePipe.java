@@ -344,14 +344,14 @@ public class BasePipe implements Pipe {
     }
 
     @Override
-    public void before() throws Exception {
+    public void before() {
         if (StringUtils.isNotBlank(beforeHook)){
             plumber.newPipe(resolver).ref(beforeHook).run();
         }
     }
 
     @Override
-    public void after() throws Exception {
+    public void after() {
         if (StringUtils.isNotBlank(afterHook)){
             plumber.newPipe(resolver).ref(afterHook).run();
         }

@@ -23,6 +23,7 @@ import org.apache.jackrabbit.vault.fs.config.DefaultWorkspaceFilter;
 import org.apache.jackrabbit.vault.packaging.JcrPackage;
 import org.apache.jackrabbit.vault.packaging.JcrPackageDefinition;
 import org.apache.jackrabbit.vault.packaging.JcrPackageManager;
+import org.apache.jackrabbit.vault.packaging.PackageException;
 import org.apache.jackrabbit.vault.packaging.PackagingService;
 import org.apache.jackrabbit.vault.util.Text;
 import org.apache.sling.api.resource.Resource;
@@ -149,11 +150,15 @@ public class PackagePipe extends BasePipe {
     }
 
     @Override
-    public void after() throws Exception {
+    public void after() {
         super.after();
         if (assemble) {
-            JcrPackageManager mgr = PackagingService.getPackageManager(resolver.adaptTo(Session.class));
-            mgr.assemble(jcrPackage, null);
+            try {
+                JcrPackageManager mgr = PackagingService.getPackageManager(resolver.adaptTo(Session.class));
+                mgr.assemble(jcrPackage, null);
+            } catch (PackageException | RepositoryException | IOException e) {
+                throw new IllegalStateException(e);
+            }
         }
     }
 }

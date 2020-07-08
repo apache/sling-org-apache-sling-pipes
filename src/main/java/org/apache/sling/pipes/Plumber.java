@@ -61,7 +61,7 @@ public interface Plumber {
      *
      * @return Job if registered, null otherwise
      */
-    Job executeAsync(ResourceResolver resolver, String path, Map bindings);
+    Job executeAsync(ResourceResolver resolver, String path, Map<String, Object> bindings);
 
     /**
      * executes in a background thread
@@ -71,7 +71,7 @@ public interface Plumber {
      *
      * @return Job if registered, null otherwise
      */
-    Job executeAsync(String path, Map bindings);
+    Job executeAsync(String path, Map<String, Object> bindings);
 
     /**
      * Executes a pipe at a certain path
@@ -83,10 +83,8 @@ public interface Plumber {
      * @param save     in case that pipe writes anything, wether the plumber should save changes or not
      *
      * @return instance of <code>ExecutionResult</code>
-     *
-     * @throws Exception in case execution fails
      */
-    ExecutionResult execute(ResourceResolver resolver, String path, Map bindings, OutputWriter writer, boolean save) throws Exception;
+    ExecutionResult execute(ResourceResolver resolver, String path, Map<String, Object> bindings, OutputWriter writer, boolean save);
 
     /**
      * Executes a given pipe
@@ -98,10 +96,8 @@ public interface Plumber {
      * @param save     in case that pipe writes anything, wether the plumber should save changes or not
      *
      * @return instance of <code>ExecutionResult</code>
-     *
-     * @throws Exception in case execution fails
      */
-    ExecutionResult execute(ResourceResolver resolver, Pipe pipe, Map bindings, OutputWriter writer, boolean save) throws Exception;
+    ExecutionResult execute(ResourceResolver resolver, Pipe pipe, Map<String, Object> bindings, OutputWriter writer, boolean save);
 
     /**
      * Registers
@@ -151,5 +147,5 @@ public interface Plumber {
     /**
      * @return service user that has been configured for executing pipes;
      */
-    Map getServiceUser();
+    Map<String, Object> getServiceUser();
 }

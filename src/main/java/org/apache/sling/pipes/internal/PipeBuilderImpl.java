@@ -62,11 +62,11 @@ public class PipeBuilderImpl implements PipeBuilder {
 
     public static final String PIPES_REPOSITORY_PATH = "/var/pipes";
 
-    public static final String[] DEFAULT_NAMES = new String[]{"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"};
+    private static final String[] DEFAULT_NAMES = new String[]{"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"};
 
     List<Step> steps;
 
-    Map outputs;
+    Map<String, Object> outputs;
 
     Step containerStep = new Step(ContainerPipe.RESOURCE_TYPE);
 
@@ -274,9 +274,9 @@ public class PipeBuilderImpl implements PipeBuilder {
      */
     protected PipeBuilder writeToCurrentStep(String name, Object... params) throws IllegalAccessException {
         checkArguments(params);
-        Map props = name != null ? currentStep.confs.get(name) : currentStep.properties;
+        Map<String, Object> props = name != null ? currentStep.confs.get(name) : currentStep.properties;
         if (props == null){
-            props = new HashMap();
+            props = new HashMap<>();
             if (name != null){
                 currentStep.confs.put(name, props);
             }
@@ -320,13 +320,13 @@ public class PipeBuilderImpl implements PipeBuilder {
      * @throws PersistenceException in case configuration resource couldn't be persisted
      * @return resource created
      */
-    protected Resource createResource(ResourceResolver resolver, String path, String type, Map data) throws PersistenceException {
+    protected Resource createResource(ResourceResolver resolver, String path, String type, Map<String, Object> data) throws PersistenceException {
         return ResourceUtil.getOrCreateResource(resolver, path, data, type, false);
     }
 
     @Override
     public PipeBuilder outputs(String... keys) {
-        outputs = new HashMap();
+        outputs = new HashMap<>();
         writeToMap(outputs, keys);
         return this;
     }
@@ -346,10 +346,11 @@ public class PipeBuilderImpl implements PipeBuilder {
      */
     protected Resource persistStep(String path, String parentType, Step step) throws PersistenceException {
         Resource resource = createResource(resolver, path, parentType, step.properties);
-        if (StringUtils.isNotBlank(step.name)){
-            resource.adaptTo(ModifiableValueMap.class).put(BasePipe.PN_NAME, step.name);
+        ModifiableValueMap mvm = resource.adaptTo(ModifiableValueMap.class);
+        if (StringUtils.isNotBlank(step.name) && mvm != null){
+            mvm.put(Pipe.PN_NAME, step.name);
         }
-        for (Map.Entry<String, Map> entry : step.confs.entrySet()){
+        for (Map.Entry<String, Map<String, Object>> entry : step.confs.entrySet()){
             createResource(resolver, path + "/" + entry.getKey(), NT_SLING_FOLDER, entry.getValue());
             logger.debug("built pipe {}'s {} node", path, entry.getKey());
         }
@@ -364,7 +365,10 @@ public class PipeBuilderImpl implements PipeBuilder {
         }
         int index = 0;
         for (Step step : steps){
-            String name = StringUtils.isNotBlank(step.name) ? step.name : DEFAULT_NAMES.length > index ? DEFAULT_NAMES[index] : Integer.toString(index);
+            String name = DEFAULT_NAMES.length > index ? DEFAULT_NAMES[index] : Integer.toString(index);
+            if (StringUtils.isNotBlank(step.name)) {
+                name = step.name;
+            }
             index++;
             persistStep(path + "/" + Pipe.NN_CONF + "/" + name, NT_SLING_ORDERED_FOLDER, step);
         }
@@ -374,36 +378,42 @@ public class PipeBuilderImpl implements PipeBuilder {
     }
 
     @Override
-    public ExecutionResult run() throws Exception {
+    public ExecutionResult run() {
         return run(null);
     }
 
     @Override
-    public ExecutionResult runWith(Object... bindings) throws Exception {
+    public ExecutionResult runWith(Object... bindings) {
         checkArguments(bindings);
-        Map bindingsMap = new HashMap();
+        Map<String, Object> bindingsMap = new HashMap<>();
         writeToMap(bindingsMap, bindings);
         return run(bindingsMap);
     }
 
     @Override
-    public ExecutionResult run(Map bindings) throws Exception {
+    public ExecutionResult run(Map<String, Object> bindings) {
         JsonWriter writer = new JsonWriter();
-        writer.starts();
-        Pipe pipe = this.build();
-        return plumber.execute(resolver, pipe, bindings,  writer , true);
+        try {
+            writer.starts();
+            Pipe pipe = this.build();
+            return plumber.execute(resolver, pipe, bindings, writer, true);
+        } catch (PersistenceException e) {
+            logger.error("unable to build the pipe", e);
+        }
+        return new ExecutionResult(writer);
     }
 
     @Override
-    public Job runAsync(Map bindings) throws PersistenceException {
+    public Job runAsync(Map<String, Object> bindings) throws PersistenceException {
         Pipe pipe = this.build();
         return plumber.executeAsync(resolver, pipe.getResource().getPath(), bindings);
     }
 
     @Override
-    public ExecutionResult runParallel(int numThreads, Map additionalBindings) throws Exception {
+    public ExecutionResult runParallel(int numThreads, Map<String, Object> additionalBindings) {
         containerStep.setType(ManifoldPipe.RESOURCE_TYPE);
-        Map bindings = new HashMap() {{put(PN_NUM_THREADS, numThreads);}};
+        Map<String, Object> bindings = new HashMap<>();
+        bindings.put(PN_NUM_THREADS, numThreads);
         if (additionalBindings != null){
             bindings.putAll(additionalBindings);
         }
@@ -415,10 +425,10 @@ public class PipeBuilderImpl implements PipeBuilder {
      */
     public class Step {
         String name;
-        Map properties;
-        Map<String, Map> confs = new HashMap<>();
+        Map<String, Object> properties;
+        Map<String, Map<String, Object>> confs = new HashMap<>();
         Step(String type){
-            properties = new HashMap();
+            properties = new HashMap<>();
             setType(type);
         }
 

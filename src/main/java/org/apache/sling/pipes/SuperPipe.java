@@ -126,7 +126,7 @@ public abstract class SuperPipe extends BasePipe {
     }
 
     @Override
-    public void before() throws Exception {
+    public void before() {
         LOG.debug("entering {} before", getName());
         super.before();
         if (subpipes.isEmpty()){
@@ -139,7 +139,7 @@ public abstract class SuperPipe extends BasePipe {
     }
 
     @Override
-    public void after() throws Exception {
+    public void after() {
         LOG.debug("entering {} after", getName());
         super.after();
         for (Pipe pipe : subpipes){

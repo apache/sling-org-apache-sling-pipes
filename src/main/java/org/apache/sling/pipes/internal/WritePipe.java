@@ -22,6 +22,7 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.PipeBindings;
 import org.apache.sling.pipes.Plumber;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -138,8 +139,8 @@ public class WritePipe extends BasePipe {
      * @param conf configured resource that holds all properties to write (and subpipes)
      * @param target target resource on which configured values will be written
      */
-    private void copyProperties(Resource conf, Resource target)  {
-        ValueMap writeMap = conf.adaptTo(ValueMap.class);
+    private void copyProperties(@Nullable Resource conf, Resource target)  {
+        ValueMap writeMap = conf != null ? conf.adaptTo(ValueMap.class) : null;
         ModifiableValueMap properties = target.adaptTo(ModifiableValueMap.class);
 
         //writing current node
@@ -186,17 +187,19 @@ public class WritePipe extends BasePipe {
         NodeIterator childrenConf = conf.getNodes();
         if (childrenConf.hasNext()){
             Node targetNode = target.adaptTo(Node.class);
-            logger.info("dubbing {} at {}", conf.getPath(), target.getPath());
-            while (childrenConf.hasNext()){
-                Node childConf = childrenConf.nextNode();
-                String name = childConf.getName();
-                name = bindings.conditionalString(name);
-                if (name == null){
-                    logger.debug("name has been instantiated as null, not writing that tree");
-                } else if (!isDryRun()){
-                    Node childTarget = targetNode.hasNode(name) ? targetNode.getNode(name) : targetNode.addNode(name, childConf.getPrimaryNodeType().getName());
-                    logger.debug("writing tree {}", childTarget.getPath());
-                    writeTree(childConf, resolver.getResource(childTarget.getPath()));
+            if (targetNode != null) {
+                logger.info("dubbing {} at {}", conf.getPath(), target.getPath());
+                while (childrenConf.hasNext()){
+                    Node childConf = childrenConf.nextNode();
+                    String name = childConf.getName();
+                    name = bindings.conditionalString(name);
+                    if (name == null){
+                        logger.debug("name has been instantiated as null, not writing that tree");
+                    } else if (!isDryRun()){
+                        Node childTarget = targetNode.hasNode(name) ? targetNode.getNode(name) : targetNode.addNode(name, childConf.getPrimaryNodeType().getName());
+                        logger.debug("writing tree {}", childTarget.getPath());
+                        writeTree(childConf, resolver.getResource(childTarget.getPath()));
+                    }
                 }
             }
         }

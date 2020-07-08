@@ -360,7 +360,7 @@ public interface PipeBuilder {
      * @return set of resource path, output of the pipe execution
      * @throws Exception exceptions thrown by the build or the pipe execution itself
      */
-    ExecutionResult run() throws Exception;
+    ExecutionResult run();
 
     /**
      * allow execution of a pipe, with more parameter
@@ -368,7 +368,7 @@ public interface PipeBuilder {
      * @return set of resource path, output of the pipe execution
      * @throws Exception in case something goes wrong with pipe execution
      */
-    ExecutionResult run(Map bindings) throws Exception;
+    ExecutionResult run(Map<String, Object> bindings);
 
     /**
      * allow execution of a pipe, with more parameter
@@ -376,7 +376,7 @@ public interface PipeBuilder {
      * @return set of resource path, output of the pipe execution
      * @throws Exception in case something goes wrong with pipe execution
      */
-    ExecutionResult runWith(Object... bindings) throws Exception;
+    ExecutionResult runWith(Object... bindings);
 
     /**
      * run a pipe asynchronously
@@ -384,7 +384,7 @@ public interface PipeBuilder {
      * @return registered job for the pipe execution
      * @throws PersistenceException in case something goes wrong in the job creation
      */
-    Job runAsync(Map bindings) throws PersistenceException;
+    Job runAsync(Map<String, Object> bindings) throws PersistenceException;
 
     /**
      * run referenced pipes in parallel
@@ -393,5 +393,5 @@ public interface PipeBuilder {
      * @return set of resource path, merged output of pipes execution (order is arbitrary)
      * @throws Exception in case something went wrong in run execution
      */
-    ExecutionResult runParallel(int numThreads, Map bindings) throws Exception;
+    ExecutionResult runParallel(int numThreads, Map<String, Object> bindings);
 }

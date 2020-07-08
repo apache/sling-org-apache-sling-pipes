@@ -89,10 +89,10 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     public static final int DEFAULT_BUFFER_SIZE = 1000;
 
-    protected final static String PN_MONITORED = "monitored";
-    protected final static String MONITORED_PIPES_QUERY = String.format("//element(*,nt:base)[@sling:resourceType='%s' and @%s]", ContainerPipe.RESOURCE_TYPE, PN_MONITORED);
+    protected static final String PN_MONITORED = "monitored";
+    protected static final String MONITORED_PIPES_QUERY = String.format("//element(*,nt:base)[@sling:resourceType='%s' and @%s]", ContainerPipe.RESOURCE_TYPE, PN_MONITORED);
 
-    protected final static String MBEAN_NAME_FORMAT = "org.apache.sling.pipes:name=%s";
+    protected static final String MBEAN_NAME_FORMAT = "org.apache.sling.pipes:name=%s";
 
     @ObjectClassDefinition(name="Apache Sling Pipes : Plumber configuration")
     public @interface Configuration {
@@ -115,7 +115,7 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
 
     private Configuration configuration;
 
-    private Map serviceUser;
+    private Map<String, Object> serviceUser;
 
     private List<String> allowedUsers;
 
@@ -211,7 +211,7 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
     }
 
     @Override
-    public Job executeAsync(ResourceResolver resolver, String path, Map bindings) {
+    public Job executeAsync(ResourceResolver resolver, String path, Map<String, Object> bindings) {
         if (allowedUsers.contains(resolver.getUserID())) {
             return executeAsync(path, bindings);
         }
@@ -219,40 +219,53 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
     }
 
     @Override
-    public Job executeAsync(String path, Map bindings) {
+    public Job executeAsync(String path, Map<String, Object> bindings) {
         if (StringUtils.isBlank((String)serviceUser.get(SUBSERVICE))) {
             log.error("please configure plumber service user");
         }
-        final Map props = new HashMap();
+        final Map<String, Object> props = new HashMap<>();
         props.put(SlingConstants.PROPERTY_PATH, path);
         props.put(PipeBindings.NN_ADDITIONALBINDINGS, bindings);
         return jobManager.addJob(SLING_EVENT_TOPIC, props);
     }
 
     @Override
-    public ExecutionResult execute(ResourceResolver resolver, String path, Map additionalBindings, OutputWriter writer, boolean save) throws Exception {
+    public ExecutionResult execute(ResourceResolver resolver, String path, Map additionalBindings, OutputWriter writer, boolean save) {
         Resource pipeResource = resolver.getResource(path);
         Pipe pipe = getPipe(pipeResource);
         if (pipe == null) {
-            throw new Exception("unable to build pipe based on configuration at " + path);
+            throw new IllegalArgumentException("unable to build pipe based on configuration at " + path);
         }
         return execute(resolver, pipe, additionalBindings, writer, save);
     }
 
+    private ExecutionResult internalExecute(ResourceResolver resolver, OutputWriter writer, Pipe pipe) throws InterruptedException, PersistenceException {
+        ExecutionResult result = new ExecutionResult(writer);
+        for (Iterator<Resource> it = pipe.getOutput(); it.hasNext();){
+            Resource resource = it.next();
+            checkError(pipe, result);
+            if (resource != null) {
+                log.debug("[{}] retrieved {}", pipe.getName(), resource.getPath());
+                result.addResultItem(resource);
+                persist(resolver, pipe, result, resource);
+            }
+        }
+        checkError(pipe, result);
+        return result;
+    }
     @Override
-    public ExecutionResult execute(ResourceResolver resolver, Pipe pipe, Map additionalBindings, OutputWriter writer, boolean save) throws Exception {
+    public ExecutionResult execute(ResourceResolver resolver, Pipe pipe, Map additionalBindings, OutputWriter writer, boolean save) {
         boolean success = false;
         PipeMonitor monitor = null;
         long start = System.currentTimeMillis();
         try {
+            boolean readOnly = false;
             if (additionalBindings != null){
                 pipe.getBindings().addBindings(additionalBindings);
+                readOnly = (Boolean)additionalBindings.getOrDefault(BasePipe.READ_ONLY, false);
             }
-            if (additionalBindings != null && additionalBindings.containsKey(BasePipe.READ_ONLY)){
-                //this execution comes from a request
-                if ((Boolean)additionalBindings.get(BasePipe.READ_ONLY) && pipe.modifiesContent() && !pipe.isDryRun()) {
-                    throw new Exception("This pipe modifies content, you should use a POST request");
-                }
+            if (! pipe.isDryRun() && readOnly && pipe.modifiesContent()) {
+                throw new IllegalArgumentException("This pipe modifies content, you should use a POST request");
             }
             log.debug("[{}] before execution hook is called", pipe);
             pipe.before();
@@ -260,7 +273,7 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
             Resource confResource = pipe.getResource();
             writer.setPipe(pipe);
             if (isRunning(confResource)){
-                throw new RuntimeException("Pipe is already running");
+                throw new IllegalStateException("Pipe is already running");
             }
             monitor = monitoredPipes.get(confResource.getPath());
             writeStatus(pipe, STATUS_STARTED);
@@ -268,17 +281,7 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
             if (monitor != null){
                 monitor.starts();
             }
-            ExecutionResult result = new ExecutionResult(writer);
-            for (Iterator<Resource> it = pipe.getOutput(); it.hasNext();){
-                Resource resource = it.next();
-                checkError(pipe, result);
-                if (resource != null) {
-                    log.debug("[{}] retrieved {}", pipe.getName(), resource.getPath());
-                    result.addResultItem(resource);
-                    persist(resolver, pipe, result, resource);
-                }
-            }
-            checkError(pipe, result);
+            ExecutionResult result = internalExecute(resolver, writer, pipe);
             if (save && pipe.modifiesContent()) {
                 persist(resolver, pipe, result, null);
             }
@@ -289,9 +292,19 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
             }
             success = true;
             return result;
+        } catch (PersistenceException e) {
+            log.error("error while executing pipe", e);
+            throw new IllegalStateException(e);
+        } catch (InterruptedException ie) {
+            log.error("execution interrupted", ie);
+            Thread.currentThread().interrupt();
         } finally {
-            writeStatus(pipe, STATUS_FINISHED);
-            resolver.commit();
+            try {
+                writeStatus(pipe, STATUS_FINISHED);
+                resolver.commit();
+            } catch (PersistenceException e) {
+                log.error("unable to make final save", e);
+            }
             long length = System.currentTimeMillis() - start;
             String time = length < 1000 ? length + "ms" : (length / 1000) + "s";
             log.info("[{}] done executing in {}.", pipe.getName(), time);
@@ -301,6 +314,8 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
                 monitor.failed();
             }
         }
+        //returning void result if we get there
+        return new ExecutionResult(writer);
     }
 
     /**
@@ -315,6 +330,13 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
         }
     }
 
+    private boolean shouldSave(ResourceResolver resolver, Pipe pipe, ExecutionResult result, Resource currentResource) {
+        return  pipe.modifiesContent()
+            && resolver.hasChanges()
+            && !pipe.isDryRun()
+            && (currentResource == null || result.size() % configuration.bufferSize() == 0);
+    }
+
     /**
      * Persists pipe change if big enough, or ended, and eventually distribute changes
      * @param resolver resolver to use
@@ -323,26 +345,24 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
      * @param currentResource if running, null if ended
      * @throws PersistenceException in case save fails
      */
-    protected void persist(ResourceResolver resolver, Pipe pipe, ExecutionResult result, Resource currentResource) throws Exception {
-        if  (pipe.modifiesContent() && resolver.hasChanges() && !pipe.isDryRun()){
-            if (currentResource == null || result.size() % configuration.bufferSize() == 0){
-                log.info("[{}] saving changes...", pipe.getName());
-                writeStatus(pipe, currentResource == null ? STATUS_FINISHED : currentResource.getPath());
-                resolver.commit();
-                if (currentResource == null && distributor != null && StringUtils.isNotBlank(pipe.getDistributionAgent())) {
-                    log.info("a distribution agent is configured, will try to distribute the changes");
-                    DistributionRequest request = new SimpleDistributionRequest(DistributionRequestType.ADD, true, result.getCurrentPathSet().toArray(new String[result.getCurrentPathSet().size()]));
-                    DistributionResponse response = distributor.distribute(pipe.getDistributionAgent(), resolver, request);
-                    log.info("distribution response : {}", response);
-                }
-                if (result.size() > configuration.bufferSize()){
-                    //avoid too big foot print
-                    result.emptyCurrentSet();
-                }
-                if (configuration.sleep() > 0){
-                    log.debug("sleeping for {}ms", configuration.sleep());
-                    Thread.sleep(configuration.sleep());
-                }
+    protected void persist(ResourceResolver resolver, Pipe pipe, ExecutionResult result, Resource currentResource) throws PersistenceException, InterruptedException {
+        if (shouldSave(resolver, pipe, result, currentResource)) {
+            log.info("[{}] saving changes...", pipe.getName());
+            writeStatus(pipe, currentResource == null ? STATUS_FINISHED : currentResource.getPath());
+            resolver.commit();
+            if (currentResource == null && distributor != null && StringUtils.isNotBlank(pipe.getDistributionAgent())) {
+                log.info("a distribution agent is configured, will try to distribute the changes");
+                DistributionRequest request = new SimpleDistributionRequest(DistributionRequestType.ADD, true, result.getCurrentPathSet().toArray(new String[result.getCurrentPathSet().size()]));
+                DistributionResponse response = distributor.distribute(pipe.getDistributionAgent(), resolver, request);
+                log.info("distribution response : {}", response);
+            }
+            if (result.size() > configuration.bufferSize()) {
+                //avoid too big foot print
+                result.emptyCurrentSet();
+            }
+            if (configuration.sleep() > 0) {
+                log.debug("sleeping for {}ms", configuration.sleep());
+                Thread.sleep(configuration.sleep());
             }
         }
     }
@@ -363,13 +383,15 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
      * @param status status to write
      * @throws RepositoryException in case write goes wrong
      */
-    protected void writeStatus(Pipe pipe, String status) throws RepositoryException {
+    protected void writeStatus(Pipe pipe, String status){
         if (StringUtils.isNotBlank(status)){
             ModifiableValueMap vm = pipe.getResource().adaptTo(ModifiableValueMap.class);
-            vm.put(PN_STATUS, status);
-            Calendar cal = new GregorianCalendar();
-            cal.setTime(new Date());
-            vm.put(PN_STATUS_MODIFIED, cal);
+            if( vm != null) {
+                vm.put(PN_STATUS, status);
+                Calendar cal = new GregorianCalendar();
+                cal.setTime(new Date());
+                vm.put(PN_STATUS_MODIFIED, cal);
+            }
         }
     }
 
@@ -387,8 +409,7 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
 
     @Override
     public PipeBuilder newPipe(ResourceResolver resolver) {
-        PipeBuilder builder = new PipeBuilderImpl(resolver, this);
-        return builder;
+        return new PipeBuilderImpl(resolver, this);
     }
 
     @Override
@@ -400,7 +421,7 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
     public JobResult process(Job job) {
         try(ResourceResolver resolver = factory.getServiceResourceResolver(serviceUser)){
             String path = (String)job.getProperty(SlingConstants.PROPERTY_PATH);
-            Map bindings = (Map)job.getProperty(PipeBindings.NN_ADDITIONALBINDINGS);
+            Map<String, Object> bindings = (Map)job.getProperty(PipeBindings.NN_ADDITIONALBINDINGS);
             OutputWriter writer = new JsonWriter();
             writer.starts();
             execute(resolver, path, bindings, writer, true);
@@ -424,8 +445,8 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
             }
         }
         monitoredPipes = map;
-        for (String path : monitoredPipes.keySet()){
-            toggleJmxRegistration(monitoredPipes.get(path), path, true);
+        for (Map.Entry<String, PipeMonitor> entry : monitoredPipes.entrySet()){
+            toggleJmxRegistration(entry.getValue(), entry.getKey(), true);
         }
     }
 

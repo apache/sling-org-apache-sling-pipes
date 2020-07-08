@@ -123,7 +123,7 @@ public class PlumberServletTest extends AbstractPipeTest {
      * the execution should fail.
      */
     @Test
-    public void testGetOnWriteExecute() throws ServletException {
+    public void testGetOnWriteExecute() {
         SlingHttpServletRequest request = mockPlumberServletRequest(context.resourceResolver(), "json", pipedWritePath, null, null, null, null, null);
         boolean hasFailed = true;
         try {
@@ -146,8 +146,7 @@ public class PlumberServletTest extends AbstractPipeTest {
         try {
             servlet.execute(request, response, false);
             hasFailed = false;
-        } catch (Exception e){
-        }
+        } catch (Exception e){}
         assertFalse("Execution should not have failed", hasFailed);
     }
 

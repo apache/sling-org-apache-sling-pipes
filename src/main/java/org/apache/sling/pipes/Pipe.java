@@ -20,7 +20,6 @@ import org.apache.sling.api.resource.Resource;
 import org.jetbrains.annotations.Nullable;
 import org.osgi.annotation.versioning.ConsumerType;
 
-import javax.script.ScriptException;
 import java.util.Iterator;
 
 /**
@@ -118,13 +117,13 @@ public interface Pipe {
      * to be executed before output is retrieved
      * @throws Exception in case anything goes wrong
      */
-    void before() throws Exception;
+    void before();
 
     /**
      * to be executed before output is retrieved
      * @throws Exception in case anything goes wrong
      */
-    void after() throws Exception;
+    void after();
 
     /**
      * Get Distribution agent

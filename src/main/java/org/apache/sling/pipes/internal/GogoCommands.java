@@ -18,11 +18,14 @@ package org.apache.sling.pipes.internal;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.pipes.ExecutionResult;
 import org.apache.sling.pipes.OutputWriter;
+import org.apache.sling.pipes.Pipe;
 import org.apache.sling.pipes.PipeBuilder;
 import org.apache.sling.pipes.PipeExecutor;
 import org.apache.sling.pipes.Plumber;
@@ -31,6 +34,8 @@ import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -50,17 +55,16 @@ import static org.apache.sling.pipes.internal.CommandUtil.writeToMap;
             "osgi.command.function=execute",
             "osgi.command.function=help"
         })
-
 public class GogoCommands {
     final Logger log = LoggerFactory.getLogger(GogoCommands.class);
 
-    protected final static String SEPARATOR = "/";
-    protected final static String PARAMS = "@";
-    protected final static String INPUT = "-";
-    protected final static String KEY_VALUE_SEP = "=";
-    protected final static String KEY_NAME = "name";
-    protected final static String KEY_PATH = "path";
-    protected final static String KEY_EXPR = "expr";
+    protected static final String SEPARATOR = "/";
+    protected static final String PARAMS = "@";
+    protected static final String INPUT = "-";
+    protected static final String KEY_VALUE_SEP = "=";
+    protected static final String KEY_NAME = "name";
+    protected static final String KEY_PATH = "path";
+    protected static final String KEY_EXPR = "expr";
 
 
     @Reference
@@ -72,16 +76,21 @@ public class GogoCommands {
     Map<String, Method> methodMap;
 
     Map<String, PipeExecutor> executorMap;
+    
+    
+    PrintStream print() {
+        return System.out;
+    }
 
     /**
      * run command handler
      * @param cmds string tokens coming with run command
      * @throws Exception in case anything went wrong
      */
-    public void run(String... cmds) throws Exception {
+    public void run(String... cmds) throws LoginException, InvocationTargetException, IllegalAccessException {
         try (ResourceResolver resolver = factory.getServiceResourceResolver(plumber.getServiceUser())) {
             PipeBuilder builder = parse(resolver, cmds);
-            System.out.println(builder.run());
+            print().println(builder.run());
         }
     }
 
@@ -90,10 +99,10 @@ public class GogoCommands {
      * @param cmds string tokens coming with build command
      * @throws Exception in case anything went wrong
      */
-    public void build(String... cmds) throws Exception {
+    public void build(String... cmds) throws LoginException, InvocationTargetException, IllegalAccessException, PersistenceException {
         try (ResourceResolver resolver = factory.getServiceResourceResolver(plumber.getServiceUser())) {
             PipeBuilder builder = parse(resolver, cmds);
-            System.out.println(builder.build().getResource().getPath());
+            print().println(builder.build().getResource().getPath());
         }
     }
 
@@ -103,13 +112,10 @@ public class GogoCommands {
      * @param options string tokens coming with run command
      * @throws Exception in case anything went wrong
      */
-    public void execute(String path, String... options) throws Exception {
+    public void execute(String path, String... options) throws IOException, LoginException {
         String computedPath = INPUT.equals(path) ? IOUtils.toString(System.in).trim() : path;
         try (ResourceResolver resolver = factory.getServiceResourceResolver(plumber.getServiceUser())) {
-            System.out.println(executeInternal(resolver, computedPath, options));
-        } catch(Exception e){
-            log.error("Unable to execute {}", path, e);
-            throw(e);
+            print().println(executeInternal(resolver, computedPath, options));
         }
     }
 
@@ -121,15 +127,15 @@ public class GogoCommands {
      * @return Execution results
      * @throws Exception exception in case something goes wrong
      */
-    protected ExecutionResult executeInternal(ResourceResolver resolver, String path, String... optionTokens) throws Exception {
+    protected ExecutionResult executeInternal(ResourceResolver resolver, String path, String... optionTokens) {
         Resource resource = resolver.getResource(path);
         if (resource == null){
             throw new IllegalArgumentException(String.format("%s resource does not exist", path));
         }
         Options options = getOptions(optionTokens);
-        Map bMap = null;
+        Map<String, Object> bMap = null;
         if (options.with != null) {
-            bMap = new HashMap();
+            bMap = new HashMap<>();
             writeToMap(bMap, options.with);
         }
         OutputWriter writer = new NopWriter();
@@ -144,21 +150,21 @@ public class GogoCommands {
      * help command handler
      */
     public void help(){
-        System.out.format("\nSling Pipes Help\nAvailable commands are \n\n- execute <path> <options>(execute a pipe already built at a given path), if path is '-' then previous pipe token is used," +
-                                                    "\n- build (build pipe as configured in arguments)" +
-                                                    "\n- run (run pipe as configured in arguments)" +
-                                                    "\n- help (print this help)" +
-                                                    "\n\nfor pipe configured in argument, do 'pipe:<run|build|runAsync> <pipe token> (/ <pipe token> )*\n" +
-                                                    "\n a <pipe token> is <pipe> <expr|conf>? (<options>)?" +
-                                                    "\n <options> are (@ <option>)* form with <option> being either" +
-                                                    "\n\t'name pipeName' (used in bindings), " +
-                                                    "\n\t'expr pipeExpression' (when not directly as <args>)" +
-                                                    "\n\t'path pipePath' (when not directly as <args>)" +
-                                                    "\n\t'with key=value ...'" +
-                                                    "\n\t'outputs key=value ...'" +
-                                                    "\n and <pipe> is one of the following :\n");
+        print().format("\nSling Pipes Help\nAvailable commands are \n\n- execute <path> <options>(execute a pipe already built at a given path), if path is '-' then previous pipe token is used," +
+                                "\n- build (build pipe as configured in arguments)" +
+                                "\n- run (run pipe as configured in arguments)" +
+                                "\n- help (print(). this help)" +
+                                "\n\nfor pipe configured in argument, do 'pipe:<run|build|runAsync> <pipe token> (/ <pipe token> )*\n" +
+                                "\n a <pipe token> is <pipe> <expr|conf>? (<options>)?" +
+                                "\n <options> are (@ <option>)* form with <option> being either" +
+                                "\n\t'name pipeName' (used in bindings), " +
+                                "\n\t'expr pipeExpression' (when not directly as <args>)" +
+                                "\n\t'path pipePath' (when not directly as <args>)" +
+                                "\n\t'with key=value ...'" +
+                                "\n\t'outputs key=value ...'" +
+                                "\n and <pipe> is one of the following :\n");
         for (Map.Entry<String, PipeExecutor> entry : getExecutorMap().entrySet()){
-            System.out.format("\t%s\t\t:\t%s\n", entry.getKey(), entry.getValue().description() );
+            print().format("\t%s\t\t:\t%s%n", entry.getKey(), entry.getValue().description() );
         }
     }
 
@@ -269,10 +275,10 @@ public class GogoCommands {
      * @return Token list corresponding to the string ones
      */
     protected List<Token> parseTokens(String... commands) {
-        List<Token> returnValue = new ArrayList();
+        List<Token> returnValue = new ArrayList<>();
         Token currentToken = new Token();
         returnValue.add(currentToken);
-        List currentList = new ArrayList();
+        List<String> currentList = new ArrayList<>();
         for (String token : commands){
             if (currentToken.pipeKey == null){
                 currentToken.pipeKey = token;
@@ -280,14 +286,14 @@ public class GogoCommands {
                 switch (token){
                     case GogoCommands.SEPARATOR:
                         finishToken(currentToken, currentList);
-                        currentList = new ArrayList();
+                        currentList = new ArrayList<>();
                         currentToken = new Token();
                         returnValue.add(currentToken);
                         break;
                     case GogoCommands.PARAMS:
                         if (currentToken.args == null){
                             currentToken.args = currentList;
-                            currentList = new ArrayList();
+                            currentList = new ArrayList<>();
                         }
                         currentList.add(PARAMS);
                         break;
@@ -320,7 +326,7 @@ public class GogoCommands {
      */
     protected class Token {
         String pipeKey;
-        List args;
+        List<String> args;
         Options options;
 
         @Override
@@ -355,6 +361,7 @@ public class GogoCommands {
     protected class Options {
         String name;
         String path;
+
         String expr;
         String[] with;
         OutputWriter writer;
@@ -370,6 +377,16 @@ public class GogoCommands {
                     '}';
         }
 
+
+
+        void setOutputs(List<String> values) {
+            this.writer = new JsonWriter();
+            String[] list = keyValuesToArray(values);
+            Map<String, Object> outputs = new HashMap<>();
+            CommandUtil.writeToMap(outputs, list);
+            this.writer.setCustomOutputs(outputs);
+        }
+
         /**
          * Constructor
          * @param options string list from where options will be built
@@ -378,6 +395,8 @@ public class GogoCommands {
             Map<String, Object> optionMap = new HashMap<>();
             String currentKey = null;
             List<String> currentList = null;
+
+
             for (String optionToken : options) {
                 if (PARAMS.equals(optionToken)){
                     finishOption(currentKey, currentList, optionMap);
@@ -392,33 +411,23 @@ public class GogoCommands {
             finishOption(currentKey, currentList, optionMap);
             for (Map.Entry<String, Object> entry : optionMap.entrySet()){
                 switch (entry.getKey()) {
-                    case "name" : {
+                    case Pipe.PN_NAME :
                         this.name = (String)entry.getValue();
                         break;
-                    }
-                    case "path" : {
+                    case Pipe.PN_PATH :
                         this.path = (String)entry.getValue();
                         break;
-                    }
-                    case "expr" : {
+                    case Pipe.PN_EXPR :
                         this.expr = (String)entry.getValue();
                         break;
-                    }
-                    case "with" : {
+                    case "with" :
                         this.with = keyValuesToArray((List<String>)entry.getValue());
                         break;
-                    }
-                    case "outputs" : {
-                        this.writer = new JsonWriter();
-                        String[] list = keyValuesToArray((List<String>)entry.getValue());
-                        Map outputs = new HashMap();
-                        CommandUtil.writeToMap(outputs, list);
-                        this.writer.setCustomOutputs(outputs);
+                    case "outputs" :
+                        setOutputs((List<String>)entry.getValue());
                         break;
-                    }
-                    default: {
+                    default:
                         throw new IllegalArgumentException(String.format("%s is an unknown option", entry.getKey()));
-                    }
                 }
             }
 

@@ -10,12 +10,6 @@
     "path": "/content/fruits/apple",
     "expr": "/content/fruits/granny"
   },
-  "moveNodeOverwrite": {
-    "sling:resourceType":"slingPipes/mv",
-    "path": "/content/fruits/apple",
-    "expr": "/content/fruits/banana",
-    "overwriteTarget": true
-  },
   "moveNodeOrder": {
     "sling:resourceType":"slingPipes/mv",
     "path": "/content/fruits/banana",

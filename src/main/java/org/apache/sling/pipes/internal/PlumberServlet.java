@@ -59,6 +59,7 @@ import java.util.Map;
                 ServletResolverConstants.SLING_SERVLET_EXTENSIONS + "=csv"
         })
 public class PlumberServlet extends SlingAllMethodsServlet {
+
     Logger log = LoggerFactory.getLogger(this.getClass());
 
     protected static final String PARAM_PATH = "path";
