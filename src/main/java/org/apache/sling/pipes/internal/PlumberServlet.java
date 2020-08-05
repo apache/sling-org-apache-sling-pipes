@@ -68,8 +68,6 @@ public class PlumberServlet extends SlingAllMethodsServlet {
 
     protected static final String PARAM_ASYNC = "async";
 
-    protected static final String PARAM_FILE = "pipes_inputFile";
-
     @Reference
     Plumber plumber;
 
@@ -100,7 +98,7 @@ public class PlumberServlet extends SlingAllMethodsServlet {
             if (StringUtils.isBlank(path)) {
                 throw new IllegalArgumentException("path should be provided");
             }
-            Map<String, Object> bindings = getBindingsFromRequest(request, writeAllowed);
+            Map<String, Object> bindings = plumber.getBindingsFromRequest(request, writeAllowed);
             String asyncParam = request.getParameter(PARAM_ASYNC);
             if (StringUtils.isNotBlank(asyncParam) && asyncParam.equals(Boolean.TRUE.toString())){
                 Job job = plumber.executeAsync(request.getResourceResolver(), path, bindings);
@@ -117,36 +115,6 @@ public class PlumberServlet extends SlingAllMethodsServlet {
         } catch (Exception e) {
             throw new ServletException(e);
         }
-    }
-
-    /**
-     * Converts request into pipe bindings
-     * @param request from where to extract bindings
-     * @param writeAllowed should we consider this execution is about to modify content
-     * @return map of bindings
-     * @throws IOException in case something turns wrong with an input stream
-     */
-    protected Map<String, Object> getBindingsFromRequest(SlingHttpServletRequest request, boolean writeAllowed) throws IOException{
-        Map<String, Object> bindings = new HashMap<>();
-        String dryRun = request.getParameter(BasePipe.DRYRUN_KEY);
-        if (StringUtils.isNotBlank(dryRun) && !dryRun.equals(Boolean.FALSE.toString())) {
-            bindings.put(BasePipe.DRYRUN_KEY, true);
-        }
-        String paramBindings = request.getParameter(PARAM_BINDINGS);
-        if (StringUtils.isNotBlank(paramBindings)){
-            try {
-                bindings.putAll(JsonUtil.unbox(JsonUtil.parseObject(paramBindings)));
-            } catch (Exception e){
-                log.error("Unable to retrieve bindings information", e);
-            }
-        }
-        RequestParameter fileParameter = request.getRequestParameter(PARAM_FILE);
-        if (fileParameter != null){
-            bindings.put(AbstractInputStreamPipe.BINDING_IS, fileParameter.getInputStream());
-        }
-
-        bindings.put(BasePipe.READ_ONLY, !writeAllowed);
-        return bindings;
     }
 
     /**

@@ -19,6 +19,8 @@ package org.apache.sling.pipes.internal;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingConstants;
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
@@ -33,6 +35,7 @@ import org.apache.sling.distribution.SimpleDistributionRequest;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
+import org.apache.sling.pipes.AbstractInputStreamPipe;
 import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.ExecutionResult;
 import org.apache.sling.pipes.OutputWriter;
@@ -58,6 +61,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.query.Query;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
+
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -93,6 +98,10 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
     protected static final String MONITORED_PIPES_QUERY = String.format("//element(*,nt:base)[@sling:resourceType='%s' and @%s]", ContainerPipe.RESOURCE_TYPE, PN_MONITORED);
 
     protected static final String MBEAN_NAME_FORMAT = "org.apache.sling.pipes:name=%s";
+
+    protected static final String PARAM_BINDINGS = "bindings";
+
+    protected static final String PARAM_FILE = "pipes_inputFile";
 
     @ObjectClassDefinition(name="Apache Sling Pipes : Plumber configuration")
     public @interface Configuration {
@@ -208,6 +217,31 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
             }
         }
         return null;
+    }
+
+    @Override
+    public Map<String, Object> getBindingsFromRequest(SlingHttpServletRequest request, boolean writeAllowed) throws IOException
+    {
+        Map<String, Object> bindings = new HashMap<>();
+        String dryRun = request.getParameter(BasePipe.DRYRUN_KEY);
+        if (StringUtils.isNotBlank(dryRun) && !dryRun.equals(Boolean.FALSE.toString())) {
+            bindings.put(BasePipe.DRYRUN_KEY, true);
+        }
+        String paramBindings = request.getParameter(PARAM_BINDINGS);
+        if (StringUtils.isNotBlank(paramBindings)){
+            try {
+                bindings.putAll(JsonUtil.unbox(JsonUtil.parseObject(paramBindings)));
+            } catch (Exception e){
+                log.error("Unable to retrieve bindings information", e);
+            }
+        }
+        RequestParameter fileParameter = request.getRequestParameter(PARAM_FILE);
+        if (fileParameter != null){
+            bindings.put(AbstractInputStreamPipe.BINDING_IS, fileParameter.getInputStream());
+        }
+
+        bindings.put(BasePipe.READ_ONLY, !writeAllowed);
+        return bindings;
     }
 
     @Override

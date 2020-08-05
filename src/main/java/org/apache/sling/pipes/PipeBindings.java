@@ -66,7 +66,7 @@ public class PipeBindings {
      */
     public static final String NAME_BINDING = "name";
 
-    private static final String INJECTED_SCRIPT_REGEXP = "\\$\\{(([^\\{^\\}]*(\\{[0-9,]+\\})?)*)\\}";
+    public static final String INJECTED_SCRIPT_REGEXP = "\\$\\{(([^\\{^\\}]*(\\{[0-9,]+\\})?)*)\\}";
     private static final Pattern INJECTED_SCRIPT = Pattern.compile(INJECTED_SCRIPT_REGEXP);
     protected static final String IF_PREFIX = "$if";
     protected static final Pattern CONDITIONAL_STRING =  Pattern.compile("^\\" + IF_PREFIX + INJECTED_SCRIPT_REGEXP);

@@ -43,14 +43,17 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.sling.jcr.resource.JcrResourceConstants.NT_SLING_FOLDER;
 import static org.apache.sling.jcr.resource.JcrResourceConstants.NT_SLING_ORDERED_FOLDER;
 import static org.apache.sling.jcr.resource.JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY;
+import static org.apache.sling.pipes.BasePipe.SLASH;
 import static org.apache.sling.pipes.internal.CommandUtil.checkArguments;
 import static org.apache.sling.pipes.internal.CommandUtil.writeToMap;
 import static org.apache.sling.pipes.internal.ManifoldPipe.PN_NUM_THREADS;
@@ -320,8 +323,22 @@ public class PipeBuilderImpl implements PipeBuilder {
      * @throws PersistenceException in case configuration resource couldn't be persisted
      * @return resource created
      */
-    protected Resource createResource(ResourceResolver resolver, String path, String type, Map<String, Object> data) throws PersistenceException {
-        return ResourceUtil.getOrCreateResource(resolver, path, data, type, false);
+    Resource createResource(ResourceResolver resolver, String path, String type, Map<String, Object> data) throws PersistenceException {
+        if (! data.keySet().stream().anyMatch(k -> k.contains(SLASH))) {
+            return ResourceUtil.getOrCreateResource(resolver, path, data, type, false);
+        }
+        String returnPath = EMPTY;
+        for (Map.Entry<String, Object> entry : data.entrySet()) {
+            if (entry.getKey().contains(SLASH)) {
+                String deepPath = String.join(SLASH, path, StringUtils.substringBeforeLast(entry.getKey(), SLASH));
+                createResource(resolver, deepPath, type, Collections.singletonMap(
+                    StringUtils.substringAfterLast(entry.getKey(), SLASH), entry.getValue()));
+                if (returnPath.isEmpty() || returnPath.length() > deepPath.length()) {
+                    returnPath = deepPath;
+                }
+            }
+        }
+        return resolver.getResource(returnPath);
     }
 
     @Override

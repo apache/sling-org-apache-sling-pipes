@@ -16,11 +16,17 @@
  */
 package org.apache.sling.pipes;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.event.jobs.Job;
+import org.apache.sling.pipes.internal.JsonUtil;
 import org.osgi.annotation.versioning.ProviderType;
 
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -143,6 +149,15 @@ public interface Plumber {
      * @return true if still running
      */
     boolean isRunning(Resource pipeResource);
+
+    /**
+     * Extract pipe bindings from the request
+     * @param request from where to extract bindings
+     * @param writeAllowed should we consider this execution is about to modify content
+     * @return map of bindings
+     * @throws IOException in case something turns wrong with an input stream
+     */
+    Map<String, Object> getBindingsFromRequest(SlingHttpServletRequest request, boolean writeAllowed) throws IOException;
 
     /**
      * @return service user that has been configured for executing pipes;

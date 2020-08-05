@@ -16,41 +16,51 @@
  */
 package org.apache.sling.pipes.internal;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.pipes.AbstractPipeTest;
 import org.apache.sling.pipes.ExecutionResult;
 import org.apache.sling.pipes.PipeBuilder;
+import org.apache.sling.testing.mock.sling.ResourceResolverType;
+import org.apache.sling.testing.mock.sling.junit.SlingContext;
+import org.apache.sling.testing.mock.sling.servlet.MockSlingHttpServletRequest;
+import org.apache.sling.testing.mock.sling.servlet.MockSlingHttpServletResponse;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-public class GogoCommandsTest extends AbstractPipeTest {
+import javax.servlet.ServletException;
 
-    GogoCommands commands;
+public class CommandExecutorImplTest extends AbstractPipeTest {
+
+    CommandExecutorImpl commands;
 
     @Before
     public void setup() throws PersistenceException {
         super.setup();
-        commands = new GogoCommands();
+        context = new SlingContext(ResourceResolverType.JCR_OAK);
+        context.load().json("/initial-content/content/fruits.json", PATH_FRUITS);
+        commands = new CommandExecutorImpl();
         commands.plumber = plumber;
     }
 
     @Test
     public void testParseTokens(){
-        List<GogoCommands.Token> tokens = commands.parseTokens("some", "isolated", "items");
+        List<CommandExecutorImpl.Token> tokens = commands.parseTokens("some", "isolated", "items");
         assertEquals("there should be 1 token", 1, tokens.size());
-        GogoCommands.Token token = tokens.get(0);
+        CommandExecutorImpl.Token token = tokens.get(0);
         assertEquals("pipe key should be 'some'","some", token.pipeKey);
         assertEquals("pipe args should be isolated, items", Arrays.asList("isolated","items"), token.args);
         String tokenString = "first arg / second firstarg secondarg @ name second / third blah";
@@ -58,6 +68,15 @@ public class GogoCommandsTest extends AbstractPipeTest {
         assertEquals("there should be 3 tokens", 3, tokens.size());
         assertEquals("keys check", Arrays.asList("first","second", "third"), tokens.stream().map(t -> t.pipeKey).collect(Collectors.toList()));
         assertEquals("params check", "second", tokens.get(1).options.name);
+    }
+
+    @Test
+    public void testKeyValueToArray() {
+        assertArrayEquals(new String[]{"one","two","three","four"}, commands.keyValuesToArray(Arrays.asList("one=two","three=four")));
+        assertArrayEquals(new String[]{"one","two","three","${four}"}, commands.keyValuesToArray(Arrays.asList("one=two","three=${four}")));
+        assertArrayEquals(new String[]{"one","two","three","${four == 'blah' ? 'five' : 'six'}"},
+            commands.keyValuesToArray(Arrays.asList("one=two","three=${four == 'blah' ? 'five' : 'six'}")));
+        assertArrayEquals(new String[]{"jcr:content/singer","${'ringo' == one ? false : true}"}, commands.keyValuesToArray(Arrays.asList("jcr:content/singer=${'ringo' == one ? false : true}")));
     }
 
     @Test
@@ -79,7 +98,7 @@ public class GogoCommandsTest extends AbstractPipeTest {
     public void testOptions() {
         String expected = "works";
         String optionString = "@ name works @ path works @ expr works @ with one=works two=works @ outputs one=works two=works";
-        GogoCommands.Options options = commands.getOptions(optionString.split("\\s"));
+        CommandExecutorImpl.Options options = commands.getOptions(optionString.split("\\s"));
         assertEquals("check name", expected, options.name);
         assertEquals("check expr", expected, options.expr);
         assertEquals("check path", expected, options.path);
@@ -97,7 +116,7 @@ public class GogoCommandsTest extends AbstractPipeTest {
     public void testOptionsListsWithOneItem() {
         String expected = "works";
         String optionString = "@ with one=works @ outputs one=works";
-        GogoCommands.Options options = commands.getOptions(optionString.split("\\s"));
+        CommandExecutorImpl.Options options = commands.getOptions(optionString.split("\\s"));
         Map bindings = new HashMap();
         CommandUtil.writeToMap(bindings, options.with);
         assertEquals("check with first", expected, bindings.get("one"));
@@ -130,6 +149,39 @@ public class GogoCommandsTest extends AbstractPipeTest {
     public void testExecuteWithWriter() throws Exception {
         PipeBuilder builder = plumber.newPipe(context.resourceResolver()).echo("/content/${node}").$("nt:base");
         String path = builder.build().getResource().getPath();
-        ExecutionResult result = commands.executeInternal(context.resourceResolver(), path, "@ outputs title=jcr:title desc=jcr:description @ with node=fruits");
+        ExecutionResult result = commands.execute(context.resourceResolver(), path, "@ outputs title=jcr:title desc=jcr:description @ with node=fruits");
+    }
+
+    String testServlet(Map<String,Object> params) throws ServletException, IOException {
+        MockSlingHttpServletRequest request = context.request();
+        MockSlingHttpServletResponse response = context.response();
+        request.setParameterMap(params);
+        request.setMethod("POST");
+        commands.doPost(request, response);
+        if (response.getStatus() != 200) {
+            System.out.println(response.getOutputAsString());
+        }
+        assertEquals(200, response.getStatus());
+        return response.getOutputAsString();
+    }
+
+    @Test
+    public void testSimpleCommandServlet() throws IOException, ServletException {
+        Map<String, Object> params = new HashMap<>();
+        params.put(CommandExecutorImpl.REQ_PARAM_CMD, "echo /content / mkdir foo / write type=bar");
+        String response = testServlet(params);
+        assertEquals("{\"items\":[\"/content/foo\"],\"size\":1}\n", response);
+    }
+
+    @Test
+    public void testFileCommandServlet() throws IOException, ServletException {
+        Map<String, Object> params = new HashMap<>();
+        params.put(CommandExecutorImpl.REQ_PARAM_FILE, IOUtils.toString(getClass().getResourceAsStream("/testcommand"
+            + ".txt"), "UTF-8"));
+        String response = testServlet(params);
+        assertEquals("{\"items\":[\"/content/beatles/john\",\"/content/beatles/paul\","
+            + "\"/content/beatles/georges\",\"/content/beatles/ringo\"],"
+            + "\"size\":4}\n"
+            + "{\"items\":[\"/content/beatles/ringo/jcr:content\"],\"size\":1}\n", response);
     }
 }
