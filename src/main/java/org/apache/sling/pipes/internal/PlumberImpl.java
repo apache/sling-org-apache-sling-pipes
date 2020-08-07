@@ -94,14 +94,14 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     public static final int DEFAULT_BUFFER_SIZE = 1000;
 
-    protected static final String PN_MONITORED = "monitored";
-    protected static final String MONITORED_PIPES_QUERY = String.format("//element(*,nt:base)[@sling:resourceType='%s' and @%s]", ContainerPipe.RESOURCE_TYPE, PN_MONITORED);
+    static final String PN_MONITORED = "monitored";
+    static final String MONITORED_PIPES_QUERY = String.format("//element(*,nt:base)[@sling:resourceType='%s' and @%s]", ContainerPipe.RESOURCE_TYPE, PN_MONITORED);
 
-    protected static final String MBEAN_NAME_FORMAT = "org.apache.sling.pipes:name=%s";
+    static final String MBEAN_NAME_FORMAT = "org.apache.sling.pipes:name=%s";
 
-    protected static final String PARAM_BINDINGS = "bindings";
+    static final String PARAM_BINDINGS = "bindings";
 
-    protected static final String PARAM_FILE = "pipes_inputFile";
+    static final String PARAM_FILE = "pipes_inputFile";
 
     @ObjectClassDefinition(name="Apache Sling Pipes : Plumber configuration")
     public @interface Configuration {
@@ -144,7 +144,7 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
     /**
      * Register all pipes declared in pipe builder
      */
-    protected void registerPipes(){
+    void registerPipes(){
         registerPipe(ContainerPipe.RESOURCE_TYPE, ContainerPipe.class);
         registerPipe(ManifoldPipe.RESOURCE_TYPE, ManifoldPipe.class);
         for (Method method : PipeBuilder.class.getDeclaredMethods()){
@@ -191,7 +191,7 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
     }
 
     @Reference(policy= ReferencePolicy.DYNAMIC, cardinality= ReferenceCardinality.OPTIONAL)
-    protected volatile Distributor distributor = null;
+    volatile Distributor distributor = null;
 
     @Reference
     JobManager jobManager;
@@ -357,7 +357,7 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
      * @param pipe current pipe
      * @param result current result
      */
-    protected void checkError(Pipe pipe, ExecutionResult result){
+    void checkError(Pipe pipe, ExecutionResult result){
         String error = pipe.getBindings().popCurrentError();
         if (StringUtils.isNotBlank(error)){
             result.addError(error);
@@ -379,7 +379,7 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
      * @param currentResource if running, null if ended
      * @throws PersistenceException in case save fails
      */
-    protected void persist(ResourceResolver resolver, Pipe pipe, ExecutionResult result, Resource currentResource) throws PersistenceException, InterruptedException {
+    void persist(ResourceResolver resolver, Pipe pipe, ExecutionResult result, Resource currentResource) throws PersistenceException, InterruptedException {
         if (shouldSave(resolver, pipe, result, currentResource)) {
             log.info("[{}] saving changes...", pipe.getName());
             writeStatus(pipe, currentResource == null ? STATUS_FINISHED : currentResource.getPath());
@@ -417,7 +417,7 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
      * @param status status to write
      * @throws RepositoryException in case write goes wrong
      */
-    protected void writeStatus(Pipe pipe, String status){
+    void writeStatus(Pipe pipe, String status){
         if (StringUtils.isNotBlank(status)){
             ModifiableValueMap vm = pipe.getResource().adaptTo(ModifiableValueMap.class);
             if( vm != null) {
@@ -484,7 +484,7 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
         }
     }
 
-    protected Collection<PipeMonitor> getMonitoredPipes() {
+    Collection<PipeMonitor> getMonitoredPipes() {
         Collection<PipeMonitor> beans = new ArrayList<>();
         if (serviceUser != null) {
             try (ResourceResolver resolver = factory.getServiceResourceResolver(serviceUser)) {

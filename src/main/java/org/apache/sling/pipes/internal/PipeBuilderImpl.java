@@ -80,11 +80,11 @@ public class PipeBuilderImpl implements PipeBuilder {
     ResourceResolver resolver;
 
     /**
-     * protected constructor (to only allow internal classes to build it out)
+     * constructor (to only allow internal classes to build it out)
      * @param resolver resolver with which the pipe will be built and executed
      * @param plumber instance of the plumber
      */
-    protected PipeBuilderImpl(ResourceResolver resolver, Plumber plumber){
+    PipeBuilderImpl(ResourceResolver resolver, Plumber plumber){
         this.plumber = plumber;
         this.resolver = resolver;
     }
@@ -108,7 +108,7 @@ public class PipeBuilderImpl implements PipeBuilder {
      * @param expr expression
      * @return updated instance of PipeBuilder
      */
-    protected PipeBuilder pipeWithExpr(String type, String expr){
+    PipeBuilder pipeWithExpr(String type, String expr){
         try {
             pipe(type).expr(expr);
         } catch (IllegalAccessException e){
@@ -275,7 +275,7 @@ public class PipeBuilderImpl implements PipeBuilder {
      * @return updated instance of PipeBuilder
      * @throws IllegalAccessException in case configuration is wrong
      */
-    protected PipeBuilder writeToCurrentStep(String name, Object... params) throws IllegalAccessException {
+    PipeBuilder writeToCurrentStep(String name, Object... params) throws IllegalAccessException {
         checkArguments(params);
         Map<String, Object> props = name != null ? currentStep.confs.get(name) : currentStep.properties;
         if (props == null){
@@ -308,7 +308,7 @@ public class PipeBuilderImpl implements PipeBuilder {
      * build a time + random based path under /var/pipes
      * @return full path of future Pipe
      */
-    protected String buildRandomPipePath() {
+    String buildRandomPipePath() {
         final Calendar now = Calendar.getInstance();
         return PIPES_REPOSITORY_PATH + '/' + now.get(Calendar.YEAR) + '/' + now.get(Calendar.MONTH) + '/' + now.get(Calendar.DAY_OF_MONTH) + "/"
                 + UUID.randomUUID().toString();
@@ -324,7 +324,7 @@ public class PipeBuilderImpl implements PipeBuilder {
      * @return resource created
      */
     Resource createResource(ResourceResolver resolver, String path, String type, Map<String, Object> data) throws PersistenceException {
-        if (! data.keySet().stream().anyMatch(k -> k.contains(SLASH))) {
+        if (data.keySet().stream().noneMatch(k -> k.contains(SLASH))) {
             return ResourceUtil.getOrCreateResource(resolver, path, data, type, false);
         }
         String returnPath = EMPTY;
@@ -361,7 +361,7 @@ public class PipeBuilderImpl implements PipeBuilder {
      * @return created resource
      * @throws PersistenceException in case persistence fails
      */
-    protected Resource persistStep(String path, String parentType, Step step) throws PersistenceException {
+    Resource persistStep(String path, String parentType, Step step) throws PersistenceException {
         Resource resource = createResource(resolver, path, parentType, step.properties);
         ModifiableValueMap mvm = resource.adaptTo(ModifiableValueMap.class);
         if (StringUtils.isNotBlank(step.name) && mvm != null){

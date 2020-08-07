@@ -16,29 +16,26 @@
  */
 package org.apache.sling.pipes.internal;
 
+import static org.apache.sling.pipes.internal.PlumberServlet.RESOURCE_TYPE;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.servlets.ServletResolverConstants;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.event.jobs.Job;
-import org.apache.sling.pipes.AbstractInputStreamPipe;
 import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.OutputWriter;
 import org.apache.sling.pipes.Plumber;
 import org.apache.sling.pipes.internal.slingquery.ChildrenPipe;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -47,7 +44,7 @@ import java.util.Map;
  */
 @Component(service = {Servlet.class},
         property= {
-                ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES + "=" + Plumber.RESOURCE_TYPE,
+                ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES + "=" + RESOURCE_TYPE,
                 ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES + "=" + ContainerPipe.RESOURCE_TYPE,
                 ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES + "=" + ManifoldPipe.RESOURCE_TYPE,
                 ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES + "=" + AuthorizablePipe.RESOURCE_TYPE,
@@ -59,14 +56,13 @@ import java.util.Map;
                 ServletResolverConstants.SLING_SERVLET_EXTENSIONS + "=csv"
         })
 public class PlumberServlet extends SlingAllMethodsServlet {
+    public static final String RESOURCE_TYPE = "slingPipes/plumber";
 
-    Logger log = LoggerFactory.getLogger(this.getClass());
+    static final String PARAM_PATH = "path";
 
-    protected static final String PARAM_PATH = "path";
+    static final String PARAM_BINDINGS = "bindings";
 
-    protected static final String PARAM_BINDINGS = "bindings";
-
-    protected static final String PARAM_ASYNC = "async";
+    static final String PARAM_ASYNC = "async";
 
     @Reference
     Plumber plumber;
@@ -92,8 +88,8 @@ public class PlumberServlet extends SlingAllMethodsServlet {
      * @param writeAllowed should we consider this execution is about to modify content
      * @throws ServletException in case something is wrong...
      */
-    protected void execute(SlingHttpServletRequest request, SlingHttpServletResponse response, boolean writeAllowed) throws ServletException {
-        String path = request.getResource().getResourceType().equals(Plumber.RESOURCE_TYPE) ? request.getParameter(PARAM_PATH) : request.getResource().getPath();
+    void execute(SlingHttpServletRequest request, SlingHttpServletResponse response, boolean writeAllowed) throws ServletException {
+        String path = request.getResource().getResourceType().equals(RESOURCE_TYPE) ? request.getParameter(PARAM_PATH) : request.getResource().getPath();
         try {
             if (StringUtils.isBlank(path)) {
                 throw new IllegalArgumentException("path should be provided");

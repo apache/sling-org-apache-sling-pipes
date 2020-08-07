@@ -115,7 +115,7 @@ public class AuthorizablePipe extends BasePipe {
      * @return corresponding authorizable
      * @throws RepositoryException can happen with any JCR operation
      */
-    protected Authorizable getAuthorizable() throws RepositoryException {
+    Authorizable getAuthorizable() throws RepositoryException {
         Authorizable auth = null;
         String authId = getExpr();
         if (StringUtils.isNotBlank(authId)) {
@@ -140,7 +140,7 @@ public class AuthorizablePipe extends BasePipe {
      * Add current authorizable to configured addToGroup expression (should resolve as a group id)
      * @param auth authorizable to add to the group
      */
-    protected void addToGroup(Authorizable auth){
+    void addToGroup(Authorizable auth){
         try {
             //if addToGroup is set to true, we try to find the corresponding
             //group and to add current auth to it as a member
@@ -161,7 +161,7 @@ public class AuthorizablePipe extends BasePipe {
      * Add to current authorizable (that should be a group) the configured members in addMembers expression
      * @param auth group to which members should be added
      */
-    protected void addMembers(Authorizable auth) {
+    void addMembers(Authorizable auth) {
         try {
             if (auth.isGroup()) {
                 Group group = (Group)auth;
@@ -191,7 +191,7 @@ public class AuthorizablePipe extends BasePipe {
      * add current group's members to the bindings
      * @param auth group whose members should be bound in the pipe bindings
      */
-    protected void bindMembers(Authorizable auth){
+    void bindMembers(Authorizable auth){
         try {
             if (auth.isGroup()){
                 Group group = (Group)auth;

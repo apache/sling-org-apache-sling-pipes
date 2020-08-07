@@ -27,5 +27,5 @@ public @interface PipeExecutor {
     String command();
     String resourceType();
     String description();
-    Class pipeClass();
+    Class<? extends BasePipe> pipeClass();
 }

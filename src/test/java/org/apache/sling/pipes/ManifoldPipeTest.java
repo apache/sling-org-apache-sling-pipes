@@ -37,8 +37,6 @@ public class ManifoldPipeTest extends AbstractPipeTest {
     public static final String NN_DEFAULT = "defaultExecutor";
     public static final String NN_STRAINED = "strainedExecutor";
 
-
-
     @Before
     public void setup() throws PersistenceException {
         super.setup();

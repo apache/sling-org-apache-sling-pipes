@@ -49,7 +49,6 @@ public class MovePipe extends BasePipe {
     private boolean overwriteTarget;
     private boolean orderBefore;
 
-
     public MovePipe(Plumber plumber, Resource resource, PipeBindings upperBindings) {
         super(plumber, resource, upperBindings);
         overwriteTarget = properties.get(PN_OVERWRITE_TARGET, false);

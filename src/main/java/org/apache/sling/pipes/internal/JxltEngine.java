@@ -26,7 +26,6 @@ import org.apache.commons.jexl3.MapContext;
 
 public class JxltEngine {
 
-
     JexlEngine jexl;
     JexlContext jc;
 

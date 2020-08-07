@@ -16,17 +16,13 @@
  */
 package org.apache.sling.pipes;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.event.jobs.Job;
-import org.apache.sling.pipes.internal.JsonUtil;
 import org.osgi.annotation.versioning.ProviderType;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -34,8 +30,6 @@ import java.util.Map;
  */
 @ProviderType
 public interface Plumber {
-
-    String RESOURCE_TYPE = "slingPipes/plumber";
 
     /**
      * Instantiate a pipe from the given resource and returns it

@@ -136,7 +136,7 @@ public class ACLPipe extends BasePipe {
      * @param resource current resource
      */
 
-    protected void bindACLs(Resource resource) {
+    void bindACLs(Resource resource) {
         try {
             Authorizable auth = checkIsAuthorizableResource(resource);
             if ( null != auth ) {
@@ -177,7 +177,7 @@ public class ACLPipe extends BasePipe {
      * @throws RepositoryException in case something goes wrong while executing xpath query
      */
 
-    protected void bindAclsForAuthorizableResource(Authorizable auth) throws RepositoryException {
+    void bindAclsForAuthorizableResource(Authorizable auth) throws RepositoryException {
         //query for searching in full repository where auth is prinicpal in access control entry.
         logger.info("binding acls for authorizable {} and authID {}", auth.getPath(), auth.getID());
         String query = "/jcr:root//element(*, rep:ACE)[@rep:principalName = '" + auth.getID() + "']";
@@ -207,7 +207,7 @@ public class ACLPipe extends BasePipe {
         outputBinding = JsonUtil.toString(authPermisions);
     }
 
-    protected Authorizable checkIsAuthorizableResource(Resource resource) {
+    Authorizable checkIsAuthorizableResource(Resource resource) {
         return resource.adaptTo(Authorizable.class);
     }
 
@@ -217,7 +217,7 @@ public class ACLPipe extends BasePipe {
      * @return Principal for the principalName
      */
 
-    protected Principal getPrincipalFor(String prinicipalName) {
+    Principal getPrincipalFor(String prinicipalName) {
         Principal principal = null;
         try {
             if (StringUtils.isNotBlank(prinicipalName)) {
