@@ -35,6 +35,7 @@ import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.security.AccessControlException;
 import java.util.Arrays;
 import java.util.Map;
 
@@ -108,7 +109,11 @@ public class PlumberServlet extends SlingAllMethodsServlet {
                 OutputWriter writer = getWriter(request, response);
                 plumber.execute(request.getResourceResolver(), path, bindings, writer, true);
             }
-        } catch (Exception e) {
+        }
+        catch (AccessControlException e) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        }
+        catch (Exception e) {
             throw new ServletException(e);
         }
     }

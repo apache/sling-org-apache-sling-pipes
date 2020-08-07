@@ -25,6 +25,7 @@ import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
+import java.security.AccessControlException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -55,6 +56,7 @@ import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 import static org.apache.sling.pipes.PipeBindings.INJECTED_SCRIPT_REGEXP;
@@ -153,7 +155,11 @@ public class CommandExecutorImpl extends SlingAllMethodsServlet implements Comma
                 }
             }
             response.setStatus(SC_OK);
-        } catch (IllegalAccessException | InvocationTargetException e) {
+        }
+        catch (AccessControlException e) {
+            response.sendError(SC_FORBIDDEN);
+        }
+        catch (IllegalAccessException | InvocationTargetException e) {
             writer.println("Error executing " + currentCommand);
             e.printStackTrace(writer);
             response.sendError(SC_INTERNAL_SERVER_ERROR);

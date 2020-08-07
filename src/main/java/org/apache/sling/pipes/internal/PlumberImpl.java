@@ -65,6 +65,7 @@ import javax.management.ObjectName;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
+import java.security.AccessControlException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -103,6 +104,8 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
 
     static final String PARAM_FILE = "pipes_inputFile";
 
+    static final String PERMISSION_EXECUTION = "/system/sling/permissions/pipes/exec";
+
     @ObjectClassDefinition(name="Apache Sling Pipes : Plumber configuration")
     public @interface Configuration {
         @AttributeDefinition(description="Number of iterations after which plumber should saves a pipe execution")
@@ -113,6 +116,9 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
 
         @AttributeDefinition(description="Name of service user, with appropriate rights, that will be used for async execution")
         String serviceUser();
+
+        @AttributeDefinition(description="Path of the permission resource for executing pipes")
+        String executionPermissionResource() default PERMISSION_EXECUTION;
 
         @AttributeDefinition(description="Users allowed to register async pipes")
         String[] authorizedUsers() default  {"admin"};
@@ -151,6 +157,15 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
             PipeExecutor executor = method.getAnnotation(PipeExecutor.class);
             if (executor != null){
                 registerPipe(executor.resourceType(), executor.pipeClass());
+            }
+        }
+    }
+
+    void checkPermissions(ResourceResolver context, String... permissions) throws AccessControlException {
+        for (String permission : permissions) {
+            if (context.getResource(permission) == null) {
+                log.debug("error trying to check permission {}", permission);
+                throw new AccessControlException("User has not the required permissions");
             }
         }
     }
@@ -289,6 +304,7 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
     }
     @Override
     public ExecutionResult execute(ResourceResolver resolver, Pipe pipe, Map additionalBindings, OutputWriter writer, boolean save) {
+        checkPermissions(resolver, configuration.executionPermissionResource());
         boolean success = false;
         PipeMonitor monitor = null;
         long start = System.currentTimeMillis();

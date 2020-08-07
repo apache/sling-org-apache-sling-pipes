@@ -68,6 +68,7 @@ public class AbstractPipeTest {
         when(configuration.authorizedUsers()).thenReturn(new String[]{});
         when(configuration.serviceUser()).thenReturn(null);
         when(configuration.bufferSize()).thenReturn(PlumberImpl.DEFAULT_BUFFER_SIZE);
+        when(configuration.executionPermissionResource()).thenReturn(PATH_FRUITS);
         plumberImpl.activate(configuration);
         plumberImpl.registerPipe("slingPipes/dummyNull", DummyNull.class);
         plumberImpl.registerPipe("slingPipes/dummySearch", DummySearch.class);

@@ -1,0 +1,4 @@
+{
+  "jcr:primaryType":"nt:unstructured",
+  "jcr:description":"resource against which permission will be tested"
+}

@@ -46,14 +46,14 @@ public class ManifoldPipeTest extends AbstractPipeTest {
     }
 
     @Test
-    public void testWithDefaults() throws Exception {
+    public void testWithDefaults() {
         Iterator<Resource> output = getOutput(PATH_PIPE + "/" + NN_DEFAULT);
         boolean hasNext = output.hasNext();
         assertTrue("There should be children", hasNext);
     }
 
     @Test
-    public void testStrained() throws Exception {
+    public void testStrained() {
         Iterator<Resource> tenPipes = getOutput(PATH_PIPE + "/" + NN_STRAINED);
         int numResults = 0;
         while (tenPipes.hasNext()) {
@@ -64,13 +64,13 @@ public class ManifoldPipeTest extends AbstractPipeTest {
     }
 
     @Test
-    public void testStrainedFromReference() throws Exception {
+    public void testStrainedFromReference() {
         ExecutionResult result = plumber.newPipe(context.resourceResolver()).ref(PATH_PIPE + "/" + NN_STRAINED).run();
         assertEquals("All the sub-pipes output should be present exactly once in Executor output", 10*6, result.size());
     }
 
     @Test
-    public void testBuilder() throws Exception {
+    public void testBuilder() {
         ExecutionResult result = plumber.newPipe(context.resourceResolver())
                 .echo(PATH_APPLE)
                 .echo(PATH_BANANA)
