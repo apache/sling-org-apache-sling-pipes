@@ -63,7 +63,7 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
         CommandExecutorImpl.Token token = tokens.get(0);
         assertEquals("pipe key should be 'some'","some", token.pipeKey);
         assertEquals("pipe args should be isolated, items", Arrays.asList("isolated","items"), token.args);
-        String tokenString = "first arg / second firstarg secondarg @ name second / third blah";
+        String tokenString = "first arg | second firstarg secondarg @ name second | third blah";
         tokens = commands.parseTokens(tokenString.split("\\s"));
         assertEquals("there should be 3 tokens", 3, tokens.size());
         assertEquals("keys check", Arrays.asList("first","second", "third"), tokens.stream().map(t -> t.pipeKey).collect(Collectors.toList()));
@@ -87,7 +87,7 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
 
     @Test
     public void testSimpleChainedConf() throws Exception {
-        PipeBuilder builder = commands.parse(context.resourceResolver(),"echo /content/fruits / write some=test key=value".split("\\s"));
+        PipeBuilder builder = commands.parse(context.resourceResolver(),"echo /content/fruits | write some=test key=value".split("\\s"));
         assertNotNull("there should be a resource", builder.run());
         ValueMap props = context.currentResource(PATH_FRUITS).getValueMap();
         assertEquals("there should some=test", "test", props.get("some"));
@@ -128,7 +128,7 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
     @Test
     public void testChainedConfWithInternalOptions() throws Exception {
         PipeBuilder builder = commands.parse(context.resourceResolver(),
-        "echo /content/fruits @ name fruits / write some=${path.fruits} key=value".split("\\s"));
+        "echo /content/fruits @ name fruits | write some=${path.fruits} key=value".split("\\s"));
         assertNotNull("there should be a resource", builder.run());
         ValueMap props = context.currentResource(PATH_FRUITS).getValueMap();
         assertEquals("there should some=/content/fruits", PATH_FRUITS, props.get("some"));
@@ -138,7 +138,7 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
     @Test
     public void adaptToDemoTest() throws Exception {
         String url = "'http://99-bottles-of-beer.net/lyrics.html'";
-        String cmd = "egrep " + url + " @ name bottles @ with 'pattern=(?<number>\\d(\\d)?)' / mkdir '/var/bottles/${bottles.number}'";
+        String cmd = "egrep " + url + " @ name bottles @ with pattern=(?<number>\\d(\\d)?) | mkdir /var/bottles/${bottles.number}";
         PipeBuilder builder = commands.parse(context.resourceResolver(), cmd.split("\\s"));
         ContainerPipe pipe = (ContainerPipe)builder.build();
         ValueMap regexp = pipe.getResource().getChild("conf/bottles").getValueMap();
@@ -168,7 +168,7 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
     @Test
     public void testSimpleCommandServlet() throws IOException, ServletException {
         Map<String, Object> params = new HashMap<>();
-        params.put(CommandExecutorImpl.REQ_PARAM_CMD, "echo /content / mkdir foo / write type=bar");
+        params.put(CommandExecutorImpl.REQ_PARAM_CMD, "echo /content | mkdir foo | write type=bar");
         String response = testServlet(params);
         assertEquals("{\"items\":[\"/content/foo\"],\"size\":1}\n", response);
     }
@@ -183,5 +183,17 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
             + "\"/content/beatles/georges\",\"/content/beatles/ringo\"],"
             + "\"size\":4}\n"
             + "{\"items\":[\"/content/beatles/ringo/jcr:content\"],\"size\":1}\n", response);
+    }
+
+    @Test
+    public void testChainedCommand() throws IOException, ServletException {
+        Map<String, Object> params = new HashMap<>();
+        params.put(CommandExecutorImpl.REQ_PARAM_FILE, IOUtils.toString(getClass().getResourceAsStream("/chainedCommand"
+            + ".txt"), "UTF-8"));
+        String response = testServlet(params);
+        assertEquals("{\"items\":[],\"size\":0}\n"
+            + "{\"items\":[\"/content/fruits/banana/isnota/pea\",\"/content/fruits/banana/isnota/carrot\","
+            + "\"/content/fruits/apple/isnota/pea\",\"/content/fruits/apple/isnota/plum\","
+            + "\"/content/fruits/apple/isnota/carrot\"],\"size\":5}\n", response);
     }
 }

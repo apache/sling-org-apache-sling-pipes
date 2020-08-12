@@ -75,9 +75,10 @@ public class CommandExecutorImpl extends SlingAllMethodsServlet implements Comma
     public static final String RESOURCE_TYPE = "slingPipes/exec";
     static final String REQ_PARAM_FILE = "pipe_cmdfile";
     static final String REQ_PARAM_CMD = "pipe_cmd";
+    static final String CMD_LINE_PREFIX = "cmd_line_";
     static final String WHITE_SPACE_SEPARATOR = "\\s";
     static final String COMMENT_PREFIX = "#";
-    static final String SEPARATOR = "/";
+    static final String SEPARATOR = "|";
     static final String PARAMS = "@";
     static final String KEY_VALUE_SEP = "=";
     static final String FIRST_TOKEN = "first";
@@ -147,11 +148,16 @@ public class CommandExecutorImpl extends SlingAllMethodsServlet implements Comma
             if (cmds.isEmpty()) {
                 writer.println("No command to execute!");
             }
+            short idx_line = 0;
             for (String command : cmds) {
                 if (StringUtils.isNotBlank(command)) {
+                    JsonWriter pipeWriter = new JsonWriter();
+                    pipeWriter.starts();
                     currentCommand = command;
                     PipeBuilder pipeBuilder = parse(resolver, command.split(WHITE_SPACE_SEPARATOR));
-                    writer.println(pipeBuilder.run(bindings));
+                    Pipe pipe = pipeBuilder.build();
+                    bindings.put(CMD_LINE_PREFIX + idx_line++, pipe.getResource().getPath());
+                    writer.println(plumber.execute(resolver, pipe, bindings, pipeWriter, true));
                 }
             }
             response.setStatus(SC_OK);

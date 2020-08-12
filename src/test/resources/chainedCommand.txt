@@ -13,7 +13,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-mkdir /content | json ['john','paul','georges','ringo'] @ name beatle | mkdir beatles/${beatle} | write jcr:content/isBeatle=true jcr:content/firstName=${beatle} jcr:content/singer=${'ringo'==beatle?false:true}
 
-echo /content | xpath /jcr:root//element(*,nt:base)[@singer='false']
+#this pipe returns grand children of the current one (should return blank if context is normal)
+echo isnota | children nt:unstructured
+
+#now we are using above pipe as a reference and we should get stuff
+echo /content | $ /apps/pipes-it/fruit | ref ${cmd_line_0}
