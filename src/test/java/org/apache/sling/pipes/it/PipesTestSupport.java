@@ -27,6 +27,7 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.auth.core.AuthenticationSupport;
 import org.apache.sling.pipes.Plumber;
 import org.apache.sling.resource.presence.ResourcePresence;
+import org.apache.sling.testing.paxexam.SlingVersionResolver;
 import org.apache.sling.testing.paxexam.TestSupport;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
@@ -71,6 +72,7 @@ public abstract class PipesTestSupport extends TestSupport {
 
     @Configuration
     public Option[] configuration() {
+        SlingVersionResolver versionResolver = new SlingVersionResolver();
         return options(
             baseConfiguration(),
             quickstart(),
@@ -79,7 +81,7 @@ public abstract class PipesTestSupport extends TestSupport {
             factoryConfiguration("org.apache.sling.resource.presence.internal.ResourcePresenter")
                 .put("path", "/etc/pipes-it/fruit-list")
                 .asOption(),
-            mavenBundle().groupId("org.apache.servicemix.bundles").artifactId("org.apache.servicemix.bundles.commons-httpclient").versionAsInProject(),
+            mavenBundle().groupId("org.apache.geronimo.bundles").artifactId("commons-httpclient").version(versionResolver),
             // testing
             slingResourcePresence(),
             newConfiguration("org.apache.sling.jcr.base.internal.LoginAdminWhitelist")
