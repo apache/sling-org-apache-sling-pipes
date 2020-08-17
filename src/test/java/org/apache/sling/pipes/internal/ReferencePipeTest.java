@@ -16,6 +16,7 @@
  */
 package org.apache.sling.pipes.internal;
 
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.pipes.AbstractPipeTest;
 import org.apache.sling.pipes.ExecutionResult;
@@ -59,6 +60,19 @@ public class ReferencePipeTest  extends AbstractPipeTest {
     @Test
     public void testValueBinding() throws Exception {
         testOneResource(PATH_PIPE + "/isAppleWormy", PATH_APPLE);
+    }
+
+
+    @Test
+    public void testSkipExecution() throws PersistenceException, IllegalAccessException {
+        Pipe pipe = plumber.newPipe(context.resourceResolver()).echo(PATH_FRUITS).build();
+        String path = pipe.getResource().getPath();
+        assertEquals("there should be one result", 1, plumber.newPipe(context.resourceResolver())
+            .ref(path).run().size());
+        assertEquals("there should be one result", 1, plumber.newPipe(context.resourceResolver())
+            .ref(path).with("skipExecution","${false}").run().size());
+        assertEquals("there should be zero result", 0, plumber.newPipe(context.resourceResolver())
+            .ref(path).with("skipExecution","${true}").run().size());
     }
 
     @Test

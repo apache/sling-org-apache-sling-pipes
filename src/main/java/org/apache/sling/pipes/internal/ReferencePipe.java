@@ -34,6 +34,7 @@ public class ReferencePipe extends SuperPipe {
     private static final Logger log = LoggerFactory.getLogger(ReferencePipe.class);
 
     public static final String RESOURCE_TYPE = "slingPipes/reference";
+    static final String PN_SKIPEXECUTION = "skipExecution";
 
     protected Pipe reference;
 
@@ -67,10 +68,31 @@ public class ReferencePipe extends SuperPipe {
         }
     }
 
-    @Override
-    protected Iterator<Resource> computeSubpipesOutput() {
+    /**
+     * @return boolean flag mentionning wether we could skip the execution of that pipe
+     */
+    boolean shouldBeSkipped() {
+        String skip = properties.get(PN_SKIPEXECUTION, String.class);
+        if (StringUtils.isNotBlank(skip)) {
+            Object object = bindings.instantiateObject(skip);
+            if (object instanceof Boolean) {
+                return (Boolean)object;
+            }
+        }
+        return false;
+    }
+
+    protected Iterator<Resource> computeReferredOutput() {
         buildChildren();
         log.debug("getting {} output", reference);
         return reference.getOutput();
+    }
+
+    @Override
+    protected Iterator<Resource> computeSubpipesOutput() {
+        if (! shouldBeSkipped()) {
+            return computeReferredOutput();
+        }
+        return EMPTY_ITERATOR;
     }
 }
