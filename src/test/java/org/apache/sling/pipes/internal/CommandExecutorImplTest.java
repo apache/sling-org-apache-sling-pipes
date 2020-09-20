@@ -174,15 +174,19 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
     }
 
     @Test
-    public void testFileCommandServlet() throws IOException, ServletException {
+    public void testMultipeLineGetCommandLine() throws IOException, ServletException {
         Map<String, Object> params = new HashMap<>();
-        params.put(CommandExecutorImpl.REQ_PARAM_FILE, IOUtils.toString(getClass().getResourceAsStream("/testcommand"
+        params.put(CommandExecutorImpl.REQ_PARAM_FILE, IOUtils.toString(getClass().getResourceAsStream("/commandsFormats"
             + ".txt"), "UTF-8"));
-        String response = testServlet(params);
-        assertEquals("{\"items\":[\"/content/beatles/john\",\"/content/beatles/paul\","
-            + "\"/content/beatles/georges\",\"/content/beatles/ringo\"],"
-            + "\"size\":4}\n"
-            + "{\"items\":[\"/content/beatles/ringo/jcr:content\"],\"size\":1}\n", response);
+        MockSlingHttpServletRequest request = context.request();
+        request.setParameterMap(params);
+        request.setMethod("POST");
+        List<String> cmdList = commands.getCommandList(context.request());
+        assertEquals(4, cmdList.size());
+        for (int i = 0; i < 3; i ++) {
+            assertEquals("echo /content | $ /apps/pipes-it/fruit | children nt:unstructured", cmdList.get(i));
+        }
+        assertEquals ("echo /content | write one=foo nested/two=foo nested/three=foo", cmdList.get(3));
     }
 
     @Test
@@ -195,5 +199,17 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
             + "{\"items\":[\"/content/fruits/banana/isnota/pea\",\"/content/fruits/banana/isnota/carrot\","
             + "\"/content/fruits/apple/isnota/pea\",\"/content/fruits/apple/isnota/plum\","
             + "\"/content/fruits/apple/isnota/carrot\"],\"size\":5}\n", response);
+    }
+
+    @Test
+    public void testFileCommandServlet() throws IOException, ServletException {
+        Map<String, Object> params = new HashMap<>();
+        params.put(CommandExecutorImpl.REQ_PARAM_FILE, IOUtils.toString(getClass().getResourceAsStream("/testcommand"
+            + ".txt"), "UTF-8"));
+        String response = testServlet(params);
+        assertEquals("{\"items\":[\"/content/beatles/john\",\"/content/beatles/paul\","
+            + "\"/content/beatles/georges\",\"/content/beatles/ringo\"],"
+            + "\"size\":4}\n"
+            + "{\"items\":[\"/content/beatles/ringo/jcr:content\"],\"size\":1}\n", response);
     }
 }

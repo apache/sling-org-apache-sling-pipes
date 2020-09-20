@@ -79,6 +79,7 @@ public class CommandExecutorImpl extends SlingAllMethodsServlet implements Comma
     static final String WHITE_SPACE_SEPARATOR = "\\s";
     static final String COMMENT_PREFIX = "#";
     static final String SEPARATOR = "|";
+    static final String LINE_SEPARATOR = " ";
     static final String PARAMS = "@";
     static final String KEY_VALUE_SEP = "=";
     static final String FIRST_TOKEN = "first";
@@ -128,17 +129,24 @@ public class CommandExecutorImpl extends SlingAllMethodsServlet implements Comma
             InputStream is = request.getRequestParameter(REQ_PARAM_FILE).getInputStream();
             BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
             String line;
+            StringBuilder cmdBuilder = new StringBuilder();
             while ((line = reader.readLine()) != null) {
                 if (isCommandCandidate(line)) {
-                    cmds.add(line);
+                    cmdBuilder.append(LINE_SEPARATOR + line.trim());
+                } else if (cmdBuilder.length() > 0){
+                    cmds.add(cmdBuilder.toString().trim());
+                    cmdBuilder = new StringBuilder();
                 }
+            }
+            if (cmdBuilder.length() > 0) {
+                cmds.add(cmdBuilder.toString().trim());
             }
         }
         return cmds;
     }
 
     @Override
-    protected void doPost(@NotNull SlingHttpServletRequest request, @NotNull SlingHttpServletResponse response) throws ServletException, IOException {
+    protected void doPost(@NotNull SlingHttpServletRequest request, @NotNull SlingHttpServletResponse response) throws IOException {
         String currentCommand = null;
         PrintWriter writer = response.getWriter();
         try {
