@@ -67,7 +67,9 @@ public class GogoCommands {
     /**
      * run command handler
      * @param cmds string tokens coming with run command
-     * @throws Exception in case anything went wrong
+     * @throws LoginException in case configured service user is invalid,
+     * @throws InvocationTargetException in case commands are misconfigured,
+     * @throws IllegalAccessException in case this user can't access the pipe executions
      */
     public void run(String... cmds) throws LoginException, InvocationTargetException, IllegalAccessException {
         try (ResourceResolver resolver = factory.getServiceResourceResolver(plumber.getServiceUser())) {
@@ -79,7 +81,10 @@ public class GogoCommands {
     /**
      * build command handler
      * @param cmds string tokens coming with build command
-     * @throws Exception in case anything went wrong
+     * @throws LoginException in case configured service user is invalid,
+     * @throws InvocationTargetException in case commands are misconfigured,
+     * @throws IllegalAccessException in case this user can't access the pipe executions
+     * @throws PersistenceException in case persistence of the pipe failed
      */
     public void build(String... cmds) throws LoginException, InvocationTargetException, IllegalAccessException, PersistenceException {
         try (ResourceResolver resolver = factory.getServiceResourceResolver(plumber.getServiceUser())) {
@@ -92,7 +97,8 @@ public class GogoCommands {
      * execute command handler
      * @param path pipe path, {@code INPUT} for getting last token's output as path for things like build some / pipe | execute -
      * @param options string tokens coming with run command
-     * @throws Exception in case anything went wrong
+     * @throws IOException if writing to the output fails,
+     * @throws LoginException in case configured service user is invalid,
      */
     public void execute(String path, String... options) throws IOException, LoginException {
         String computedPath = INPUT.equals(path) ? IOUtils.toString(System.in).trim() : path;

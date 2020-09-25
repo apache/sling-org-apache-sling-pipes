@@ -115,13 +115,11 @@ public interface Pipe {
 
     /**
      * to be executed before output is retrieved
-     * @throws Exception in case anything goes wrong
      */
     void before();
 
     /**
      * to be executed before output is retrieved
-     * @throws Exception in case anything goes wrong
      */
     void after();
 

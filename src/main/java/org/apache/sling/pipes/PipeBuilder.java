@@ -358,7 +358,6 @@ public interface PipeBuilder {
     /**
      * builds and run configured pipe
      * @return set of resource path, output of the pipe execution
-     * @throws Exception exceptions thrown by the build or the pipe execution itself
      */
     ExecutionResult run();
 
@@ -366,7 +365,6 @@ public interface PipeBuilder {
      * allow execution of a pipe, with more parameter
      * @param bindings additional bindings
      * @return set of resource path, output of the pipe execution
-     * @throws Exception in case something goes wrong with pipe execution
      */
     ExecutionResult run(Map<String, Object> bindings);
 
@@ -374,7 +372,6 @@ public interface PipeBuilder {
      * allow execution of a pipe, with more parameter
      * @param bindings additional bindings, should be key/value format
      * @return set of resource path, output of the pipe execution
-     * @throws Exception in case something goes wrong with pipe execution
      */
     ExecutionResult runWith(Object... bindings);
 
@@ -391,7 +388,6 @@ public interface PipeBuilder {
      * @param numThreads number of threads to use for running the contained pipes
      * @param bindings additional bindings for the execution (can be null)
      * @return set of resource path, merged output of pipes execution (order is arbitrary)
-     * @throws Exception in case something went wrong in run execution
      */
     ExecutionResult runParallel(int numThreads, Map<String, Object> bindings);
 }
