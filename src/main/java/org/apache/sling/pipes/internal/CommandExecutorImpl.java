@@ -37,6 +37,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.ServletResolverConstants;
@@ -63,7 +64,6 @@ import static org.apache.sling.pipes.PipeBindings.INJECTED_SCRIPT_REGEXP;
 import static org.apache.sling.pipes.internal.CommandUtil.writeToMap;
 
 import javax.servlet.Servlet;
-import javax.servlet.ServletException;
 
 @Component(service = {Servlet.class, CommandExecutor.class}, property= {
     ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES + "=" + CommandExecutorImpl.RESOURCE_TYPE,
@@ -125,21 +125,24 @@ public class CommandExecutorImpl extends SlingAllMethodsServlet implements Comma
         List<String> cmds = new ArrayList<>();
         if (request.getParameterMap().containsKey(REQ_PARAM_CMD)) {
             cmds.add(request.getParameter(REQ_PARAM_CMD));
-        } else if (request.getParameterMap().containsKey(REQ_PARAM_FILE)) {
-            InputStream is = request.getRequestParameter(REQ_PARAM_FILE).getInputStream();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
-            String line;
-            StringBuilder cmdBuilder = new StringBuilder();
-            while ((line = reader.readLine()) != null) {
-                if (isCommandCandidate(line)) {
-                    cmdBuilder.append(LINE_SEPARATOR + line.trim());
-                } else if (cmdBuilder.length() > 0){
-                    cmds.add(cmdBuilder.toString().trim());
-                    cmdBuilder = new StringBuilder();
+        } else {
+            RequestParameter paramFile = request.getRequestParameter(REQ_PARAM_FILE);
+            if (paramFile != null) {
+                InputStream is = paramFile.getInputStream();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
+                String line;
+                StringBuilder cmdBuilder = new StringBuilder();
+                while ((line = reader.readLine()) != null) {
+                    if (isCommandCandidate(line)) {
+                        cmdBuilder.append(LINE_SEPARATOR + line.trim());
+                    } else if (cmdBuilder.length() > 0){
+                        cmds.add(cmdBuilder.toString().trim());
+                        cmdBuilder = new StringBuilder();
+                    }
                 }
-            }
-            if (cmdBuilder.length() > 0) {
-                cmds.add(cmdBuilder.toString().trim());
+                if (cmdBuilder.length() > 0) {
+                    cmds.add(cmdBuilder.toString().trim());
+                }
             }
         }
         return cmds;
@@ -156,7 +159,7 @@ public class CommandExecutorImpl extends SlingAllMethodsServlet implements Comma
             if (cmds.isEmpty()) {
                 writer.println("No command to execute!");
             }
-            short idx_line = 0;
+            short idxLine = 0;
             for (String command : cmds) {
                 if (StringUtils.isNotBlank(command)) {
                     JsonWriter pipeWriter = new JsonWriter();
@@ -164,7 +167,7 @@ public class CommandExecutorImpl extends SlingAllMethodsServlet implements Comma
                     currentCommand = command;
                     PipeBuilder pipeBuilder = parse(resolver, command.split(WHITE_SPACE_SEPARATOR));
                     Pipe pipe = pipeBuilder.build();
-                    bindings.put(CMD_LINE_PREFIX + idx_line++, pipe.getResource().getPath());
+                    bindings.put(CMD_LINE_PREFIX + idxLine ++, pipe.getResource().getPath());
                     writer.println(plumber.execute(resolver, pipe, bindings, pipeWriter, true));
                 }
             }

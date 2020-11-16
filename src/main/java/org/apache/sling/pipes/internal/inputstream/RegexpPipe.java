@@ -32,6 +32,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -74,6 +75,9 @@ public class RegexpPipe extends AbstractInputStreamPipe {
 
                     @Override
                     public Resource next() {
+                        if (! hasNext) {
+                            throw new NoSuchElementException();
+                        }
                         if (!names.isEmpty()){
                             Map<String, Object> map = new HashMap<>();
                             for (String name : names) {

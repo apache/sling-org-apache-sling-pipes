@@ -124,7 +124,11 @@ public class PipeBuilderImpl implements PipeBuilder {
 
     @Override
     public PipeBuilder write(Object... conf) throws IllegalAccessException {
-        return pipe(WritePipe.RESOURCE_TYPE).conf(conf);
+        PipeBuilder instance = pipe(WritePipe.RESOURCE_TYPE);
+        if (conf.length > 0) {
+            instance = instance.conf(conf);
+        }
+        return instance;
     }
 
     @Override

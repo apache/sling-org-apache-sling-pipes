@@ -25,10 +25,12 @@ import org.apache.sling.pipes.Plumber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
+import javax.annotation.PostConstruct;
+
 
 /**
  * Check for pipes presence under <code>pipes</code> node of the given resource, and make their output available as pipes
@@ -37,7 +39,7 @@ import java.util.Map;
  */
 @Model(adaptables = Resource.class)
 public class PipeModel {
-    Logger LOG = LoggerFactory.getLogger(PipeModel.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PipeModel.class);
 
     /**
      * name of the child nodes under which we should look for pipes
@@ -99,7 +101,7 @@ public class PipeModel {
                     outputs.put(pipe.getName(), pipe.getOutput());
                     LOG.debug("found and initialized {}", pipe.getName());
                 } catch(Exception e){
-                    LOG.error("unable to bind {} pipe", candidate.getPath(), e);
+                    LOG.error("unable to bind {} pipe", candidate.getPath(), e);
                 }
             }
         } else {

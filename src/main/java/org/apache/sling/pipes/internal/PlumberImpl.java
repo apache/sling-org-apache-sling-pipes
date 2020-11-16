@@ -161,7 +161,7 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
         }
     }
 
-    void checkPermissions(ResourceResolver context, String... permissions) throws AccessControlException {
+    void checkPermissions(ResourceResolver context, String... permissions) {
         for (String permission : permissions) {
             if (context.getResource(permission) == null) {
                 log.debug("error trying to check permission {}", permission);

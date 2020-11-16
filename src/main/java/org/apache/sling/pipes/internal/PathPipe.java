@@ -16,6 +16,8 @@
  */
 package org.apache.sling.pipes.internal;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
@@ -25,6 +27,8 @@ import org.apache.sling.pipes.Plumber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import java.util.Collections;
 import java.util.Iterator;
 
@@ -34,7 +38,9 @@ import static org.apache.sling.jcr.resource.JcrResourceConstants.NT_SLING_FOLDER
  * creates or get given expression's path and returns corresponding resource
  * this pipe can be configured with the following properties:
  * <ul>
- *     <li><code>nodeType</code> resource type with which the leaf node of the created path will be created</li>
+ *     <li><code>nodeType</code> node type with which the leaf node of the created path will be created.
+ *     Note that in that case Jackrabbit utilitary will be used, as this explicitely set path to be JCR.</li>
+ *     <li><code>resourceType</code> resource type with which the leaf node of the created path will be created</li>
  *     <li><code>intermediateType</code> resource type with which intermediate nodse of the created path will be created</li>
  *     <li><code>autosave</code> flag indicating wether this pipe should triggers a commit at the end of the execution</li>
  * </ul>
@@ -42,10 +48,12 @@ import static org.apache.sling.jcr.resource.JcrResourceConstants.NT_SLING_FOLDER
 public class PathPipe extends BasePipe {
 
     public static final String RESOURCE_TYPE = RT_PREFIX + "path";
+    public static final String PN_NODETYPE = "nodeType";
     public static final String PN_RESOURCETYPE = "resourceType";
     public static final String PN_INTERMEDIATE = "intermediateType";
     public static final String PN_AUTOSAVE = "autosave";
 
+    String nodeType;
     String resourceType;
     String intermediateType;
     boolean autosave;
@@ -54,6 +62,7 @@ public class PathPipe extends BasePipe {
 
     public PathPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) {
         super(plumber, resource, upperBindings);
+        nodeType = properties.get(PN_NODETYPE, String.class);
         resourceType = properties.get(PN_RESOURCETYPE, NT_SLING_FOLDER);
         intermediateType = properties.get(PN_INTERMEDIATE, resourceType);
         autosave = properties.get(PN_AUTOSAVE, false);
@@ -72,10 +81,16 @@ public class PathPipe extends BasePipe {
             String path = isRootPath(expr) ? expr : getInput().getPath() + SLASH + expr;
             logger.info("creating path {}", path);
             if (!isDryRun()) {
-                Resource resource = ResourceUtil.getOrCreateResource(resolver, path, resourceType, intermediateType, autosave);
+                if (StringUtils.isNotBlank(nodeType)) {
+                    //in that case we are in a "JCR" mode
+                    JcrUtils.getOrCreateByPath(path, intermediateType, nodeType, resolver.adaptTo(Session.class), autosave);
+                } else {
+                    ResourceUtil.getOrCreateResource(resolver, path, resourceType, intermediateType, autosave);
+                }
+                Resource resource = resolver.getResource(path);
                 output = Collections.singleton(resource).iterator();
             }
-        } catch (PersistenceException e) {
+        } catch (PersistenceException | RepositoryException e) {
             logger.error ("Not able to create path {}", expr, e);
         }
         return output;

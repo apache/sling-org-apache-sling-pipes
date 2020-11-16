@@ -72,7 +72,9 @@ public class BasePipe implements Pipe {
     protected String afterHook;
 
     // used by pipes using complex JCR configurations
-    protected static final List<String> IGNORED_PROPERTIES = Arrays.asList("jcr:lastModified", "jcr:primaryType", "jcr:created", "jcr:createdBy", "jcr:uuid");
+    protected static final List<String> IGNORED_PROPERTIES = Arrays.asList("jcr:lastModified", "jcr:primaryType",
+        "jcr:created", "jcr:createdBy", "jcr:versionHistory", "jcr:predecessors", "jcr:baseVersion", "jcr:uuid",
+        "jcr:isCheckedOut");
 
     Boolean dryRunObject = null;
 
