@@ -119,4 +119,11 @@ public class MovePipeTest extends AbstractPipeTest {
         assertTrue("new property path should exists", session.propertyExists(PATH_FRUITS + MOVED_PROPERTY_PATH));
         Assert.assertFalse("old property path should not", session.propertyExists(PATH_FRUITS + PN_INDEX));
     }
+
+    @Test
+    public void testRelativeMove() throws Exception {
+        ExecutionResult results = execute(oak.resourceResolver(), "mkdir /content/foo | mv bar");
+        assertEquals("there should be 1 result", 1 , results.size());
+        assertEquals(results.getCurrentPathSet().iterator().next(), "/content/bar");
+    }
 }

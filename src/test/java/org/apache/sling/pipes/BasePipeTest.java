@@ -62,12 +62,8 @@ public class BasePipeTest extends AbstractPipeTest {
 
     @Test
     public void testRelativeInput() throws Exception {
-        Resource resource = plumber.newPipe(context.resourceResolver())
-                .echo(ROOT)
-                .echo(NN_FRUITS)
-                .build().getOutput().next();
-        assertNotNull("there should be an output", resource);
-        assertEquals("it should be fruits root", PATH_FRUITS, resource.getPath());
+        ExecutionResult results = execute("echo /content | echo fruits");
+        assertEquals("it should be fruits root", PATH_FRUITS, results.currentPathSet.iterator().next());
     }
 
     @Test

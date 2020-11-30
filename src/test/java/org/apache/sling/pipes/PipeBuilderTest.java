@@ -83,15 +83,9 @@ public class PipeBuilderTest extends AbstractPipeTest {
 
     @Test
     public void bindings() throws Exception {
-        PipeBuilder defaultNames = plumber.newPipe(context.resourceResolver());
-        ExecutionResult result = defaultNames
-                .echo(PATH_FRUITS)
-                .children("nt:unstructured")
-                .grep("slingPipesFilter_test","${two.worm}")
-                .children("nt:unstructured#isnota")
-                .children("nt:unstructured").name("thing")
-                .write("jcr:path", "${path.thing}")
-                .run();
+        ExecutionResult result = execute("echo /content/fruits | children nt:unstructured " +
+                "| grep slingPipesFilter_test=${two.worm} | children nt:unstructured#isnota " +
+                "| children nt:unstructured @ name thing | write jcr:path=${path.thing}");
         assertEquals("There should be 3 resources", 3, result.size());
         String pea = "/content/fruits/apple/isnota/pea";
         String carrot = "/content/fruits/apple/isnota/carrot";

@@ -23,6 +23,7 @@ import org.apache.sling.pipes.internal.ContainerPipe;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
 
 import static org.junit.Assert.assertEquals;
@@ -108,14 +109,10 @@ public class ContainerPipeTest extends AbstractPipeTest {
      * one "empty" sub pipe in the middle of the execution should cut the pipe
      */
     @Test
-    public void testContainerCut() throws PersistenceException {
-        Pipe pipe = plumber.newPipe(context.resourceResolver())
-                .echo(PATH_FRUITS) //should return fruit root
-                .echo("nonexisting") // /content/fruits/nonexisting does not exist
-                .echo(PATH_APPLE) // existing apple
-                .build();
-        assertFalse("there should be no output to that pipe because some empty pipe is in the middle",
-                pipe.getOutput().hasNext());
+    public void testContainerCut() throws PersistenceException, InvocationTargetException, IllegalAccessException {
+        ExecutionResult result = execute("echo /content/fruits | echo nonexisting | echo /content/fruits/apple");
+        assertEquals("there should be no output to that pipe because some empty pipe is in the middle",
+                0, result.size());
     }
 
     @Test

@@ -16,6 +16,7 @@
  */
 package org.apache.sling.pipes.internal;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.jackrabbit.api.JackrabbitNode;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
@@ -154,6 +155,10 @@ public class MovePipe extends BasePipe {
             return output;
         }
         String targetPath = getExpr();
+        if (! targetPath.startsWith(SLASH)) {
+            logger.debug("relative path requested as target path: we'll take current path's parent");
+            targetPath = StringUtils.substringBeforeLast(input.getPath(), SLASH) + SLASH + targetPath;
+        }
         Resource targetResource = resolver.getResource(targetPath);
         try {
             if (targetResource == null) {

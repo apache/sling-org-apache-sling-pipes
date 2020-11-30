@@ -46,10 +46,8 @@ public class ShallowReferencePipeTest extends AbstractPipeTest {
         plumber.newPipe(context.resourceResolver()).echo(PATH_FRUITS + "/apple").build(PATH_PIPE + "/applePipe");
         plumber.newPipe(context.resourceResolver()).echo(PATH_FRUITS + "/banana").build(PATH_PIPE + "/bananaPipe");
 
-        ExecutionResult result = plumber.newPipe(context.resourceResolver())
-                .json("['apple','banana']").name("fruit")
-                .shallowRef(PATH_PIPE + "/${fruit}Pipe")
-                .run();
+        ExecutionResult result = execute("json ['apple','banana'] @ name fruit" +
+                " | shallowRef " + PATH_PIPE + "/${fruit}Pipe");
         assertEquals("there should be two outputs", 2, result.size());
         assertTrue("apple should be returned", result.getCurrentPathSet().contains(PATH_FRUITS + "/apple"));
         assertTrue("banana should be returned", result.getCurrentPathSet().contains(PATH_FRUITS + "/banana"));

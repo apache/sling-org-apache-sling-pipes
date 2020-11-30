@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.3.0" name="org.apache.sling.pipes.internal.PlumberImpl" configuration-policy="require" immediate="true" activate="activate">
+    <implementation class="org.apache.sling.pipes.internal.PlumberImpl"/>
+    <service>
+        <provide interface="org.apache.sling.pipes.Plumber"/>
+    </service>
+    <reference name="factory" interface="org.apache.sling.api.resource.ResourceResolverFactory" field="factory"/>
+    <reference interface="org.apache.sling.event.jobs.JobManager" name="jobManager" field="jobManager"/>
+</scr:component>

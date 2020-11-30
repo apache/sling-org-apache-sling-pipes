@@ -23,6 +23,7 @@ import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
 
 import static org.junit.Assert.assertEquals;
@@ -64,8 +65,8 @@ public class ManifoldPipeTest extends AbstractPipeTest {
     }
 
     @Test
-    public void testStrainedFromReference() {
-        ExecutionResult result = plumber.newPipe(context.resourceResolver()).ref(PATH_PIPE + "/" + NN_STRAINED).run();
+    public void testStrainedFromReference() throws InvocationTargetException, IllegalAccessException {
+        ExecutionResult result = execute( "ref " + PATH_PIPE + "/" + NN_STRAINED);
         assertEquals("All the sub-pipes output should be present exactly once in Executor output", 10*6, result.size());
     }
 

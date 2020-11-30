@@ -18,21 +18,25 @@ package org.apache.sling.pipes;
 
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.event.jobs.JobManager;
+
 import org.apache.sling.pipes.dummies.DummyNull;
 import org.apache.sling.pipes.dummies.DummySearch;
+import org.apache.sling.pipes.internal.CommandExecutorImpl;
 import org.apache.sling.pipes.internal.PlumberImpl;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
 import org.junit.Rule;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  * this abstract class for pipes implements a plumber with all registered pipes, plus some test ones, and give some paths,
@@ -58,22 +62,23 @@ public class AbstractPipeTest {
 
     protected Plumber plumber;
 
+    protected CommandExecutor commandsExecutor;
+
     @Rule
     public SlingContext context = new SlingContext(ResourceResolverType.JCR_MOCK);
 
     @Before
     public void setup() throws PersistenceException {
-        PlumberImpl plumberImpl = new PlumberImpl();
-        PlumberImpl.Configuration configuration = mock(PlumberImpl.Configuration.class);
-        when(configuration.authorizedUsers()).thenReturn(new String[]{});
-        when(configuration.serviceUser()).thenReturn(null);
-        when(configuration.bufferSize()).thenReturn(PlumberImpl.DEFAULT_BUFFER_SIZE);
-        when(configuration.executionPermissionResource()).thenReturn(PATH_FRUITS);
-        plumberImpl.activate(configuration);
-        plumberImpl.registerPipe("slingPipes/dummyNull", DummyNull.class);
-        plumberImpl.registerPipe("slingPipes/dummySearch", DummySearch.class);
-        plumber = plumberImpl;
         context.load().json("/initial-content/content/fruits.json", PATH_FRUITS);
+        plumber = new PlumberImpl();
+        context.registerService(mock(JobManager.class));
+        context.registerInjectActivateService(plumber, "authorizedUsers", new String[]{},
+                "bufferSize", PlumberImpl.DEFAULT_BUFFER_SIZE,
+                "executionPermissionResource", PATH_FRUITS);
+        plumber.registerPipe("slingPipes/dummyNull", DummyNull.class);
+        plumber.registerPipe("slingPipes/dummySearch", DummySearch.class);
+        commandsExecutor = new CommandExecutorImpl();
+        context.registerInjectActivateService(commandsExecutor);
     }
 
     protected Pipe getPipe(String path){
@@ -85,6 +90,15 @@ public class AbstractPipeTest {
         Pipe pipe = getPipe(path);
         assertNotNull("pipe should be found", pipe);
         return pipe.getOutput();
+    }
+
+    protected ExecutionResult execute(String command) throws InvocationTargetException, IllegalAccessException {
+        return execute(context.resourceResolver(), command);
+    }
+
+    protected ExecutionResult execute(ResourceResolver resolver, String command) throws InvocationTargetException, IllegalAccessException {
+        PipeBuilder builder = commandsExecutor.parse(resolver, command.trim().split("\\s"));
+        return builder.run();
     }
 
     /**

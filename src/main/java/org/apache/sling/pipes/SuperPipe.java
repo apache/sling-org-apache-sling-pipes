@@ -25,7 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * Pipe that outputs some other pipes output, managing for them what is their outputs, and bindings
+ * Pipe that outputs a configured set of pipes output, managing for them what is their outputs, and bindings
  */
 public abstract class SuperPipe extends BasePipe {
     private static final Logger LOG = LoggerFactory.getLogger(SuperPipe.class);

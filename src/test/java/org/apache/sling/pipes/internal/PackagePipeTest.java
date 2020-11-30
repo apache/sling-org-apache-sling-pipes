@@ -38,10 +38,8 @@ public class PackagePipeTest extends AbstractPipeTest {
     public void filterModeTest() throws Exception {
         oak.load().json("/initial-content/content/fruits.json", PATH_FRUITS);
         String packagePath = "/content/package";
-        ExecutionResult result = plumber.newPipe(oak.resourceResolver())
-                .echo("/content/fruits")
-                .children("nt:unstructured")
-                .pkg(packagePath).run();
+        ExecutionResult result = execute(oak.resourceResolver(),
+                "echo /content/fruits | children nt:unstructured | package /content/package");
         assertTrue("there should be more than one output", result.size() > 0);
         Resource packageResource = context.resourceResolver().getResource(packagePath);
         assertNotNull(packageResource);

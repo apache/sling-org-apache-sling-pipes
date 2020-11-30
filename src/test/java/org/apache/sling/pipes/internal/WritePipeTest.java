@@ -136,11 +136,7 @@ public class WritePipeTest extends AbstractPipeTest {
     public void testReferencedSource() throws Exception {
         String path = "/content/test/referenced/source";
         ResourceResolver resolver = context.resourceResolver();
-        ExecutionResult result = plumber.newPipe(resolver)
-                .mkdir(path)
-                .pipe(WritePipe.RESOURCE_TYPE)
-                .expr("/content/fruits")
-                .run();
+        ExecutionResult result = execute("mkdir " + path + " | write @ expr /content/fruits");
         assertEquals("result should have 1", 1, result.size());
         Resource root = resolver.getResource(path);
         assertNotNull("target resource should be created", root);
