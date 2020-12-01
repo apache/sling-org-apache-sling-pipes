@@ -16,15 +16,23 @@
  */
 package org.apache.sling.pipes.internal.inputstream;
 
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.pipes.AbstractPipeTest;
+import org.apache.sling.pipes.ExecutionResult;
 import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -42,6 +50,13 @@ public class JsonPipeTest extends AbstractPipeTest {
         super.setup();
         context.load().json("/json.json", "/content/json");
     }
+
+    private static final int PORT = 1234;
+    private static final String baseUrl = "http://127.0.0.1:" + PORT;
+
+    @Rule
+    public WireMockRule http = new WireMockRule(PORT);
+
 
     @Test
     public void testPipedJson() throws Exception{
@@ -68,6 +83,13 @@ public class JsonPipeTest extends AbstractPipeTest {
     public void testPipedArray() throws Exception {
         testArray(getOutput(ARRAY));
     }
+    protected void testJsonPath(String json, String valuePath) throws Exception {
+        assertEquals("there should be 2 results for valuePath " + valuePath, 2, plumber.newPipe(context.resourceResolver())
+                .echo("/content/fruits")
+                .json(json).with("valuePath", valuePath).name("json")
+                .echo("/content/json/array/${json.test}")
+                .run().size());
+    }
 
     @Test
     public void testSimpleJsonPath() throws Exception {
@@ -80,11 +102,28 @@ public class JsonPipeTest extends AbstractPipeTest {
         testJsonPath("{'objects':{'items':[{'test':'one'}, {'test':'two'}]}}", "$.objects.items");
     }
 
-    protected void testJsonPath(String json, String valuePath) throws Exception {
-        assertEquals("there should be 2 results for valuePath " + valuePath, 2, plumber.newPipe(context.resourceResolver())
-                .echo("/content/fruits")
-                .json(json).with("valuePath", valuePath).name("json")
-                .echo("/content/json/array/${json.test}")
-                .run().size());
+    @Test
+    public void testSimpleRemoteJson() throws InvocationTargetException, IllegalAccessException {
+        http.givenThat(get(urlEqualTo("/get/foo.json"))
+                .willReturn(aResponse().withStatus(200).withBody("{\"args\":{\"foo1\":\"bar\"}}")));
+        ExecutionResult results = execute("echo /content " +
+                "| json "  + baseUrl + "/get/foo.json @ name data " +
+                "| mkdir ${data.args.foo1}");
+        assertEquals(1, results.size());
+        assertEquals("/content/bar", results.getCurrentPathSet().iterator().next());
     }
+
+    @Test
+    @Ignore
+    public void testAuthentifiedRemoteJson() throws InvocationTargetException, IllegalAccessException {
+        http.givenThat(get(urlEqualTo("/get/profile.json")).withBasicAuth("jdoe","jdoe")
+                .willReturn(aResponse().withStatus(200).withBody("{\"firstName\":\"John\"}")));
+        ExecutionResult results = plumber.newPipe(context.resourceResolver())
+                .json(baseUrl + "/get/profile.json").name("profile")
+                .mkdir("/home/${profile.firstName}").runWith("basicAuth", "jdoe:jdoe");
+        assertEquals(1, results.size());
+        assertEquals("/home/John", results.getCurrentPathSet().iterator().next());
+    }
+
+
 }

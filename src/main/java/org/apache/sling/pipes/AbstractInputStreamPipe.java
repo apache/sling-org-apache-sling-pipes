@@ -16,13 +16,6 @@
  */
 package org.apache.sling.pipes;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpConnectionManager;
-import org.apache.commons.httpclient.HttpState;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
@@ -32,7 +25,11 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Iterator;
 import java.util.regex.Pattern;
 
@@ -49,29 +46,19 @@ public abstract class AbstractInputStreamPipe extends BasePipe {
 
     public static final String BINDING_IS = "org.apache.sling.pipes.RequestInputStream";
 
-    HttpClient client;
+    private static final String BASIC_AUTH_BINDINGS = "basicAuth";
+
+    private static final String AUTH_HEADER = "Authentication";
+
+    private static final String BASIC_PREFIX = "Basic ";
 
     protected Object binding;
-
-    GetMethod method = null;
 
     InputStream is;
 
     public AbstractInputStreamPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) {
         super(plumber, resource, upperBindings);
-        configureHttpClient();
         binding = null;
-    }
-
-    /**
-     * Configure http client
-     */
-    private void configureHttpClient(){
-        HttpConnectionManager manager = new MultiThreadedHttpConnectionManager();
-        HttpConnectionManagerParams params = new HttpConnectionManagerParams();
-        manager.setParams(params);
-        client = new HttpClient(manager);
-        client.getParams().setAuthenticationPreemptive(false);
     }
 
     InputStream getInputStreamFromResource(String expr) {
@@ -86,16 +73,19 @@ public abstract class AbstractInputStreamPipe extends BasePipe {
         String expr = getExpr();
         if (expr.startsWith(REMOTE_START)) {
             //first look at
-            HttpState httpState = new HttpState();
-            String url = getExpr();
-            if (StringUtils.isNotBlank(url)) {
-                method = new GetMethod(url);
-                LOGGER.debug("Executing GET {}", url);
-                int status = client.executeMethod(null, method, httpState);
-                if (status == HttpStatus.SC_OK) {
-                    LOGGER.debug("200 received, streaming content");
-                    return method.getResponseBodyAsStream();
+            String urlExpression = getExpr();
+            if (StringUtils.isNotBlank(urlExpression)) {
+                URL url = new URL(urlExpression);
+                URLConnection urlConnection = url.openConnection();
+                String basicAuth = (String)getBindings().getBindings().get(BASIC_AUTH_BINDINGS);
+                if (StringUtils.isNotBlank(basicAuth)) {
+                    LOGGER.debug("Configuring basic authentication for {}", urlConnection);
+                    HttpURLConnection connection = (HttpURLConnection) urlConnection;
+                    String encoded = Base64.getEncoder().encodeToString(basicAuth.getBytes(StandardCharsets.UTF_8));
+                    connection.setRequestProperty(AUTH_HEADER, BASIC_PREFIX + encoded);
                 }
+                LOGGER.debug("Executing GET {}", url);
+                return urlConnection.getInputStream();
             }
         }
         if (VALID_PATH.matcher(expr).find()) {
@@ -126,9 +116,6 @@ public abstract class AbstractInputStreamPipe extends BasePipe {
             throw new IllegalArgumentException(e);
         } finally {
             IOUtils.closeQuietly(is);
-            if (method != null){
-                method.releaseConnection();
-            }
         }
     }
 }
