@@ -28,7 +28,9 @@ import org.slf4j.LoggerFactory;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
@@ -43,24 +45,37 @@ public class FilterPipe extends BasePipe {
     public static final String PN_TEST = PREFIX_FILTER + "test";
     public static final String PN_INJECTCHILDRENCOUNT = PREFIX_FILTER + "injectChildrenCount";
     public static final String BINDING_CHILDREN_COUNT = "childrenCount";
+    Map<String, Pattern> propertiesPatterns;
 
     public FilterPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) {
         super(plumber, resource, upperBindings);
     }
 
-    boolean propertiesPass(ValueMap current, ValueMap filter) {
+    Pattern getPattern(Resource filterResource, final String propertyKey) {
+        if (propertiesPatterns == null) {
+            propertiesPatterns = new HashMap<>();
+        }
+        String key = filterResource.getPath() + SLASH + propertyKey;
+        return propertiesPatterns.computeIfAbsent(key, x -> {
+            String value = filterResource.getValueMap().get(propertyKey, String.class);
+            return value != null ? Pattern.compile(filterResource.getValueMap().get(propertyKey, String.class))  : null;
+        });
+    }
+
+    boolean propertiesPass(ValueMap current, Resource filterResource) {
+        ValueMap filter = filterResource.getValueMap();
         if (filter.containsKey(PN_TEST)){
             Object test = bindings.instantiateObject(filter.get(PN_TEST, PipeBindings.FALSE_BINDING));
             if (! (test instanceof Boolean)){
-                logger.error("instatiated test {} is not a boolean, filtering out", test);
+                logger.error("instantiated test {} is not a boolean, filtering out", test);
                 return false;
             }
             return (Boolean) test;
         }
         for (String key : filter.keySet()){
             if (! IGNORED_PROPERTIES.contains(key) && !key.startsWith(PREFIX_FILTER)){
-                Pattern pattern = Pattern.compile(filter.get(key, String.class));
-                if (!pattern.matcher(current.get(key, String.class)).find()){
+                Pattern pattern = getPattern(filterResource, key);
+                if (!current.containsKey(key) || !pattern.matcher(current.get(key, String.class)).find()){
                     return false;
                 }
             }
@@ -114,7 +129,7 @@ public class FilterPipe extends BasePipe {
                     bindings.addBinding(BINDING_CHILDREN_COUNT, childrenCount);
                 }
             }
-            if (propertiesPass(current, filter)) {
+            if (propertiesPass(current, filterResource)) {
                 return childrenPass(currentResource, filterResource);
             }
         }

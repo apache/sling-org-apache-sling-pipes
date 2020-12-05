@@ -22,9 +22,11 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.pipes.AbstractPipeTest;
+import org.apache.sling.pipes.ExecutionResult;
 import org.apache.sling.pipes.Pipe;
 import org.junit.Test;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -65,7 +67,6 @@ public class FilterPipeTest extends AbstractPipeTest {
         assertFalse("...and only One", resourceIterator.hasNext());
     }
 
-
     @Test
     public void testNoChildrenFails(){
         assertFalse("output has no resource...", getOutput(PATH_PIPE + "/" + NN_NOCHILDREN_FAILS).hasNext());
@@ -102,6 +103,18 @@ public class FilterPipeTest extends AbstractPipeTest {
         Pipe pipe = plumber.getPipe(resource);
         Iterator<Resource> resourceIterator = pipe.getOutput();
         assertFalse("output has no resource...", resourceIterator.hasNext());
+    }
+
+    @Test
+    public void testMultiplePattern() throws InvocationTargetException, IllegalAccessException {
+        ExecutionResult result = execute("echo /content/fruits/apple/isnota | children nt:unstructured | grep sling:resourceType=.+ @ with slingPipesFilter_not=true");
+        assertTrue("there should be some results", result.size() > 0);
+    }
+
+    @Test
+    public void testBadTestFails() throws InvocationTargetException, IllegalAccessException {
+        ExecutionResult result = execute("echo /content/fruits | grep slingPipesFilter_test=${'some string'}");
+        assertEquals(0, result.size());
     }
 
     @Test
