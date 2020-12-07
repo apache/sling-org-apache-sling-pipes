@@ -20,7 +20,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.pipes.internal.JxltEngine;
+import org.apache.sling.pipes.internal.bindings.JxltEngine;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,6 +61,8 @@ public class PipeBindings {
      */
     public static final String PATH_BINDING = "path";
 
+    public static final String CACONFIG_BINDING = "caconfig";
+
     /**
      * add ${name.pipeName} binding allowing to retrieve pipeName's current resource name
      */
@@ -79,9 +81,18 @@ public class PipeBindings {
 
     Map<String, String> nameBindings = new HashMap<>();
 
+    Map<String, Map> caconfigBindings = new HashMap<>();
+
     Map<String, Resource> outputResources = new HashMap<>();
 
     String currentError;
+
+    Plumber plumber;
+
+    public PipeBindings(@NotNull Plumber plumber, @NotNull Resource resource) {
+        this(resource);
+        this.plumber = plumber;
+    }
 
     /**
      * public constructor, built from pipe's resource
@@ -99,6 +110,9 @@ public class PipeBindings {
 
         //add name bindings where name.MyPipe will give MyPipe current resource name
         getBindings().put(NAME_BINDING, nameBindings);
+
+        //add caconfig bindings where caconfig.MyPipe will give MyPipe current ca configuration
+        getBindings().put(CACONFIG_BINDING, caconfigBindings);
     }
 
     /**
@@ -327,6 +341,9 @@ public class PipeBindings {
         if (resource != null) {
             pathBindings.put(name, resource.getPath());
             nameBindings.put(name, resource.getName());
+            if (plumber != null) {
+                caconfigBindings.put(name, plumber.getContextAwareConfigurationMap(resource));
+            }
         }
     }
 

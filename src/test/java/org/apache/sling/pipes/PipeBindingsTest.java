@@ -18,18 +18,19 @@ package org.apache.sling.pipes;
 
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.testing.mock.caconfig.MockContextAwareConfig;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.util.Calendar;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * testing binding's expressions instanciations
@@ -135,5 +136,14 @@ public class PipeBindingsTest extends AbstractPipeTest {
         assertEquals("first name binding should be apple", bindings.instantiateExpression("${name.dummyParent}"), "apple");
         output.next();
         assertEquals("second name binding should be banana", bindings.instantiateExpression("${name.dummyParent}"), "banana");
+    }
+
+    @Test
+    public void testCaConfigBinding() throws InvocationTargetException, IllegalAccessException {
+        context.build().resource("/conf/foo/sling:configs/" + TestConfiguration.class.getName(), "fruit", "apple");
+        MockContextAwareConfig.registerAnnotationClasses(context, TestConfiguration.class);
+        ExecutionResult result = execute("echo /content/fruits | echo ${caconfig.one['org.apache.sling.pipes.TestConfiguration'].fruit}");
+        assertTrue(result.size() > 0);
+        assertEquals("/content/fruits/apple", result.currentPathSet.iterator().next());
     }
 }

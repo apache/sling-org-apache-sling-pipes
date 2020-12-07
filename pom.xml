@@ -29,7 +29,7 @@
   </parent>
 
   <artifactId>org.apache.sling.pipes</artifactId>
-  <version>4.0.1-SNAPSHOT</version>
+  <version>4.1.0-SNAPSHOT</version>
 
   <name>Apache Sling Pipes</name>
   <description>bulk content changes tool</description>
@@ -268,6 +268,18 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
+      <artifactId>org.apache.sling.caconfig.api</artifactId>
+      <version>1.1.0</version>
+      <groupId>org.apache.sling</groupId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <artifactId>org.apache.sling.caconfig.impl</artifactId>
+      <version>1.4.10</version>
+      <groupId>org.apache.sling</groupId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>org.jetbrains</groupId>
       <artifactId>annotations</artifactId>
       <scope>provided</scope>
@@ -391,6 +403,18 @@
       <artifactId>wiremock-jre8-standalone</artifactId>
       <version>2.27.2</version>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.testing.caconfig-mock-plugin</artifactId>
+      <scope>test</scope>
+      <version>1.3.0</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.commons</groupId>
+          <artifactId>commons-lang3</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
   </dependencies>
 </project>

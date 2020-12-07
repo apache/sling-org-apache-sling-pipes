@@ -19,6 +19,7 @@ package org.apache.sling.pipes;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.caconfig.spi.ConfigurationMetadataProvider;
 import org.apache.sling.event.jobs.JobManager;
 
 import org.apache.sling.pipes.dummies.DummyNull;
@@ -27,12 +28,14 @@ import org.apache.sling.pipes.internal.CommandExecutorImpl;
 import org.apache.sling.pipes.internal.PlumberImpl;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
+import org.apache.sling.testing.mock.sling.junit.SlingContextBuilder;
 import org.junit.Before;
 import org.junit.Rule;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
 
+import static org.apache.sling.testing.mock.caconfig.ContextPlugins.CACONFIG;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -65,12 +68,13 @@ public class AbstractPipeTest {
     protected CommandExecutor commandsExecutor;
 
     @Rule
-    public SlingContext context = new SlingContext(ResourceResolverType.JCR_MOCK);
+    public SlingContext context = new SlingContextBuilder(ResourceResolverType.JCR_MOCK).plugin(CACONFIG).build();
 
     @Before
     public void setup() throws PersistenceException {
         context.load().json("/initial-content/content/fruits.json", PATH_FRUITS);
         plumber = new PlumberImpl();
+        context.registerService(mock(ConfigurationMetadataProvider.class));
         context.registerService(mock(JobManager.class));
         context.registerInjectActivateService(plumber, "authorizedUsers", new String[]{},
                 "bufferSize", PlumberImpl.DEFAULT_BUFFER_SIZE,

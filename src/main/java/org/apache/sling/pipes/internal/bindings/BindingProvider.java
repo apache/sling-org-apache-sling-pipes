@@ -14,28 +14,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.pipes.internal;
+package org.apache.sling.pipes.internal.bindings;
 
-import java.util.Map;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.pipes.Pipe;
 
-import org.apache.commons.jexl3.JexlBuilder;
-import org.apache.commons.jexl3.JexlContext;
-import org.apache.commons.jexl3.JexlEngine;
-import org.apache.commons.jexl3.JexlExpression;
-import org.apache.commons.jexl3.MapContext;
+import java.util.Iterator;
+import java.util.concurrent.Callable;
 
-public class JxltEngine {
+public class BindingProvider implements Callable<ValueMap> {
 
-    JexlEngine jexl;
-    JexlContext jc;
-
-    public JxltEngine(Map<String, Object> context) {
-        jexl = new JexlBuilder().create();
-        jc = new MapContext(context);
+    public BindingProvider(Pipe pipe) {
+        this.pipe = pipe;
     }
 
-    public Object parse(String expression) {
-        JexlExpression e = jexl.createExpression(expression);
-        return e.evaluate(jc);
+    Pipe pipe;
+
+    @Override
+    public ValueMap call() {
+        Iterator<Resource> output = pipe.getOutput();
+        if (output != null && output.hasNext()) {
+            return output.next().adaptTo(ValueMap.class);
+        }
+        return null;
+    }
+
+    public Pipe getPipe() {
+        return pipe;
     }
 }

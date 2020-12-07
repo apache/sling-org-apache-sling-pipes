@@ -35,6 +35,7 @@ import org.ops4j.pax.exam.ProbeBuilder;
 import org.ops4j.pax.exam.TestProbeBuilder;
 import org.ops4j.pax.exam.util.Filter;
 
+import static org.apache.sling.testing.paxexam.SlingOptions.slingCaconfig;
 import static org.apache.sling.testing.paxexam.SlingOptions.slingCommonsHtml;
 import static org.apache.sling.testing.paxexam.SlingOptions.slingDistribution;
 import static org.apache.sling.testing.paxexam.SlingOptions.slingEvent;
@@ -84,6 +85,7 @@ public abstract class PipesTestSupport extends TestSupport {
             mavenBundle().groupId("org.apache.geronimo.bundles").artifactId("commons-httpclient").version(versionResolver),
             // testing
             slingResourcePresence(),
+            slingCaconfig(),
             newConfiguration("org.apache.sling.jcr.base.internal.LoginAdminWhitelist")
                 .put("whitelist.bundles.regexp", "^PAXEXAM.*$")
                 .asOption(),

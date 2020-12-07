@@ -40,7 +40,6 @@ public interface Plumber {
      */
     Pipe getPipe(Resource resource);
 
-
     /**
      * Instantiate a pipe from the given resource and returns it
      *
@@ -50,7 +49,6 @@ public interface Plumber {
      * @return pipe instantiated from the resource, null otherwise
      */
     Pipe getPipe(Resource resource, PipeBindings upperBindings);
-
 
     /**
      * executes in a background thread
@@ -107,7 +105,6 @@ public interface Plumber {
      */
     void registerPipe(String type, Class<? extends BasePipe> pipeClass);
 
-
     /**
      * returns wether or not a pipe type is registered
      *
@@ -157,4 +154,10 @@ public interface Plumber {
      * @return service user that has been configured for executing pipes;
      */
     Map<String, Object> getServiceUser();
+
+    /**
+     * @param currentResource
+     * @return context aware configuration map
+     */
+    Map getContextAwareConfigurationMap(Resource currentResource);
 }

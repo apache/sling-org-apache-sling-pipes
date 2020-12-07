@@ -6,4 +6,5 @@
     </service>
     <reference name="factory" interface="org.apache.sling.api.resource.ResourceResolverFactory" field="factory"/>
     <reference interface="org.apache.sling.event.jobs.JobManager" name="jobManager" field="jobManager"/>
+    <reference interface="org.apache.sling.caconfig.spi.ConfigurationMetadataProvider" name="configMetadataProvider" field="configMetadataProvider"/>
 </scr:component>

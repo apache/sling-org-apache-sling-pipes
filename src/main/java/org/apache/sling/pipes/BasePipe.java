@@ -20,7 +20,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.pipes.internal.BindingProvider;
+import org.apache.sling.pipes.internal.bindings.BindingProvider;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -78,6 +78,10 @@ public class BasePipe implements Pipe {
 
     Boolean dryRunObject = null;
 
+    protected Plumber plumber;
+
+    private String name;
+
     @Override
     public SuperPipe getParent() {
         return parent;
@@ -92,10 +96,6 @@ public class BasePipe implements Pipe {
     public Resource getResource() {
         return resource;
     }
-
-    protected Plumber plumber;
-
-    private String name;
 
     /**
      * Pipe Constructor
@@ -139,7 +139,7 @@ public class BasePipe implements Pipe {
      * @param upperBindings
      */
     private void extractAdditionalBindings(@NotNull Resource resource, @Nullable PipeBindings upperBindings) {
-        bindings = upperBindings == null ? new PipeBindings(resource) : upperBindings;
+        bindings = upperBindings == null ? new PipeBindings(plumber, resource) : upperBindings;
         //additional bindings (global variables to use in child pipes expressions)
         Resource additionalBindings = resource.getChild(NN_ADDITIONALBINDINGS);
         if (additionalBindings != null) {

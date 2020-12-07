@@ -17,10 +17,9 @@
 package org.apache.sling.pipes;
 
 import org.apache.sling.api.resource.PersistenceException;
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.pipes.internal.BindingProvider;
+import org.apache.sling.pipes.internal.bindings.BindingProvider;
 import org.junit.Test;
 
 import javax.json.Json;

@@ -27,6 +27,7 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.caconfig.spi.ConfigurationMetadataProvider;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.DistributionResponse;
@@ -45,6 +46,7 @@ import org.apache.sling.pipes.PipeBuilder;
 import org.apache.sling.pipes.PipeExecutor;
 import org.apache.sling.pipes.Plumber;
 import org.apache.sling.pipes.PlumberMXBean;
+import org.apache.sling.pipes.internal.bindings.ConfigurationMap;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
@@ -124,6 +126,18 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
         String[] authorizedUsers() default  {"admin"};
     }
 
+    @Reference(policy= ReferencePolicy.DYNAMIC, cardinality= ReferenceCardinality.OPTIONAL)
+    volatile Distributor distributor = null;
+
+    @Reference
+    JobManager jobManager;
+
+    @Reference
+    ResourceResolverFactory factory;
+
+    @Reference
+    ConfigurationMetadataProvider configMetadataProvider;
+
     Map<String, Class<? extends BasePipe>> registry;
 
     public static final String SLING_EVENT_TOPIC = "org/apache/sling/pipes/topic";
@@ -175,6 +189,11 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
         return serviceUser;
     }
 
+    @Override
+    public Map getContextAwareConfigurationMap(Resource currentResource) {
+        return new ConfigurationMap(currentResource, configMetadataProvider);
+    }
+
     @Deactivate
     public void deactivate(){
         toggleJmxRegistration(null, PlumberMXBean.class.getName(), false);
@@ -204,15 +223,6 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
             log.error("unable to toggle mbean {} registration", name, e);
         }
     }
-
-    @Reference(policy= ReferencePolicy.DYNAMIC, cardinality= ReferenceCardinality.OPTIONAL)
-    volatile Distributor distributor = null;
-
-    @Reference
-    JobManager jobManager;
-
-    @Reference
-    ResourceResolverFactory factory;
 
     @Override
     public Pipe getPipe(Resource resource) {
@@ -343,8 +353,7 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
             success = true;
             return result;
         } catch (PersistenceException e) {
-            log.error("error while executing pipe", e);
-            throw new IllegalStateException(e);
+            throw new IllegalStateException("persistence error while executing pipe", e);
         } catch (InterruptedException ie) {
             log.error("execution interrupted", ie);
             Thread.currentThread().interrupt();

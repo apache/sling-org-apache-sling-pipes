@@ -1,6 +1,7 @@
 {
   "jcr:primaryType":"nt:unstructured",
   "index":["apple","banana"],
+  "sling:configRef": "/conf/foo",
   "apple":{
     "jcr:primaryType":"nt:unstructured",
     "sling:resourceType":"/apps/pipes-it/fruit",
