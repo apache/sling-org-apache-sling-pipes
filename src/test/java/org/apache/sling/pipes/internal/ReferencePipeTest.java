@@ -19,11 +19,11 @@ package org.apache.sling.pipes.internal;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.pipes.AbstractPipeTest;
-import org.apache.sling.pipes.ExecutionResult;
 import org.apache.sling.pipes.Pipe;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -62,7 +62,6 @@ public class ReferencePipeTest  extends AbstractPipeTest {
         testOneResource(PATH_PIPE + "/isAppleWormy", PATH_APPLE);
     }
 
-
     @Test
     public void testSkipExecution() throws PersistenceException, IllegalAccessException {
         Pipe pipe = plumber.newPipe(context.resourceResolver()).echo(PATH_FRUITS).build();
@@ -87,5 +86,11 @@ public class ReferencePipeTest  extends AbstractPipeTest {
             .ref(pipe.getResource().getPath())
             .run(bindings).getCurrentPathSet();
         assertTrue("paths should contain new path", paths.contains(newPath));
+    }
+
+    @Test
+    public void testReferences() throws PersistenceException, InvocationTargetException, IllegalAccessException {
+        plumber.newPipe(context.resourceResolver()).echo("/content/fruits").build("/apps/scripts/fruit-echo");
+        assertTrue(execute("ref fruit-echo").size() > 0);
     }
 }

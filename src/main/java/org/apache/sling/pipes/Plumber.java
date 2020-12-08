@@ -20,6 +20,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.event.jobs.Job;
+import org.jetbrains.annotations.Nullable;
 import org.osgi.annotation.versioning.ProviderType;
 
 import java.io.IOException;
@@ -160,4 +161,11 @@ public interface Plumber {
      * @return context aware configuration map
      */
     Map getContextAwareConfigurationMap(Resource currentResource);
+
+    /**
+     * @param referrer resource from which is made the fetch
+     * @param reference reference we are searching a resource for (assuming this is *not* a full path already)
+     * @return referenced resource, null otherwise
+     */
+    @Nullable Resource getReferencedResource(Resource referrer, String reference);
 }

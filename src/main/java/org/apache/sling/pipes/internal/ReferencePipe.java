@@ -54,14 +54,17 @@ public class ReferencePipe extends SuperPipe {
             referencePath = expression;
             Resource pipeResource = resolver.getResource(referencePath);
             if (pipeResource == null) {
-                throw new IllegalArgumentException("Reference configuration error: There is no resource at " + getExpr());
+                pipeResource = plumber.getReferencedResource(resource, referencePath);
+            }
+            if (pipeResource == null) {
+                throw new IllegalArgumentException("Reference configuration error: There is no resource at " + referencePath);
             }
             reference = plumber.getPipe(pipeResource, bindings);
             if (reference == null) {
-                throw new IllegalArgumentException("Unable to build out pipe out of " + getPath());
+                throw new IllegalArgumentException("Unable to build out pipe out of " + referencePath);
             }
             reference.setParent(this);
-            log.info("set reference to {}", reference);
+            log.info("sets reference to {}", reference);
 
             subpipes.clear();
             subpipes.add(reference);

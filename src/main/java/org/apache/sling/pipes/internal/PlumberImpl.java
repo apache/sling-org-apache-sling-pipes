@@ -47,6 +47,7 @@ import org.apache.sling.pipes.PipeExecutor;
 import org.apache.sling.pipes.Plumber;
 import org.apache.sling.pipes.PlumberMXBean;
 import org.apache.sling.pipes.internal.bindings.ConfigurationMap;
+import org.jetbrains.annotations.Nullable;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
@@ -83,6 +84,7 @@ import java.util.Map;
 import static org.apache.sling.api.resource.ResourceResolverFactory.SUBSERVICE;
 import static org.apache.sling.pipes.BasePipe.PN_STATUS;
 import static org.apache.sling.pipes.BasePipe.PN_STATUS_MODIFIED;
+import static org.apache.sling.pipes.BasePipe.SLASH;
 import static org.apache.sling.pipes.BasePipe.STATUS_FINISHED;
 import static org.apache.sling.pipes.BasePipe.STATUS_STARTED;
 
@@ -124,6 +126,9 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
 
         @AttributeDefinition(description="Users allowed to register async pipes")
         String[] authorizedUsers() default  {"admin"};
+
+        @AttributeDefinition(description = "Paths to search for references in")
+        String[] referencesPaths() default {};
     }
 
     @Reference(policy= ReferencePolicy.DYNAMIC, cardinality= ReferenceCardinality.OPTIONAL)
@@ -192,6 +197,18 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
     @Override
     public Map getContextAwareConfigurationMap(Resource currentResource) {
         return new ConfigurationMap(currentResource, configMetadataProvider);
+    }
+
+    @Override
+    public @Nullable Resource getReferencedResource(Resource referrer, String reference) {
+        ResourceResolver resolver = referrer.getResourceResolver();
+        for (String path : configuration.referencesPaths()) {
+            Resource target = resolver.getResource(path + SLASH + reference);
+            if (target != null) {
+                return target;
+            }
+        }
+        return null;
     }
 
     @Deactivate

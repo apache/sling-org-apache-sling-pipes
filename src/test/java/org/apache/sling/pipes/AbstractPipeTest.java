@@ -78,7 +78,8 @@ public class AbstractPipeTest {
         context.registerService(mock(JobManager.class));
         context.registerInjectActivateService(plumber, "authorizedUsers", new String[]{},
                 "bufferSize", PlumberImpl.DEFAULT_BUFFER_SIZE,
-                "executionPermissionResource", PATH_FRUITS);
+                "executionPermissionResource", PATH_FRUITS,
+                "referencesPaths", new String [] { "/conf/global/sling/pipes", "/apps/scripts" });
         plumber.registerPipe("slingPipes/dummyNull", DummyNull.class);
         plumber.registerPipe("slingPipes/dummySearch", DummySearch.class);
         commandsExecutor = new CommandExecutorImpl();
