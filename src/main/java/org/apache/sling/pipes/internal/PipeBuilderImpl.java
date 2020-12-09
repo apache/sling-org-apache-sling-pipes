@@ -27,6 +27,7 @@ import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.ExecutionResult;
 import org.apache.sling.pipes.OutputWriter;
 import org.apache.sling.pipes.Pipe;
+import org.apache.sling.pipes.PipeBindings;
 import org.apache.sling.pipes.PipeBuilder;
 import org.apache.sling.pipes.Plumber;
 import org.apache.sling.pipes.internal.inputstream.CsvPipe;
@@ -258,7 +259,12 @@ public class PipeBuilderImpl implements PipeBuilder {
     }
 
     @Override
-    public PipeBuilder acls() throws IllegalAccessException{
+    public PipeBuilder bindings(Object... bindings) throws IllegalAccessException {
+        return writeToCurrentStep(PipeBindings.NN_ADDITIONALBINDINGS, bindings);
+    }
+
+    @Override
+    public PipeBuilder acls() {
         return pipe(ACLPipe.RESOURCE_TYPE);
     }
 
@@ -277,9 +283,8 @@ public class PipeBuilderImpl implements PipeBuilder {
      * @param name name of the configuration node, can be null in which case it's the subpipe itself
      * @param params key/value pair list of configuration
      * @return updated instance of PipeBuilder
-     * @throws IllegalAccessException in case configuration is wrong
      */
-    PipeBuilder writeToCurrentStep(String name, Object... params) throws IllegalAccessException {
+    PipeBuilder writeToCurrentStep(String name, Object... params) {
         checkArguments(params);
         Map<String, Object> props = name != null ? currentStep.confs.get(name) : currentStep.properties;
         if (props == null){
@@ -446,6 +451,7 @@ public class PipeBuilderImpl implements PipeBuilder {
      */
     public class Step {
         String name;
+        Map<String, Object> bindings;
         Map<String, Object> properties;
         Map<String, Map<String, Object>> confs = new HashMap<>();
         Step(String type){

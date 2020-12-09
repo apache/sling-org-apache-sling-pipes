@@ -332,6 +332,13 @@ public interface PipeBuilder {
      */
     PipeBuilder conf(Object... properties) throws IllegalAccessException;
 
+    /**
+     * Adds binding to current pipe
+     * @param bindings bindings key value
+     * @return updated instance of PipeBuilder
+     * @throws IllegalAccessException
+     */
+    PipeBuilder bindings(Object... bindings) throws IllegalAccessException;
 
     /**
      * add outputs passed key

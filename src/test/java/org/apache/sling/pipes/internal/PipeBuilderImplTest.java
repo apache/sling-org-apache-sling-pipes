@@ -21,12 +21,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.AbstractPipeTest;
+import org.apache.sling.pipes.ExecutionResult;
 import org.junit.Test;
 
 public class PipeBuilderImplTest extends AbstractPipeTest {
@@ -64,5 +66,13 @@ public class PipeBuilderImplTest extends AbstractPipeTest {
         context.resourceResolver().commit();
         assertTrue(fetchBooleanResource(rootPath + "/one/levelDepth"));
         assertTrue(fetchBooleanResource(rootPath + "/one/anotherLevel/depth"));
+    }
+
+    @Test
+    public void testLocalBindings() throws PersistenceException, InvocationTargetException, IllegalAccessException {
+        plumber.newPipe(context.resourceResolver()).echo("/content/fruits/${fruit}").build("/some/reference");
+        ExecutionResult result = execute("ref /some/reference @ bindings fruit=apple");
+        assertEquals(1, result.size());
+        assertEquals("/content/fruits/apple", result.getCurrentPathSet().iterator().next());
     }
 }

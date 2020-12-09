@@ -267,6 +267,7 @@ public class CommandExecutorImpl extends SlingAllMethodsServlet implements Comma
         String path;
         String expr;
         String[] with;
+        String[] bindings;
         OutputWriter writer;
 
         @Override
@@ -276,6 +277,7 @@ public class CommandExecutorImpl extends SlingAllMethodsServlet implements Comma
                 ", path='" + path + '\'' +
                 ", expr='" + expr + '\'' +
                 ", with=" + Arrays.toString(with) +
+                ", bindings=" + Arrays.toString(bindings) +
                 ", writer=" + writer +
                 '}';
         }
@@ -324,6 +326,9 @@ public class CommandExecutorImpl extends SlingAllMethodsServlet implements Comma
                     case "with" :
                         this.with = keyValuesToArray((List<String>)entry.getValue());
                         break;
+                    case "bindings" :
+                        this.bindings = keyValuesToArray((List<String>) entry.getValue());
+                        break;
                     case "outputs" :
                         setOutputs((List<String>)entry.getValue());
                         break;
@@ -367,6 +372,9 @@ public class CommandExecutorImpl extends SlingAllMethodsServlet implements Comma
             }
             if (with != null){
                 builder.with(with);
+            }
+            if (bindings != null){
+                builder.bindings(bindings);
             }
         }
     }
