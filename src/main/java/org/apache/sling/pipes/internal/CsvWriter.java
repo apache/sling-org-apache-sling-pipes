@@ -36,8 +36,6 @@ public class CsvWriter extends OutputWriter {
 
     private static final String SEPARATOR = ",";
 
-    private static final String NEW_LINE = "\n";
-
     private static final String HEADER_ERROR = "errors";
 
     List<String> headers;

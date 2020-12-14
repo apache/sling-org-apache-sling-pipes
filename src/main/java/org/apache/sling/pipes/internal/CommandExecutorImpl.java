@@ -41,7 +41,6 @@ import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.ServletResolverConstants;
-import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.pipes.CommandExecutor;
 import org.apache.sling.pipes.ExecutionResult;
 import org.apache.sling.pipes.OutputWriter;
@@ -59,22 +58,26 @@ import org.slf4j.LoggerFactory;
 
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+import static javax.servlet.http.HttpServletResponse.SC_NOT_ACCEPTABLE;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 import static org.apache.sling.pipes.PipeBindings.INJECTED_SCRIPT_REGEXP;
 import static org.apache.sling.pipes.internal.CommandUtil.writeToMap;
 
+import javax.json.JsonException;
 import javax.servlet.Servlet;
 
 @Component(service = {Servlet.class, CommandExecutor.class}, property= {
     ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES + "=" + CommandExecutorImpl.RESOURCE_TYPE,
     ServletResolverConstants.SLING_SERVLET_METHODS + "=POST",
-    ServletResolverConstants.SLING_SERVLET_EXTENSIONS + "=txt"
+    ServletResolverConstants.SLING_SERVLET_EXTENSIONS + "=json",
+    ServletResolverConstants.SLING_SERVLET_EXTENSIONS + "=csv"
 })
-public class CommandExecutorImpl extends SlingAllMethodsServlet implements CommandExecutor {
+public class CommandExecutorImpl extends AbstractPlumberServlet implements CommandExecutor {
     final Logger log = LoggerFactory.getLogger(CommandExecutorImpl.class);
     public static final String RESOURCE_TYPE = "slingPipes/exec";
     static final String REQ_PARAM_FILE = "pipe_cmdfile";
     static final String REQ_PARAM_CMD = "pipe_cmd";
+    static final String REQ_PARAM_HELP = "pipe_help";
     static final String CMD_LINE_PREFIX = "cmd_line_";
     static final String WHITE_SPACE_SEPARATOR = "\\s";
     static final String COMMENT_PREFIX = "#";
@@ -97,8 +100,9 @@ public class CommandExecutorImpl extends SlingAllMethodsServlet implements Comma
         "\n\t'name pipeName' (used in bindings), " +
         "\n\t'expr pipeExpression' (when not directly as <args>)" +
         "\n\t'path pipePath' (when not directly as <args>)" +
-        "\n\t'with key=value ...'" +
-        "\n\t'outputs key=value ...'" +
+        "\n\t'bindings key=value ...' (for setting pipe bindings) " +
+        "\n\t'with key=value ...' (for setting pipe specific properties)" +
+        "\n\t'outputs key=value ...' (for setting outputs)" +
         "\n and <pipe> is one of the following :\n";
 
     Map<String, Method> methodMap;
@@ -153,33 +157,53 @@ public class CommandExecutorImpl extends SlingAllMethodsServlet implements Comma
         String currentCommand = null;
         PrintWriter writer = response.getWriter();
         try {
-            ResourceResolver resolver = request.getResourceResolver();
-            Map<String, Object> bindings = plumber.getBindingsFromRequest(request, true);
-            List<String> cmds = getCommandList(request);
-            if (cmds.isEmpty()) {
-                writer.println("No command to execute!");
-            }
-            short idxLine = 0;
-            for (String command : cmds) {
-                if (StringUtils.isNotBlank(command)) {
-                    JsonWriter pipeWriter = new JsonWriter();
-                    pipeWriter.starts();
-                    currentCommand = command;
-                    PipeBuilder pipeBuilder = parse(resolver, command.split(WHITE_SPACE_SEPARATOR));
-                    Pipe pipe = pipeBuilder.build();
-                    bindings.put(CMD_LINE_PREFIX + idxLine ++, pipe.getResource().getPath());
-                    writer.println(plumber.execute(resolver, pipe, bindings, pipeWriter, true));
+            if (request.getParameter(REQ_PARAM_HELP) != null) {
+                writer.println(help());
+            } else {
+                ResourceResolver resolver = request.getResourceResolver();
+                Map<String, Object> bindings = plumber.getBindingsFromRequest(request, true);
+                List<String> cmds = getCommandList(request);
+                if (cmds.isEmpty()) {
+                    writer.println("No command to execute!");
                 }
+                short idxLine = 0;
+
+                OutputWriter pipeWriter = getWriter(request, response);
+                if (pipeWriter == null) {
+                    pipeWriter = new NopWriter();
+                }
+                pipeWriter.disableAutoClose();
+                pipeWriter.init(request, response);
+                for (String command : cmds) {
+                    if (StringUtils.isNotBlank(command)) {
+                        currentCommand = command;
+                        PipeBuilder pipeBuilder = parse(resolver, command.split(WHITE_SPACE_SEPARATOR));
+                        Pipe pipe = pipeBuilder.build();
+                        bindings.put(CMD_LINE_PREFIX + idxLine++, pipe.getResource().getPath());
+                        plumber.execute(resolver, pipe, bindings, pipeWriter, true);
+                    }
+                }
+                pipeWriter.ends();
             }
+            writer.println("");
             response.setStatus(SC_OK);
         }
         catch (AccessControlException e) {
+            response.setStatus(SC_FORBIDDEN);
             response.sendError(SC_FORBIDDEN);
         }
         catch (IllegalAccessException | InvocationTargetException e) {
             writer.println("Error executing " + currentCommand);
             e.printStackTrace(writer);
+            response.setStatus(SC_INTERNAL_SERVER_ERROR);
             response.sendError(SC_INTERNAL_SERVER_ERROR);
+            writer.println(help());
+        }
+        catch (IllegalArgumentException | JsonException e) {
+            writer.println("Error executing " +  currentCommand);
+            e.printStackTrace(writer);
+            response.setStatus(SC_NOT_ACCEPTABLE);
+            response.sendError(SC_NOT_ACCEPTABLE);
             writer.println(help());
         }
     }

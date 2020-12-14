@@ -362,7 +362,9 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
             if (save && pipe.modifiesContent()) {
                 persist(resolver, pipe, result, null);
             }
-            writer.ends();
+            if (writer.autoClose()) {
+                writer.ends();
+            }
             if (monitor != null){
                 monitor.ends();
                 monitor.setLastResult(result);

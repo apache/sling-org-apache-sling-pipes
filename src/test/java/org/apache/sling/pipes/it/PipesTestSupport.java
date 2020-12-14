@@ -68,8 +68,8 @@ public abstract class PipesTestSupport extends TestSupport {
     final protected int httpPort = findFreePort();
 
     @Inject
-    @Filter(value = "(path=/etc/pipes-it/fruit-list)")
-    private ResourcePresence resourcePresence;
+    @Filter(value = "(path=/apps/pipes-it/fruit-list)")
+    private ResourcePresence listPresence;
 
     @Configuration
     public Option[] configuration() {

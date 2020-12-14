@@ -22,7 +22,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.ServletResolverConstants;
-import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.OutputWriter;
@@ -56,7 +55,7 @@ import java.util.Map;
                 ServletResolverConstants.SLING_SERVLET_EXTENSIONS + "=json",
                 ServletResolverConstants.SLING_SERVLET_EXTENSIONS + "=csv"
         })
-public class PlumberServlet extends SlingAllMethodsServlet {
+public class PlumberServlet extends AbstractPlumberServlet {
     public static final String RESOURCE_TYPE = "slingPipes/plumber";
 
     static final String PARAM_PATH = "path";
@@ -116,23 +115,5 @@ public class PlumberServlet extends SlingAllMethodsServlet {
         catch (Exception e) {
             throw new ServletException(e);
         }
-    }
-
-    /**
-     * Retrieve an output writer depending on the request
-     * @param request original request against which writers will be tested
-     * @param response response writers will point to
-     * @return instance of the created writer
-     * @throws IOException bad handling of I/O streams,
-     */
-    OutputWriter getWriter(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException {
-        OutputWriter[] candidates = new OutputWriter[]{new CsvWriter(), new JsonWriter()};
-        for (OutputWriter candidate : candidates) {
-            if (candidate.handleRequest(request)) {
-                candidate.init(request, response);
-                return candidate;
-            }
-        }
-        return null;
     }
 }

@@ -17,6 +17,7 @@
 package org.apache.sling.pipes.internal;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.pipes.AbstractPipeTest;
@@ -24,6 +25,7 @@ import org.apache.sling.pipes.ExecutionResult;
 import org.apache.sling.pipes.PipeBuilder;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.junit.SlingContext;
+import org.apache.sling.testing.mock.sling.servlet.MockRequestPathInfo;
 import org.apache.sling.testing.mock.sling.servlet.MockSlingHttpServletRequest;
 import org.apache.sling.testing.mock.sling.servlet.MockSlingHttpServletResponse;
 import org.junit.Before;
@@ -156,6 +158,8 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
         MockSlingHttpServletRequest request = context.request();
         MockSlingHttpServletResponse response = context.response();
         request.setParameterMap(params);
+        MockRequestPathInfo pathInfo = (MockRequestPathInfo)request.getRequestPathInfo();
+        pathInfo.setExtension("json");
         request.setMethod("POST");
         commands.doPost(request, response);
         if (response.getStatus() != 200) {
@@ -163,6 +167,14 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
         }
         assertEquals(200, response.getStatus());
         return response.getOutputAsString();
+    }
+
+    @Test
+    public void testHelp() throws ServletException, IOException {
+        Map<String, Object> params = new HashMap<>();
+        params.put(CommandExecutorImpl.REQ_PARAM_HELP, "blah");
+        String response = testServlet(params);
+        assertTrue(StringUtils.isNotBlank(response));
     }
 
     @Test
@@ -195,8 +207,7 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
         params.put(CommandExecutorImpl.REQ_PARAM_FILE, IOUtils.toString(getClass().getResourceAsStream("/chainedCommand"
             + ".txt"), "UTF-8"));
         String response = testServlet(params);
-        assertEquals("{\"items\":[],\"size\":0}\n"
-            + "{\"items\":[\"/content/fruits/banana/isnota/pea\",\"/content/fruits/banana/isnota/carrot\","
+        assertEquals("{\"items\":[\"/content/fruits/banana/isnota/pea\",\"/content/fruits/banana/isnota/carrot\","
             + "\"/content/fruits/apple/isnota/pea\",\"/content/fruits/apple/isnota/plum\","
             + "\"/content/fruits/apple/isnota/carrot\"],\"size\":5}\n", response);
     }
@@ -208,8 +219,6 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
             + ".txt"), "UTF-8"));
         String response = testServlet(params);
         assertEquals("{\"items\":[\"/content/beatles/john\",\"/content/beatles/paul\","
-            + "\"/content/beatles/georges\",\"/content/beatles/ringo\"],"
-            + "\"size\":4}\n"
-            + "{\"items\":[\"/content/beatles/ringo/jcr:content\"],\"size\":1}\n", response);
+            + "\"/content/beatles/georges\",\"/content/beatles/ringo\",\"/content/beatles/ringo/jcr:content\"],\"size\":5}\n", response);
     }
 }

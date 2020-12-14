@@ -45,9 +45,13 @@ public abstract class OutputWriter {
 
     public static final String KEY_NB_ERRORS = "nbErrors";
 
+    protected static final String NEW_LINE = "\n";
+
     public static final String PARAM_SIZE = KEY_SIZE;
 
     public static final int NB_MAX = 10;
+
+    protected boolean autoClose = true;
 
     protected long size;
 
@@ -86,11 +90,7 @@ public abstract class OutputWriter {
         }
         String writerParam = request.getParameter(PARAM_WRITER);
         if (StringUtils.isNotBlank(writerParam)){
-            try {
-                customOutputs = JsonUtil.unbox(JsonUtil.parseObject(writerParam));
-            } catch(Exception e){
-                LOG.error("requested attributes can't be parsed", e);
-            }
+            customOutputs = JsonUtil.unbox(JsonUtil.parseObject(writerParam));
         }
         setWriter(response.getWriter());
         initResponse(response);
@@ -166,6 +166,17 @@ public abstract class OutputWriter {
      */
 
     public abstract void ends();
+
+    /**
+     * @return true if to be closed internally by the plumber
+     */
+    public boolean autoClose() {
+        return autoClose;
+    }
+
+    public void disableAutoClose() {
+        autoClose = false;
+    }
 
     /**
      * Setter
