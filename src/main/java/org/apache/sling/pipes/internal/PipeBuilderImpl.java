@@ -106,7 +106,6 @@ public class PipeBuilderImpl implements PipeBuilder {
     /**
      * internal utility to glob pipe configuration &amp; expression configuration
      * @param type pipe type
-     * @param expr expression
      * @return updated instance of PipeBuilder
      */
     PipeBuilder pipeWithExpr(String type, String expr){
@@ -250,17 +249,22 @@ public class PipeBuilderImpl implements PipeBuilder {
 
     @Override
     public PipeBuilder with(Object... params) throws IllegalAccessException {
-        return writeToCurrentStep(null, params);
+        return writeToCurrentStep(null, true, params);
+    }
+
+    @Override
+    public PipeBuilder withStrings(String... params){
+        return writeToCurrentStep(null, false, params);
     }
 
     @Override
     public PipeBuilder conf(Object... properties) throws IllegalAccessException {
-        return writeToCurrentStep(Pipe.NN_CONF, properties);
+        return writeToCurrentStep(Pipe.NN_CONF, true, properties);
     }
 
     @Override
     public PipeBuilder bindings(Object... bindings) throws IllegalAccessException {
-        return writeToCurrentStep(PipeBindings.NN_ADDITIONALBINDINGS, bindings);
+        return writeToCurrentStep(PipeBindings.NN_ADDITIONALBINDINGS, true, bindings);
     }
 
     @Override
@@ -281,25 +285,26 @@ public class PipeBuilderImpl implements PipeBuilder {
     /**
      * Add some configurations to current's Step node defined by name (if null, will be step's properties)
      * @param name name of the configuration node, can be null in which case it's the subpipe itself
+     * @param embed indicates wether or not we should try to embed values in script tags
      * @param params key/value pair list of configuration
      * @return updated instance of PipeBuilder
      */
-    PipeBuilder writeToCurrentStep(String name, Object... params) {
+    PipeBuilder writeToCurrentStep (String name, boolean embed, Object... params) {
         checkArguments(params);
         Map<String, Object> props = name != null ? currentStep.confs.get(name) : currentStep.properties;
-        if (props == null){
+        if (props == null) {
             props = new HashMap<>();
-            if (name != null){
+            if (name != null) {
                 currentStep.confs.put(name, props);
             }
         }
-        writeToMap(props, params);
+        writeToMap(props, embed, params);
         return this;
     }
 
     @Override
     public PipeBuilder expr(String value) throws IllegalAccessException {
-        return this.with(Pipe.PN_EXPR, value);
+        return this.withStrings(Pipe.PN_EXPR, value);
     }
 
     @Override
@@ -353,7 +358,7 @@ public class PipeBuilderImpl implements PipeBuilder {
     @Override
     public PipeBuilder outputs(String... keys) {
         outputs = new HashMap<>();
-        writeToMap(outputs, keys);
+        writeToMap(outputs, true, keys);
         return this;
     }
 
@@ -412,7 +417,7 @@ public class PipeBuilderImpl implements PipeBuilder {
     public ExecutionResult runWith(Object... bindings) {
         checkArguments(bindings);
         Map<String, Object> bindingsMap = new HashMap<>();
-        writeToMap(bindingsMap, bindings);
+        writeToMap(bindingsMap, true, bindings);
         return run(bindingsMap);
     }
 

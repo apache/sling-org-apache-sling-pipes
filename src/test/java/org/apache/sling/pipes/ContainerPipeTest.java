@@ -117,7 +117,7 @@ public class ContainerPipeTest extends AbstractPipeTest {
 
     @Test
     public void testSleep() throws Exception {
-        long interval = 50L;
+        long interval = 30L;
         String path = PATH_PIPE + "/" + NN_DUMMYTREE;
         context.resourceResolver().getResource(path).adaptTo(ModifiableValueMap.class).put(ContainerPipe.PN_SLEEP, interval);
         context.resourceResolver().commit();

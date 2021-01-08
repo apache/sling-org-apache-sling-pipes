@@ -301,6 +301,14 @@ public interface PipeBuilder {
     PipeBuilder with(Object... params) throws IllegalAccessException;
 
     /**
+     * parameterized current pipe in the context
+     * @param params key value pair of parameters
+     * @return updated instance of PipeBuilder
+     * @throws IllegalAccessException in case it's called with wrong # of arguments
+     */
+    PipeBuilder withStrings(String... params);
+
+    /**
      * set an expr configuration to the current pipe in the context
      * @param value expression value
      * @return updated instance of PipeBuilder

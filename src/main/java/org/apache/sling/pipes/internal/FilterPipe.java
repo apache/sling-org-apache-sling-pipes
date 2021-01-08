@@ -57,9 +57,9 @@ public class FilterPipe extends BasePipe {
         }
         String key = filterResource.getPath() + SLASH + propertyKey;
         return propertiesPatterns.computeIfAbsent(key, x -> {
-            String value = filterResource.getValueMap().get(propertyKey, String.class);
-            return value != null ? Pattern.compile(filterResource.getValueMap().get(propertyKey, String.class))  : null;
-        });
+            String value = getBindings().instantiateExpression(filterResource.getValueMap().get(propertyKey, String.class));
+            return value != null ? Pattern.compile(value)  : null;
+        });//en.wikipedia.org
     }
 
     boolean propertiesPass(ValueMap current, Resource filterResource) {
@@ -75,7 +75,7 @@ public class FilterPipe extends BasePipe {
         for (String key : filter.keySet()){
             if (! IGNORED_PROPERTIES.contains(key) && !key.startsWith(PREFIX_FILTER)){
                 Pattern pattern = getPattern(filterResource, key);
-                if (!current.containsKey(key) || !pattern.matcher(current.get(key, String.class)).find()){
+                if (!current.containsKey(key) || !pattern.matcher(current.get(key, String.class)).matches()){
                     return false;
                 }
             }
@@ -141,7 +141,7 @@ public class FilterPipe extends BasePipe {
         Resource resource = getInput();
         if (resource != null) {
             try {
-                boolean not = properties.get(PN_NOT, false);
+                boolean not = getBindings().instantiateExpression(properties.get(PN_NOT, "false")).equals(Boolean.TRUE.toString());
                 //the not does a exclusive or with the filter:
                 // - true filter with "true" not is false,
                 // - false filter with false not is false,

@@ -60,7 +60,7 @@ import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 import static javax.servlet.http.HttpServletResponse.SC_NOT_ACCEPTABLE;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
-import static org.apache.sling.pipes.PipeBindings.INJECTED_SCRIPT_REGEXP;
+import static org.apache.sling.pipes.internal.CommandUtil.keyValuesToArray;
 import static org.apache.sling.pipes.internal.CommandUtil.writeToMap;
 
 import javax.json.JsonException;
@@ -84,12 +84,6 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
     static final String SEPARATOR = "|";
     static final String LINE_SEPARATOR = " ";
     static final String PARAMS = "@";
-    static final String KEY_VALUE_SEP = "=";
-    static final String FIRST_TOKEN = "first";
-    static final String SECOND_TOKEN = "second";
-    static final String CONFIGURATION_TOKEN = "(?<" + FIRST_TOKEN + ">[\\w/\\:]+)\\s*" + KEY_VALUE_SEP
-        + "(?<" + SECOND_TOKEN + ">[(\\w*)|" + INJECTED_SCRIPT_REGEXP + "]+)";
-    static final Pattern CONFIGURATION_PATTERN = Pattern.compile(CONFIGURATION_TOKEN);
     static final String KEY_NAME = "name";
     static final String KEY_PATH = "path";
     static final String KEY_EXPR = "expr";
@@ -218,7 +212,7 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
         Map<String, Object> bMap = null;
         if (options.with != null) {
             bMap = new HashMap<>();
-            writeToMap(bMap, options.with);
+            writeToMap(bMap, true, options.with);
         }
         OutputWriter writer = new NopWriter();
         if (options.writer != null){
@@ -310,7 +304,7 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
             this.writer = new JsonWriter();
             String[] list = keyValuesToArray(values);
             Map<String, Object> outputs = new HashMap<>();
-            CommandUtil.writeToMap(outputs, list);
+            CommandUtil.writeToMap(outputs, true, list);
             this.writer.setCustomOutputs(outputs);
         }
 
@@ -514,22 +508,6 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
      */
     protected boolean isWithoutExpectedParameter(Method method){
         return method.getParameterCount() == 0;
-    }
-
-    /**
-     * @param o list of key value strings key1=value1,key2=value2,...
-     * @return String [] key1,value1,key2,value2,... corresponding to the pipe builder API
-     */
-    String[] keyValuesToArray(List<String> o) {
-        List<String> args = new ArrayList<>();
-        for (String pair : o){
-            Matcher matcher = CONFIGURATION_PATTERN.matcher(pair.trim());
-            if (matcher.matches()) {
-                args.add(matcher.group(FIRST_TOKEN));
-                args.add(matcher.group(SECOND_TOKEN));
-            }
-        }
-        return args.toArray(new String[args.size()]);
     }
 
     /**

@@ -116,6 +116,14 @@ public class PipeBindings {
     }
 
     /**
+     * @param value
+     * @return script equivalent
+     */
+    public static String embedAsScript(String value) {
+        return "${" + value + "}";
+    }
+
+    /**
      * add a binding
      * @param name binding's name
      * @param value binding's value

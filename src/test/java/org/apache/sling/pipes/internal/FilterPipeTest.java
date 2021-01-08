@@ -107,7 +107,7 @@ public class FilterPipeTest extends AbstractPipeTest {
 
     @Test
     public void testMultiplePattern() throws InvocationTargetException, IllegalAccessException {
-        ExecutionResult result = execute("echo /content/fruits/apple/isnota | children nt:unstructured | grep sling:resourceType=.+ @ with slingPipesFilter_not=true");
+        ExecutionResult result = execute("echo /content/fruits/apple/isnota | children nt:unstructured | grep sling:resourceType='.+' @ with slingPipesFilter_not=true");
         assertTrue("there should be some results", result.size() > 0);
     }
 
@@ -121,7 +121,7 @@ public class FilterPipeTest extends AbstractPipeTest {
     public void testPropertyRegexp() throws Exception {
         Collection<String> outputs = plumber.newPipe(context.resourceResolver())
             .echo(PATH_APPLE)
-            .grep("jcr:description","https://en.wikipedia.org").run().getCurrentPathSet();
+            .grep("jcr:description",".*https://en.wikipedia.org.*").run().getCurrentPathSet();
         assertEquals("there should be an item", 1, outputs.size());
         outputs = plumber.newPipe(context.resourceResolver())
                 .echo(PATH_APPLE)

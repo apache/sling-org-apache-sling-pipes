@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static org.apache.sling.pipes.internal.CommandUtil.keyValuesToArray;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -74,11 +75,11 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
 
     @Test
     public void testKeyValueToArray() {
-        assertArrayEquals(new String[]{"one","two","three","four"}, commands.keyValuesToArray(Arrays.asList("one=two","three=four")));
-        assertArrayEquals(new String[]{"one","two","three","${four}"}, commands.keyValuesToArray(Arrays.asList("one=two","three=${four}")));
+        assertArrayEquals(new String[]{"one","two","three","four"}, keyValuesToArray(Arrays.asList("one=two","three=four")));
+        assertArrayEquals(new String[]{"one","two","three","${four}"}, keyValuesToArray(Arrays.asList("one=two","three=${four}")));
         assertArrayEquals(new String[]{"one","two","three","${four == 'blah' ? 'five' : 'six'}"},
-            commands.keyValuesToArray(Arrays.asList("one=two","three=${four == 'blah' ? 'five' : 'six'}")));
-        assertArrayEquals(new String[]{"jcr:content/singer","${'ringo' == one ? false : true}"}, commands.keyValuesToArray(Arrays.asList("jcr:content/singer=${'ringo' == one ? false : true}")));
+            keyValuesToArray(Arrays.asList("one=two","three=${four == 'blah' ? 'five' : 'six'}")));
+        assertArrayEquals(new String[]{"jcr:content/singer","${'ringo' == one ? false : true}"}, keyValuesToArray(Arrays.asList("jcr:content/singer=${'ringo' == one ? false : true}")));
     }
 
     @Test
@@ -105,7 +106,7 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
         assertEquals("check expr", expected, options.expr);
         assertEquals("check path", expected, options.path);
         Map bindings = new HashMap();
-        CommandUtil.writeToMap(bindings, options.with);
+        CommandUtil.writeToMap(bindings, true, options.with);
         assertEquals("check with first", expected, bindings.get("one"));
         assertEquals("check with second", expected, bindings.get("two"));
         assertNotNull("a writer should have been created", options.writer);
@@ -120,7 +121,7 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
         String optionString = "@ with one=works @ outputs one=works";
         CommandExecutorImpl.Options options = commands.getOptions(optionString.split("\\s"));
         Map bindings = new HashMap();
-        CommandUtil.writeToMap(bindings, options.with);
+        CommandUtil.writeToMap(bindings, true, options.with);
         assertEquals("check with first", expected, bindings.get("one"));
         assertNotNull("a writer should have been created", options.writer);
         Map outputs = options.writer.getCustomOutputs();

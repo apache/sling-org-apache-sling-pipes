@@ -20,7 +20,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.pipes.internal.JsonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import static org.apache.sling.pipes.internal.CommandUtil.stringToMap;
 
 /**
  * defines how pipe's output get written to a servlet response or output stream
@@ -90,7 +90,7 @@ public abstract class OutputWriter {
         }
         String writerParam = request.getParameter(PARAM_WRITER);
         if (StringUtils.isNotBlank(writerParam)){
-            customOutputs = JsonUtil.unbox(JsonUtil.parseObject(writerParam));
+            customOutputs = stringToMap(writerParam, s -> PipeBindings.embedAsScript(s));
         }
         setWriter(response.getWriter());
         initResponse(response);

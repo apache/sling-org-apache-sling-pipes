@@ -16,7 +16,6 @@
  */
 package org.apache.sling.pipes;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.pipes.internal.JsonUtil;
 import org.junit.Test;
@@ -28,6 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -84,8 +84,8 @@ public class PipeBuilderTest extends AbstractPipeTest {
     @Test
     public void bindings() throws Exception {
         ExecutionResult result = execute("echo /content/fruits | children nt:unstructured " +
-                "| grep slingPipesFilter_test=${two.worm} | children nt:unstructured#isnota " +
-                "| children nt:unstructured @ name thing | write jcr:path=${path.thing}");
+                "| grep slingPipesFilter_test=two.worm | children nt:unstructured#isnota " +
+                "| children nt:unstructured @ name thing | write jcr:path=path.thing");
         assertEquals("There should be 3 resources", 3, result.size());
         String pea = "/content/fruits/apple/isnota/pea";
         String carrot = "/content/fruits/apple/isnota/carrot";
@@ -115,15 +115,15 @@ public class PipeBuilderTest extends AbstractPipeTest {
     public void testOutputs() throws Exception {
         ExecutionResult result = plumber.newPipe(context.resourceResolver())
                                         .echo(PATH_APPLE + "/isnota")
-                                        .children("").name("vegetable")
-                                        .outputs("name","Good ${vegetable['jcr:title']}")
+                                        .children("nt:unstructured")
+                                            .name("vegetable")
+                                            .outputs("name","vegetable['jcr:title']")
                                         .run();
         JsonObject object = JsonUtil.parseObject(result.toString());
         Collection<String> names = object.getJsonArray("items").getValuesAs(JsonObject.class)
                 .stream()
                     .map(o -> o.getString("name"))
                     .collect(Collectors.toList());
-        Collection<String> expected = Arrays.asList(new String[] {"Good Pea", "Good Carrot", "Good Plum"});
-        assertTrue("all transformed items should be here", CollectionUtils.intersection(names, expected).size() == 3);
+        assertArrayEquals("all transformed items should be here", new String[] {"Pea", "Plum", "Carrot"}, names.toArray());
     }
 }
