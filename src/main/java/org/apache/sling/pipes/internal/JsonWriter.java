@@ -71,17 +71,7 @@ public class JsonWriter extends OutputWriter {
             jsonGenerator.writeStartObject();
             jsonGenerator.write(PATH_KEY, resource.getPath());
             for (Map.Entry<String, Object> entry : customOutputs.entrySet()) {
-                try {
-                    Object o = pipe.getBindings().instantiateObject((String) entry.getValue());
-                    if (o instanceof JsonValue) {
-                        jsonGenerator.write(entry.getKey(), (JsonValue) o);
-                    } else {
-                        jsonGenerator.write(entry.getKey(), o.toString());
-                    }
-                } catch (RuntimeException e) {
-                    LOGGER.error("unable to write entry {}, will write empty value", entry, e);
-                    jsonGenerator.write(entry.getKey(), StringUtils.EMPTY);
-                }
+                jsonGenerator.write(entry.getKey(), computeValue(entry.getKey()));
             }
             jsonGenerator.writeEnd();
         }

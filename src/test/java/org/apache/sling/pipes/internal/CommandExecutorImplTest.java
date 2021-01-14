@@ -127,10 +127,7 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
         CommandUtil.writeToMap(bindings, true, options.with);
         assertEquals("check with first", expected, bindings.get("one"));
         assertEquals("check with second", expected, bindings.get("two"));
-        assertNotNull("a writer should have been created", options.writer);
-        Map outputs = options.writer.getCustomOutputs();
-        assertEquals("check writer first", expected, outputs.get("one"));
-        assertEquals("check writer second", expected, outputs.get("two"));
+        assertNotNull("a writer should have been created", options.outputs);
     }
 
     @Test
@@ -141,9 +138,7 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
         Map bindings = new HashMap();
         CommandUtil.writeToMap(bindings, true, options.with);
         assertEquals("check with first", expected, bindings.get("one"));
-        assertNotNull("a writer should have been created", options.writer);
-        Map outputs = options.writer.getCustomOutputs();
-        assertEquals("check writer first", expected, outputs.get("one"));
+        assertNotNull("a writer should have been created", options.outputs);
     }
 
     @Test

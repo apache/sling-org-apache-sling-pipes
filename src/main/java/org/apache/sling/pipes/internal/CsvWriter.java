@@ -60,12 +60,7 @@ public class CsvWriter extends OutputWriter {
         if (key.equals(PATH_KEY)){
             elts.add(resource.getPath());
         } else if (customOutputs != null) {
-            try {
-                elts.add(pipe.getBindings().instantiateExpression((String)customOutputs.get(key)));
-            } catch (RuntimeException e){
-                LOGGER.error("unable to evaluate {}, will write empty value", customOutputs.get(key), e);
-                elts.add(StringUtils.EMPTY);
-            }
+            elts.add(computeValue(key));
         }
     }
 

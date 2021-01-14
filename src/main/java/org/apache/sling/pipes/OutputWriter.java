@@ -25,10 +25,19 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.sling.pipes.internal.CommandUtil.stringToMap;
 
 /**
@@ -192,6 +201,24 @@ public abstract class OutputWriter {
                 customOutputs.remove(ignoredKey);
             }
         }
+    }
+
+    protected String computeValue(String key) {
+        String value = EMPTY;
+        try {
+            Object o = pipe.getBindings().instantiateObject((String) customOutputs.get(key));
+            if (o != null) {
+                if (o instanceof Calendar) {
+                    Instant i = ((Calendar)o).toInstant();
+                    value = DateTimeFormatter.ISO_LOCAL_DATE_TIME.withZone(ZoneId.from(ZoneOffset.UTC)).format(i);
+                } else {
+                    value = o.toString();
+                }
+            }
+        } catch (RuntimeException e) {
+            LOG.debug("unable to write entry {}, will write empty value", key, e);
+        }
+        return value;
     }
 
     @Override

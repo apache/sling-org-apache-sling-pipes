@@ -64,6 +64,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.sling.pipes.internal.CommandUtil.keyValuesToArray;
 import static org.apache.sling.pipes.internal.CommandUtil.writeToMap;
 
+import javax.json.Json;
 import javax.json.JsonException;
 import javax.servlet.Servlet;
 
@@ -219,8 +220,11 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
             writeToMap(bMap, true, options.with);
         }
         OutputWriter writer = new NopWriter();
-        if (options.writer != null){
-            writer = options.writer;
+        if (options.outputs != null){
+            writer = new JsonWriter();
+            Map<String, Object> outputs = new HashMap<>();
+            CommandUtil.writeToMap(outputs, true, options.outputs);
+            writer.setCustomOutputs(outputs);
         }
         writer.starts();
         return plumber.execute(resolver, path, bMap, writer, true);
@@ -275,7 +279,7 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
         String expr;
         String[] with;
         String[] bindings;
-        OutputWriter writer;
+        String[] outputs;
 
         @Override
         public String toString() {
@@ -285,16 +289,12 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
                 ", expr='" + expr + '\'' +
                 ", with=" + Arrays.toString(with) +
                 ", bindings=" + Arrays.toString(bindings) +
-                ", writer=" + writer +
+                ", outputs=" + Arrays.toString(outputs) +
                 '}';
         }
 
         void setOutputs(List<String> values) {
-            this.writer = new JsonWriter();
-            String[] list = keyValuesToArray(values);
-            Map<String, Object> outputs = new HashMap<>();
-            CommandUtil.writeToMap(outputs, true, list);
-            this.writer.setCustomOutputs(outputs);
+            this.outputs = keyValuesToArray(values);
         }
 
         /**
@@ -377,6 +377,9 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
             }
             if (bindings != null){
                 builder.bindings(bindings);
+            }
+            if (outputs != null) {
+                builder.outputs(outputs);
             }
         }
     }
