@@ -102,7 +102,7 @@ public class AbstractPipeTest {
     }
 
     protected ExecutionResult execute(ResourceResolver resolver, String command) throws InvocationTargetException, IllegalAccessException {
-        PipeBuilder builder = commandsExecutor.parse(resolver, command.trim().split("\\s"));
+        PipeBuilder builder = commandsExecutor.parse(resolver, command);
         return builder.run();
     }
 

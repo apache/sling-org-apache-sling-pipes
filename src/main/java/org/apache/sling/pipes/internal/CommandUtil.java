@@ -38,11 +38,12 @@ public class CommandUtil {
     static final String FIRST_TOKEN = "first";
     static final String SECOND_TOKEN = "second";
     private static final Pattern UNEMBEDDEDSCRIPT_PATTERN = Pattern.compile("^(\\d+(\\.\\d+)?)|" + //21.42
-            "(\\[.*])|" + //['one','two']
-            "(\\w[\\w_\\-\\d]+\\.[\\w_\\-\\d]+)|" + //map.field
+            "(\\[.*]$)|" + //['one','two']
+            "(\\w[\\w_\\-\\d]+\\..+)|" + //map.field...
             "(\\w[\\w_\\-\\d]+\\['.+'])|" + //map['field']
-            "(true|false)|" + //boolean
-            "'.*'$"); // 'string'
+            "(true$|false$)|" + //boolean
+            "(new .*)|" + //instantiation
+            "(.*'$)"); // 'string'
     static final String CONFIGURATION_TOKEN = "(?<" + FIRST_TOKEN + ">[\\w/\\:]+)\\s*" + KEY_VALUE_SEP
             + "(?<" + SECOND_TOKEN + ">[(\\w*)|" + INJECTED_SCRIPT_REGEXP + "]+)";
     public static final Pattern CONFIGURATION_PATTERN = Pattern.compile(CONFIGURATION_TOKEN);
@@ -109,11 +110,13 @@ public class CommandUtil {
      */
     public static String[] keyValuesToArray(List<String> o) {
         List<String> args = new ArrayList<>();
-        for (String pair : o){
-            Matcher matcher = CONFIGURATION_PATTERN.matcher(pair.trim());
-            if (matcher.matches()) {
-                args.add(matcher.group(FIRST_TOKEN));
-                args.add(matcher.group(SECOND_TOKEN));
+        if (o != null) {
+            for (String pair : o) {
+                Matcher matcher = CONFIGURATION_PATTERN.matcher(pair.trim());
+                if (matcher.matches()) {
+                    args.add(matcher.group(FIRST_TOKEN));
+                    args.add(matcher.group(SECOND_TOKEN));
+                }
             }
         }
         return args.toArray(new String[args.size()]);

@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static org.apache.sling.pipes.internal.CommandExecutorImpl.PARAMS_SEPARATOR;
 import static org.apache.sling.pipes.internal.CommandUtil.keyValuesToArray;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -60,17 +61,34 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
     }
 
     @Test
-    public void testParseTokens(){
-        List<CommandExecutorImpl.Token> tokens = commands.parseTokens("some", "isolated", "items");
+    public void getSublist() {
+        assertArrayEquals(new String[]{"check", "this"}, commands.getSpaceSeparatedTokens("check this").toArray());
+        assertArrayEquals(new String[]{"and", "now","check this"}, commands.getSpaceSeparatedTokens("and now \"check this\"").toArray());
+    }
+
+        @Test
+    public void testParseTokens() {
+        List<CommandExecutorImpl.Token> tokens = commands.parseTokens("some isolated items");
         assertEquals("there should be 1 token", 1, tokens.size());
         CommandExecutorImpl.Token token = tokens.get(0);
-        assertEquals("pipe key should be 'some'","some", token.pipeKey);
-        assertEquals("pipe args should be isolated, items", Arrays.asList("isolated","items"), token.args);
+        assertEquals("pipe key should be 'some'", "some", token.pipeKey);
+        assertEquals("pipe args should be isolated, items", Arrays.asList("isolated", "items"), token.args);
+    }
+    @Test
+    public void testParseTokensWithQuotes() {
         String tokenString = "first arg | second firstarg secondarg @ name second | third blah";
-        tokens = commands.parseTokens(tokenString.split("\\s"));
+        List<CommandExecutorImpl.Token> tokens = commands.parseTokens(tokenString);
         assertEquals("there should be 3 tokens", 3, tokens.size());
         assertEquals("keys check", Arrays.asList("first","second", "third"), tokens.stream().map(t -> t.pipeKey).collect(Collectors.toList()));
         assertEquals("params check", "second", tokens.get(1).options.name);
+    }
+
+    @Test
+    public void testQuotedTokens() {
+        List<CommandExecutorImpl.Token> tokens = commands.parseTokens("some isolated items \"with quotes\"");
+        assertEquals("there should be 1 token", 1, tokens.size());
+        CommandExecutorImpl.Token token = tokens.get(0);
+        assertEquals("pipe args should be isolated, items", Arrays.asList("isolated", "items", "with quotes"), token.args);
     }
 
     @Test
@@ -84,13 +102,13 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
 
     @Test
     public void testSimpleExpression() throws Exception {
-        PipeBuilder builder = commands.parse(context.resourceResolver(),"echo","/content/fruits");
+        PipeBuilder builder = commands.parse(context.resourceResolver(),"echo /content/fruits");
         assertTrue("there should be a resource", builder.build().getOutput().hasNext());
     }
 
     @Test
     public void testSimpleChainedConf() throws Exception {
-        PipeBuilder builder = commands.parse(context.resourceResolver(),"echo /content/fruits | write some=test key=value".split("\\s"));
+        PipeBuilder builder = commands.parse(context.resourceResolver(),"echo /content/fruits | write some=test key=value");
         assertNotNull("there should be a resource", builder.run());
         ValueMap props = context.currentResource(PATH_FRUITS).getValueMap();
         assertEquals("there should some=test", "test", props.get("some"));
@@ -100,8 +118,8 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
     @Test
     public void testOptions() {
         String expected = "works";
-        String optionString = "@ name works @ path works @ expr works @ with one=works two=works @ outputs one=works two=works";
-        CommandExecutorImpl.Options options = commands.getOptions(optionString.split("\\s"));
+        String optionString = "name works @ path works @ expr works @ with one=works two=works @ outputs one=works two=works";
+        CommandExecutorImpl.Options options = commands.getOptions(optionString.split(PARAMS_SEPARATOR));
         assertEquals("check name", expected, options.name);
         assertEquals("check expr", expected, options.expr);
         assertEquals("check path", expected, options.path);
@@ -118,8 +136,8 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
     @Test
     public void testOptionsListsWithOneItem() {
         String expected = "works";
-        String optionString = "@ with one=works @ outputs one=works";
-        CommandExecutorImpl.Options options = commands.getOptions(optionString.split("\\s"));
+        String optionString = "with one=works @ outputs one=works";
+        CommandExecutorImpl.Options options = commands.getOptions(optionString.split(PARAMS_SEPARATOR));
         Map bindings = new HashMap();
         CommandUtil.writeToMap(bindings, true, options.with);
         assertEquals("check with first", expected, bindings.get("one"));
@@ -131,7 +149,7 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
     @Test
     public void testChainedConfWithInternalOptions() throws Exception {
         PipeBuilder builder = commands.parse(context.resourceResolver(),
-        "echo /content/fruits @ name fruits | write some=${path.fruits} key=value".split("\\s"));
+        "echo /content/fruits @ name fruits | write some=${path.fruits} key=value");
         assertNotNull("there should be a resource", builder.run());
         ValueMap props = context.currentResource(PATH_FRUITS).getValueMap();
         assertEquals("there should some=/content/fruits", PATH_FRUITS, props.get("some"));
@@ -142,7 +160,7 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
     public void adaptToDemoTest() throws Exception {
         String url = "'http://99-bottles-of-beer.net/lyrics.html'";
         String cmd = "egrep " + url + " @ name bottles @ with pattern=(?<number>\\d(\\d)?) | mkdir /var/bottles/${bottles.number}";
-        PipeBuilder builder = commands.parse(context.resourceResolver(), cmd.split("\\s"));
+        PipeBuilder builder = commands.parse(context.resourceResolver(), cmd);
         ContainerPipe pipe = (ContainerPipe)builder.build();
         ValueMap regexp = pipe.getResource().getChild("conf/bottles").getValueMap();
         assertEquals("we expect expr to be the url", url, regexp.get("expr"));
@@ -152,7 +170,8 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
     public void testExecuteWithWriter() throws Exception {
         PipeBuilder builder = plumber.newPipe(context.resourceResolver()).echo("/content/${node}").$("nt:base");
         String path = builder.build().getResource().getPath();
-        ExecutionResult result = commands.execute(context.resourceResolver(), path, "@ outputs title=jcr:title desc=jcr:description @ with node=fruits");
+        ExecutionResult result = commands.execute(context.resourceResolver(), path, "outputs title=two['jcr:title'] desc=two['jcr:description']", "with node=fruits");
+        assertNotNull(result);
     }
 
     String testServlet(Map<String,Object> params) throws ServletException, IOException {

@@ -168,4 +168,9 @@ public interface Plumber {
      * @return referenced resource, null otherwise
      */
     @Nullable Resource getReferencedResource(Resource referrer, String reference);
+
+    /*
+     * Generates unique pipe path for persistence sake
+     */
+    String generateUniquePath();
 }

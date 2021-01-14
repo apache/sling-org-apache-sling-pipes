@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestParameter;
+import org.apache.sling.api.resource.AbstractResourceVisitor;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
@@ -69,6 +70,8 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
 import java.security.AccessControlException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -80,6 +83,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.apache.sling.api.resource.ResourceResolverFactory.SUBSERVICE;
 import static org.apache.sling.pipes.BasePipe.PN_STATUS;
@@ -91,11 +95,11 @@ import static org.apache.sling.pipes.BasePipe.STATUS_STARTED;
 /**
  * implements plumber interface, registers default pipes, and provides execution facilities
  */
-@Component(service = {Plumber.class, JobConsumer.class}, property = {
+@Component(service = {Plumber.class, JobConsumer.class, PlumberMXBean.class, Runnable.class}, property = {
         JobConsumer.PROPERTY_TOPICS +"="+PlumberImpl.SLING_EVENT_TOPIC
 })
 @Designate(ocd = PlumberImpl.Configuration.class)
-public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
+public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnable {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     public static final int DEFAULT_BUFFER_SIZE = 1000;
 
@@ -109,6 +113,8 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
     static final String PARAM_FILE = "pipes_inputFile";
 
     static final String PERMISSION_EXECUTION = "/system/sling/permissions/pipes/exec";
+
+    public static final String PIPES_REPOSITORY_PATH = "/var/pipes";
 
     @ObjectClassDefinition(name="Apache Sling Pipes : Plumber configuration")
     public @interface Configuration {
@@ -129,6 +135,12 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
 
         @AttributeDefinition(description = "Paths to search for references in")
         String[] referencesPaths() default {};
+
+        @AttributeDefinition(description = "max age (in days) of automatically generated pipe persistence")
+        int maxAge() default 31;
+
+        @AttributeDefinition(description = "schedule of purge process")
+        String scheduler_expression() default "0 0 12 */7 * ?";
     }
 
     @Reference(policy= ReferencePolicy.DYNAMIC, cardinality= ReferenceCardinality.OPTIONAL)
@@ -544,5 +556,61 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean {
             log.warn("no service user configured, pipes can't be monitored");
         }
         return beans;
+    }
+
+    /**
+     * build a time + random based path under /var/pipes
+     * @return full path of future Pipe
+     */
+    public String generateUniquePath() {
+        final Calendar now = Calendar.getInstance();
+        return PIPES_REPOSITORY_PATH + '/' + now.get(Calendar.YEAR) + '/' + now.get(Calendar.MONTH) + '/' + now.get(Calendar.DAY_OF_MONTH) + "/"
+                + UUID.randomUUID().toString();
+    }
+
+    void cleanResourceAndEmptyParents(Resource resource) throws PersistenceException {
+        log.debug("starting removal of {}", resource);
+        Resource parent = resource.getParent();
+        resource.getResourceResolver().delete(resource);
+        if (!parent.hasChildren() && !PIPES_REPOSITORY_PATH.equals(parent.getPath())) {
+            cleanResourceAndEmptyParents(parent);
+        }
+    }
+
+    void purge(ResourceResolver resolver, Instant now, int maxDays) throws PersistenceException {
+        final Collection<String> pipesToRemove = new ArrayList<>();
+        AbstractResourceVisitor visitor = new AbstractResourceVisitor() {
+            @Override
+            protected void visit(Resource res) {
+                Calendar cal = res.getValueMap().get(PN_STATUS_MODIFIED, Calendar.class);
+                if (cal != null && ChronoUnit.DAYS.between(cal.toInstant(), now) > maxDays) {
+                    pipesToRemove.add(res.getPath());
+                }
+            }
+        };
+        visitor.accept(resolver.getResource(PIPES_REPOSITORY_PATH));
+        if (pipesToRemove.size() > 0) {
+            log.info("about to remove {} pipe instances", pipesToRemove.size());
+            for (String path : pipesToRemove) {
+                cleanResourceAndEmptyParents(resolver.getResource(path));
+            }
+            resolver.commit();
+            log.info("purge done.");
+        }
+    }
+
+    @Override
+    public void run() {
+        if (serviceUser == null) {
+            log.warn("no service user configured, will not be able to purge old pipe instances");
+        } else {
+            try (ResourceResolver resolver = factory.getServiceResourceResolver(serviceUser)) {
+                log.info("Starting pipe purge based on a max age of {} days", configuration.maxAge());
+                purge(resolver, Instant.now(), configuration.maxAge());
+                resolver.commit();
+            } catch (LoginException | PersistenceException e) {
+                log.error("unable purge {}", PIPES_REPOSITORY_PATH, e);
+            }
+        }
     }
 }

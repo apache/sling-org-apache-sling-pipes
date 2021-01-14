@@ -16,30 +16,30 @@
  */
 package org.apache.sling.pipes.internal.bindings;
 
-import java.text.DateFormat;
-import java.util.Date;
-import java.util.Map;
+import org.apache.sling.pipes.AbstractPipeTest;
+import org.junit.Test;
 
-import org.apache.commons.jexl3.JexlBuilder;
-import org.apache.commons.jexl3.JexlContext;
-import org.apache.commons.jexl3.JexlEngine;
-import org.apache.commons.jexl3.JexlExpression;
-import org.apache.commons.jexl3.MapContext;
+import java.util.Calendar;
 
-public class JxltEngine {
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
-    JexlEngine jexl;
-    JexlContext jc;
-    static final String KEY_TIME = "timeutil";
+public class TimeUtilTest extends AbstractPipeTest {
 
-    public JxltEngine(Map<String, Object> context) {
-        jexl = new JexlBuilder().create();
-        jc = new MapContext(context);
-        jc.set(KEY_TIME, new TimeUtil());
+    @Test
+    public void testOfDate() {
+        TimeUtil timeUtil = new TimeUtil();
+        Calendar cal = timeUtil.ofDate("2012-12-02");
+        assertNotNull(cal);
+        assertEquals(2012, cal.get(Calendar.YEAR));
     }
 
-    public Object parse(String expression) {
-        JexlExpression e = jexl.createExpression(expression);
-        return e.evaluate(jc);
+    @Test
+    public void testOf() {
+        TimeUtil timeUtil = new TimeUtil();
+        Calendar cal = timeUtil.of("2012-12-02T12:30:20+02:00");
+        assertNotNull(cal);
+        assertEquals(2012, cal.get(Calendar.YEAR));
+        assertNotNull(timeUtil.of("2012-12-30T09:20:26Z"));
     }
 }

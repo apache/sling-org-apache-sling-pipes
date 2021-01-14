@@ -30,6 +30,11 @@ import org.junit.Test;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
+import java.lang.reflect.InvocationTargetException;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -184,5 +189,14 @@ public class WritePipeTest extends AbstractPipeTest {
         testIfNode(false, false);
         testIfNode("some random string", true);
         testIfNode(true, true);
+    }
+
+    @Test
+    public void testWriteDate() throws InvocationTargetException, IllegalAccessException {
+        execute("echo /content | write date=timeutil.of('2018-05-05T11:50:55+02:00')");
+        ValueMap props = context.resourceResolver().getResource("/content").getValueMap();
+        Calendar cal = props.get("date", Calendar.class);
+        assertNotNull(cal);
+        assertEquals(2018, cal.get(GregorianCalendar.YEAR));
     }
 }

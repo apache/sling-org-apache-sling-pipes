@@ -60,6 +60,7 @@ import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 import static javax.servlet.http.HttpServletResponse.SC_NOT_ACCEPTABLE;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.sling.pipes.internal.CommandUtil.keyValuesToArray;
 import static org.apache.sling.pipes.internal.CommandUtil.writeToMap;
 
@@ -82,8 +83,11 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
     static final String WHITE_SPACE_SEPARATOR = "\\s";
     static final String COMMENT_PREFIX = "#";
     static final String SEPARATOR = "|";
+    static final String PIPE_SEPARATOR = WHITE_SPACE_SEPARATOR + "*\\" + SEPARATOR + WHITE_SPACE_SEPARATOR + "*";
     static final String LINE_SEPARATOR = " ";
     static final String PARAMS = "@";
+    static final String PARAMS_SEPARATOR = WHITE_SPACE_SEPARATOR + "+" + PARAMS + WHITE_SPACE_SEPARATOR + "*";
+    static final Pattern SUB_TOKEN_PATTERN = Pattern.compile("(([^\"]\\S*)|\"([^\"]+)\")\\s*");
     static final String KEY_NAME = "name";
     static final String KEY_PATH = "path";
     static final String KEY_EXPR = "expr";
@@ -171,7 +175,7 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
                 for (String command : cmds) {
                     if (StringUtils.isNotBlank(command)) {
                         currentCommand = command;
-                        PipeBuilder pipeBuilder = parse(resolver, command.split(WHITE_SPACE_SEPARATOR));
+                        PipeBuilder pipeBuilder = parse(resolver, command);
                         Pipe pipe = pipeBuilder.build();
                         bindings.put(CMD_LINE_PREFIX + idxLine++, pipe.getResource().getPath());
                         plumber.execute(resolver, pipe, bindings, pipeWriter, true);
@@ -247,21 +251,6 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
     }
 
     /**
-     * ends up processing of current token
-     * @param currentToken token being processed
-     * @param currentList list of argument that have been collected so far
-     */
-    protected void finishToken(Token currentToken, List<String> currentList){
-        if (currentToken.args != null){
-            //it means we have already parse args here, so we need to set current list as options
-            currentToken.options = getOptions(currentList);
-        } else {
-            currentToken.args = currentList;
-        }
-        log.debug("current token : {}", currentToken);
-    }
-
-    /**
      * @param tokens array of tokens
      * @return options from array
      */
@@ -314,22 +303,18 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
          */
         protected Options(List<String> options){
             Map<String, Object> optionMap = new HashMap<>();
-            String currentKey = null;
-            List<String> currentList = null;
-
-
             for (String optionToken : options) {
-                if (PARAMS.equals(optionToken)){
-                    finishOption(currentKey, currentList, optionMap);
-                    currentList = new ArrayList<>();
-                    currentKey = null;
-                } else if (currentKey == null){
-                    currentKey = optionToken;
-                } else {
-                    currentList.add(optionToken);
+                String currentKey = null;
+                List<String> currentList = new ArrayList<>();
+                for (String subToken : getSpaceSeparatedTokens(optionToken)) {
+                    if (currentKey == null) {
+                        currentKey = subToken;
+                    } else {
+                        currentList.add(subToken);
+                    }
                 }
+                finishOption(currentKey, currentList, optionMap);
             }
-            finishOption(currentKey, currentList, optionMap);
             for (Map.Entry<String, Object> entry : optionMap.entrySet()){
                 switch (entry.getKey()) {
                     case Pipe.PN_NAME :
@@ -354,7 +339,6 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
                         throw new IllegalArgumentException(String.format("%s is an unknown option", entry.getKey()));
                 }
             }
-
         }
 
         /**
@@ -415,39 +399,38 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
         }
     }
 
+    List<String> getSpaceSeparatedTokens(String token) {
+        List<String> subTokens = new ArrayList<>();
+        Matcher matcher = SUB_TOKEN_PATTERN.matcher(token);
+        while (matcher.find()){
+            subTokens.add(matcher.group(2) != null ? matcher.group(2) : matcher.group(3));
+        }
+        return subTokens;
+    }
+
     /**
      * @param commands full list of command tokens
      * @return Token list corresponding to the string ones
      */
     protected List<CommandExecutorImpl.Token> parseTokens(String... commands) {
         List<CommandExecutorImpl.Token> returnValue = new ArrayList<>();
-        CommandExecutorImpl.Token currentToken = new CommandExecutorImpl.Token();
-        returnValue.add(currentToken);
-        List<String> currentList = new ArrayList<>();
-        for (String token : commands){
-            if (currentToken.pipeKey == null){
-                currentToken.pipeKey = token;
-            } else {
-                switch (token){
-                    case CommandExecutorImpl.SEPARATOR:
-                        finishToken(currentToken, currentList);
-                        currentList = new ArrayList<>();
-                        currentToken = new CommandExecutorImpl.Token();
-                        returnValue.add(currentToken);
-                        break;
-                    case CommandExecutorImpl.PARAMS:
-                        if (currentToken.args == null){
-                            currentToken.args = currentList;
-                            currentList = new ArrayList<>();
-                        }
-                        currentList.add(PARAMS);
-                        break;
-                    default:
-                        currentList.add(token);
+        String cat = String.join(EMPTY, commands);
+        for (String token : cat.split(PIPE_SEPARATOR)){
+            CommandExecutorImpl.Token currentToken = new CommandExecutorImpl.Token();
+            String[] options = token.split(PARAMS_SEPARATOR);
+            if (options.length > 1) {
+                currentToken.options = getOptions(Arrays.copyOfRange(options, 1, options.length));
+            }
+            List<String> subTokens = getSpaceSeparatedTokens(options[0]);
+            if (subTokens.size() > 0) {
+                currentToken.pipeKey = subTokens.get(0);
+                if (subTokens.size() > 1) {
+                    currentToken.args = subTokens.subList(1, subTokens.size());
                 }
             }
+            log.trace("generated following token {}", currentToken);
+            returnValue.add(currentToken);
         }
-        finishToken(currentToken, currentList);
         return returnValue;
     }
 

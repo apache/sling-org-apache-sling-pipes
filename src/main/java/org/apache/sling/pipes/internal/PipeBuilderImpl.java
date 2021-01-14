@@ -43,12 +43,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.sling.jcr.resource.JcrResourceConstants.NT_SLING_FOLDER;
@@ -63,8 +61,6 @@ import static org.apache.sling.pipes.internal.ManifoldPipe.PN_NUM_THREADS;
  */
 public class PipeBuilderImpl implements PipeBuilder {
     private static final Logger logger = LoggerFactory.getLogger(PipeBuilderImpl.class);
-
-    public static final String PIPES_REPOSITORY_PATH = "/var/pipes";
 
     private static final String[] DEFAULT_NAMES = new String[]{"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"};
 
@@ -319,16 +315,6 @@ public class PipeBuilderImpl implements PipeBuilder {
     }
 
     /**
-     * build a time + random based path under /var/pipes
-     * @return full path of future Pipe
-     */
-    String buildRandomPipePath() {
-        final Calendar now = Calendar.getInstance();
-        return PIPES_REPOSITORY_PATH + '/' + now.get(Calendar.YEAR) + '/' + now.get(Calendar.MONTH) + '/' + now.get(Calendar.DAY_OF_MONTH) + "/"
-                + UUID.randomUUID().toString();
-    }
-
-    /**
      * Create a configuration resource
      * @param resolver current resolver
      * @param path path of the resource
@@ -364,7 +350,7 @@ public class PipeBuilderImpl implements PipeBuilder {
 
     @Override
     public Pipe build() throws PersistenceException {
-        return build(buildRandomPipePath());
+        return build(plumber.generateUniquePath());
     }
 
     /**

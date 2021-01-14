@@ -17,6 +17,7 @@
 package org.apache.sling.pipes;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.jexl3.JexlException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -232,7 +233,7 @@ public class PipeBindings {
             if (computed != null) {
                 return getEngine() != null ? engine.eval(computed, scriptContext) : internalEvaluate(computed);
             }
-        } catch (ScriptException e) {
+        } catch (ScriptException | JexlException e) {
             throw new IllegalArgumentException(e);
         }
         return expr;
