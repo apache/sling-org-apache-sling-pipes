@@ -45,6 +45,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import javax.json.JsonString;
 import javax.servlet.ServletException;
 
 public class CommandExecutorImplTest extends AbstractPipeTest {
@@ -169,7 +172,7 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
         assertNotNull(result);
     }
 
-    String testServlet(Map<String,Object> params) throws ServletException, IOException {
+    String testRawServlet(Map<String,Object> params) throws IOException {
         MockSlingHttpServletRequest request = context.request();
         MockSlingHttpServletResponse response = context.response();
         request.setParameterMap(params);
@@ -183,12 +186,15 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
         assertEquals(200, response.getStatus());
         return response.getOutputAsString();
     }
+    JsonObject testServlet(Map<String,Object> params) throws ServletException, IOException {
+        return (JsonObject) JsonUtil.parse(testRawServlet(params));
+    }
 
     @Test
     public void testHelp() throws ServletException, IOException {
         Map<String, Object> params = new HashMap<>();
         params.put(CommandExecutorImpl.REQ_PARAM_HELP, "blah");
-        String response = testServlet(params);
+        String response = testRawServlet(params);
         assertTrue(StringUtils.isNotBlank(response));
     }
 
@@ -196,8 +202,9 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
     public void testSimpleCommandServlet() throws IOException, ServletException {
         Map<String, Object> params = new HashMap<>();
         params.put(CommandExecutorImpl.REQ_PARAM_CMD, "echo /content | mkdir foo | write type=bar");
-        String response = testServlet(params);
-        assertEquals("{\"items\":[\"/content/foo\"],\"size\":1}\n", response);
+        JsonObject response = testServlet(params);
+        assertEquals(1, response.getJsonNumber("size").intValue());
+        assertEquals("/content/foo", response.getJsonArray("items").getString(0));
     }
 
     @Test
@@ -216,24 +223,32 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
         assertEquals ("echo /content | write one=foo nested/two=foo nested/three=foo", cmdList.get(3));
     }
 
+    String[] getItemsArray(JsonObject response) {
+        JsonArray jsonItems = response.getJsonArray("items");
+        List<String> items = jsonItems.stream().map(o -> ((JsonString)o).getString()).collect(Collectors.toList());
+        return items.toArray(new String[jsonItems.size()]);
+    }
+
     @Test
     public void testChainedCommand() throws IOException, ServletException {
         Map<String, Object> params = new HashMap<>();
         params.put(CommandExecutorImpl.REQ_PARAM_FILE, IOUtils.toString(getClass().getResourceAsStream("/chainedCommand"
             + ".txt"), "UTF-8"));
-        String response = testServlet(params);
-        assertEquals("{\"items\":[\"/content/fruits/banana/isnota/pea\",\"/content/fruits/banana/isnota/carrot\","
-            + "\"/content/fruits/apple/isnota/pea\",\"/content/fruits/apple/isnota/plum\","
-            + "\"/content/fruits/apple/isnota/carrot\"],\"size\":5}\n", response);
+        JsonObject response = testServlet(params);
+        assertEquals(5, response.getJsonNumber("size").intValue());
+        assertArrayEquals(new String[]{ "/content/fruits/banana/isnota/pea","/content/fruits/banana/isnota/carrot",
+            "/content/fruits/apple/isnota/pea","/content/fruits/apple/isnota/plum",
+            "/content/fruits/apple/isnota/carrot"}, getItemsArray(response));
     }
 
     @Test
     public void testFileCommandServlet() throws IOException, ServletException {
         Map<String, Object> params = new HashMap<>();
         params.put(CommandExecutorImpl.REQ_PARAM_FILE, IOUtils.toString(getClass().getResourceAsStream("/testcommand"
-            + ".txt"), "UTF-8"));
-        String response = testServlet(params);
-        assertEquals("{\"items\":[\"/content/beatles/john\",\"/content/beatles/paul\","
-            + "\"/content/beatles/georges\",\"/content/beatles/ringo\",\"/content/beatles/ringo/jcr:content\"],\"size\":5}\n", response);
+                + ".txt"), "UTF-8"));
+        JsonObject response = testServlet(params);
+        assertEquals(5, response.getJsonNumber("size").intValue());
+        assertArrayEquals(new String[]{"/content/beatles/john", "/content/beatles/paul", "/content/beatles/georges",
+                "/content/beatles/ringo", "/content/beatles/ringo/jcr:content"}, getItemsArray(response));
     }
 }

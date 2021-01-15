@@ -64,7 +64,6 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.sling.pipes.internal.CommandUtil.keyValuesToArray;
 import static org.apache.sling.pipes.internal.CommandUtil.writeToMap;
 
-import javax.json.Json;
 import javax.json.JsonException;
 import javax.servlet.Servlet;
 
@@ -425,7 +424,7 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
                 currentToken.options = getOptions(Arrays.copyOfRange(options, 1, options.length));
             }
             List<String> subTokens = getSpaceSeparatedTokens(options[0]);
-            if (subTokens.size() > 0) {
+            if (! subTokens.isEmpty()) {
                 currentToken.pipeKey = subTokens.get(0);
                 if (subTokens.size() > 1) {
                     currentToken.args = subTokens.subList(1, subTokens.size());
