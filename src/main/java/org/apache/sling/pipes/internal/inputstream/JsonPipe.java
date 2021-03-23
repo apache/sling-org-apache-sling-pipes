@@ -16,6 +16,7 @@
  */
 package org.apache.sling.pipes.internal.inputstream;
 
+import org.apache.commons.collections.keyvalue.DefaultKeyValue;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
@@ -34,11 +35,13 @@ import javax.json.JsonValue.ValueType;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Pipe outputting binding related to a json stream: either an object
@@ -52,6 +55,11 @@ public class JsonPipe extends AbstractInputStreamPipe {
      */
     protected static final String PN_VALUEPATH = "valuePath";
 
+    /**
+     * property specifying wether we should bind the computed json as a whole, or loop over it (not set or raw=false)
+     */
+    protected static final String PN_RAW = "raw";
+
     protected static final String JSONPATH_ROOT = "$";
 
     protected static final String ARRAY_START = "[";
@@ -59,10 +67,22 @@ public class JsonPipe extends AbstractInputStreamPipe {
     protected static final String OBJ_START = ".";
 
     protected static final Pattern JSONPATH_FIRSTTOKEN = Pattern.compile("^\\" + JSONPATH_ROOT + "([\\" + OBJ_START + "\\" + ARRAY_START + "])([^\\" + OBJ_START + "\\]\\" + ARRAY_START + "]+)\\]?");
-    ArrayBasedIterator internalIterator;
+
+    JsonBindingIterator internalIterator;
 
     public JsonPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) {
         super(plumber, resource, upperBindings);
+    }
+
+    boolean isRaw() {
+        if (properties.containsKey(PN_RAW)) {
+            Object raw = bindings.instantiateObject(properties.get(PN_RAW, String.class));
+            if (raw != null && raw instanceof Boolean) {
+                return (Boolean) raw;
+            }
+            return Boolean.parseBoolean((String)raw);
+        }
+        return false;
     }
 
     /**
@@ -86,12 +106,12 @@ public class JsonPipe extends AbstractInputStreamPipe {
                     if (StringUtils.isNotBlank(valuePath)) {
                         json = getValue(json, valuePath);
                     }
-                    if (json.getValueType() != ValueType.ARRAY) {
+                    if (isRaw() || !(json.getValueType() == ValueType.ARRAY || json.getValueType() == ValueType.OBJECT)) {
                         binding = JsonUtil.unbox(json);
                         output = inputSingletonIterator;
                     } else {
                         binding = json;
-                        output = internalIterator = new ArrayBasedIterator((JsonArray)binding, getInput());
+                        output = internalIterator = new JsonBindingIterator(json, getInput());
                     }
                 }
             }
@@ -101,32 +121,32 @@ public class JsonPipe extends AbstractInputStreamPipe {
         return output;
     }
 
-    private class ArrayBasedIterator implements Iterator<Resource> {
-        int index = 0;
-        JsonArray array;
-
+    class JsonBindingIterator implements Iterator<Resource> {
+        Collection<Object> jsonValues;
+        Iterator<Object> internal;
         final Resource inputResource;
 
-        ArrayBasedIterator(JsonArray array, Resource inputResource) {
-            this.array = array;
+        JsonBindingIterator(JsonStructure json, Resource inputResource) {
+            jsonValues = json.getValueType() == ValueType.ARRAY ?
+                    ((JsonArray) json).stream().map(JsonUtil::unbox).collect(Collectors.toList()):
+                    ((JsonObject) json).entrySet().stream()
+                            .map(e -> new DefaultKeyValue(e.getKey(),
+                                    JsonUtil.unbox(e.getValue()))).collect(Collectors.toList());
+            internal = jsonValues.iterator();
             this.inputResource = inputResource;
         }
+
         @Override
         public boolean hasNext() {
-            return index < array.size();
+            return internal.hasNext();
         }
 
         @Override
         public Resource next() {
-            try {
-                if (index >= array.size()) {
-                    throw new NoSuchElementException();
-                }
-                binding = JsonUtil.unbox(array.get(index));
-            } catch (Exception e) {
-                logger.error("Unable to retrieve {}nth item of jsonarray", index, e);
+            if (! internal.hasNext()) {
+                throw new NoSuchElementException();
             }
-            index++;
+            binding = internal.next();
             return inputResource;
         }
     }

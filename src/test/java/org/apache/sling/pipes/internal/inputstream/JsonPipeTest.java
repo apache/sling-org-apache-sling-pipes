@@ -17,6 +17,7 @@
 package org.apache.sling.pipes.internal.inputstream;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import org.apache.commons.collections4.IteratorUtils;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
@@ -29,10 +30,12 @@ import org.junit.Test;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
+import java.util.List;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -107,10 +110,29 @@ public class JsonPipeTest extends AbstractPipeTest {
         http.givenThat(get(urlEqualTo("/get/foo.json"))
                 .willReturn(aResponse().withStatus(200).withBody("{\"args\":{\"foo1\":\"bar\"}}")));
         ExecutionResult results = execute("echo /content " +
-                "| json "  + baseUrl + "/get/foo.json @ name data " +
+                "| json "  + baseUrl + "/get/foo.json @ name data @ with raw=true " +
                 "| mkdir ${data.args.foo1}");
         assertEquals(1, results.size());
         assertEquals("/content/bar", results.getCurrentPathSet().iterator().next());
+    }
+
+    @Test
+    public void testLoopOverObject() throws InvocationTargetException, IllegalAccessException {
+        ExecutionResult results = execute("echo /content " +
+                "| json {'k1':'v1','k2':'v2'} @ name j" +
+                "| mkdir ${j.key}/${j.value}");
+        assertEquals(2, results.size());
+        List<String> array = IteratorUtils.toList(results.getCurrentPathSet().iterator());
+        assertArrayEquals(new String[] {"/content/k2/v2", "/content/k1/v1"}, array.toArray());
+    }
+
+    @Test
+    public void testRaw() throws InvocationTargetException, IllegalAccessException {
+        ExecutionResult results = execute("echo /content " +
+                "| json {'k1':'v1','k2':'v2'} @ name j @ with raw=true" +
+                "| write test=${j.k2}");
+        assertEquals(1, results.size());
+        assertEquals("v2", context.resourceResolver().getResource("/content").getValueMap().get("test", String.class));
     }
 
     @Test
