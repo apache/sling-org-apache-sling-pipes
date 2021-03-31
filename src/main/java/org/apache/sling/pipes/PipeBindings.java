@@ -82,7 +82,7 @@ public class PipeBindings {
 
     Map<String, String> nameBindings = new HashMap<>();
 
-    Map<String, Map> caconfigBindings = new HashMap<>();
+    Map<String, Map<String, Object>> caconfigBindings = new HashMap<>();
 
     Map<String, Resource> outputResources = new HashMap<>();
 
@@ -166,7 +166,7 @@ public class PipeBindings {
             }
             if (is != null) {
                 try {
-                    engine.eval(new InputStreamReader(is), scriptContext);
+                    getEngine().eval(new InputStreamReader(is), scriptContext);
                 } catch (Exception e) {
                     log.error("Add script: unable to evaluate script {}", path, e);
                 }

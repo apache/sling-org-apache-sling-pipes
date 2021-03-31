@@ -20,7 +20,6 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.testing.mock.caconfig.MockContextAwareConfig;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.lang.reflect.InvocationTargetException;
@@ -118,7 +117,6 @@ public class PipeBindingsTest extends AbstractPipeTest {
     }
 
     @Test
-    @Ignore
     public void testAdditionalScript() throws Exception {
         context.load().binaryFile("/testSum.js", "/content/test/testSum.js");
         Resource resource = context.resourceResolver().getResource(MOREBINDINGS);
@@ -133,9 +131,9 @@ public class PipeBindingsTest extends AbstractPipeTest {
         Iterator<Resource> output = pipe.getOutput();
         output.next();
         PipeBindings bindings = pipe.getBindings();
-        assertEquals("first name binding should be apple", bindings.instantiateExpression("${name.dummyParent}"), "apple");
+        assertEquals("first name binding should be apple", "apple", bindings.instantiateExpression("${name.dummyParent}"));
         output.next();
-        assertEquals("second name binding should be banana", bindings.instantiateExpression("${name.dummyParent}"), "banana");
+        assertEquals("second name binding should be banana", "banana", bindings.instantiateExpression("${name.dummyParent}"));
     }
 
     @Test
