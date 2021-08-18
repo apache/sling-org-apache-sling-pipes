@@ -30,8 +30,8 @@ public class CommandUtilTest extends TestCase {
         assertEquals("${vegetables['jcr:title']}", CommandUtil.embedIfNeeded("vegetables['jcr:title']"));
         assertEquals("${new Date(\"2018-05-05T11:50:55\")}", CommandUtil.embedIfNeeded("new Date(\"2018-05-05T11:50:55\")"));
         assertEquals("${some + wellformed + script}", CommandUtil.embedIfNeeded("${some + wellformed + script}"));
-        assertEquals("${['one','two']}", CommandUtil.embedIfNeeded("['one','two']"));
         assertEquals("${true}", CommandUtil.embedIfNeeded("true"));
         assertEquals("${'some string'}", CommandUtil.embedIfNeeded("'some string'"));
+        assertEquals("['one','two']", CommandUtil.embedIfNeeded("['one','two']"));
     }
 }

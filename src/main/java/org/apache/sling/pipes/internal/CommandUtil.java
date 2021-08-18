@@ -38,7 +38,6 @@ public class CommandUtil {
     static final String FIRST_TOKEN = "first";
     static final String SECOND_TOKEN = "second";
     private static final Pattern UNEMBEDDEDSCRIPT_PATTERN = Pattern.compile("^(\\d+(\\.\\d+)?)|" + //21.42
-            "(\\[.*]$)|" + //['one','two']
             "(\\w[\\w_\\-\\d]+\\..+)|" + //map.field...
             "(\\w[\\w_\\-\\d]+\\['.+'])|" + //map['field']
             "(true$|false$)|" + //boolean
