@@ -20,12 +20,14 @@ import org.apache.sling.pipes.PipeBindings;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static org.apache.sling.pipes.PipeBindings.INJECTED_SCRIPT_REGEXP;
 
@@ -37,7 +39,10 @@ public class CommandUtil {
     static final String KEY_VALUE_SEP = "=";
     static final String FIRST_TOKEN = "first";
     static final String SECOND_TOKEN = "second";
+    static final String PN_JCR_MIXIN = "jcr:mixinTypes";
+    static final Pattern MIXINS_ARRAY_PATTERN = Pattern.compile("^\\s*\\[(.*)\\]\\s*$");
     private static final Pattern UNEMBEDDEDSCRIPT_PATTERN = Pattern.compile("^(\\d+(\\.\\d+)?)|" + //21.42
+            "(\\[.*]$)|" + //['one','two']
             "(\\w[\\w_\\-\\d]+\\..+)|" + //map.field...
             "(\\w[\\w_\\-\\d]+\\['.+'])|" + //map['field']
             "(true$|false$)|" + //boolean
@@ -84,7 +89,20 @@ public class CommandUtil {
     public static void writeToMap(Map<String, Object> map, boolean embed, Object... params){
         for (int i = 0; i < params.length - 1; i += 2) {
             map.put(params[i].toString(), embed ? embedIfNeeded(params[i + 1]) : params[i + 1]);
+            if (params[i].toString().equals(PN_JCR_MIXIN)) {
+                map.put(PN_JCR_MIXIN, handleMixins((String)params[i + 1]));
+            }
         }
+    }
+
+    static String[] handleMixins(String value) {
+        Matcher matcher = MIXINS_ARRAY_PATTERN.matcher(value);
+        if (matcher.matches()) {
+            return Arrays.stream(matcher.group(1).split(PAIR_SEP))
+                    .map(String::trim)
+                    .collect(Collectors.toList()).toArray(new String[0]);
+        }
+        return new String[] { value };
     }
 
     /**

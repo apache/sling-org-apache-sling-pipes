@@ -17,6 +17,11 @@
 package org.apache.sling.pipes.internal;
 
 import junit.framework.TestCase;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.junit.Assert;
 import org.junit.Test;
 
 public class CommandUtilTest extends TestCase {
@@ -32,6 +37,24 @@ public class CommandUtilTest extends TestCase {
         assertEquals("${some + wellformed + script}", CommandUtil.embedIfNeeded("${some + wellformed + script}"));
         assertEquals("${true}", CommandUtil.embedIfNeeded("true"));
         assertEquals("${'some string'}", CommandUtil.embedIfNeeded("'some string'"));
-        assertEquals("['one','two']", CommandUtil.embedIfNeeded("['one','two']"));
+        assertEquals("${['one','two']}", CommandUtil.embedIfNeeded("['one','two']"));
+    }
+
+    @Test
+    public void testHandleMixin() {
+        String[] expected = new String[] {"rep:versionable", "rep:AccessControllable"};
+        Assert.assertArrayEquals(expected, CommandUtil.handleMixins("[ rep:versionable, rep:AccessControllable]"));
+        Assert.assertArrayEquals(expected, CommandUtil.handleMixins("[rep:versionable,rep:AccessControllable]"));
+    }
+
+    @Test
+    public void testWriteToMap() {
+        Map<String, Object> map = new HashMap<>();
+        CommandUtil.writeToMap(map, true, "p1", "'some string'", "p2", "/some/path",
+                "p3","['one','two']", "jcr:mixinTypes", "[ rep:versionable, some:OtherMixin]");
+        assertEquals("${'some string'}", map.get("p1"));
+        assertEquals("/some/path", map.get("p2"));
+        assertEquals("${['one','two']}", map.get("p3"));
+        Assert.assertArrayEquals(new String [] {"rep:versionable", "some:OtherMixin"}, (String[])map.get("jcr:mixinTypes"));
     }
 }
