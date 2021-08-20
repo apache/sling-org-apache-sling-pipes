@@ -16,6 +16,7 @@
  */
 package org.apache.sling.pipes.internal;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
@@ -59,17 +60,26 @@ public class WritePipe extends BasePipe {
      */
     public WritePipe(Plumber plumber, Resource resource, PipeBindings upperBindings) {
         super(plumber, resource, upperBindings);
-        if (getConfiguration() == null){
-            String pathCandidate = getExpr();
-            Resource candidate = resolver.getResource(pathCandidate);
-            if (candidate  != null) {
-                confTree = candidate.adaptTo(Node.class);
+    }
+
+    Node getConfTree() {
+        if (confTree == null) {
+            if (getConfiguration() == null) {
+                String pathCandidate = getExpr();
+                if (StringUtils.isBlank(pathCandidate)) {
+                    throw new IllegalArgumentException("write pipe is mis-configured: it should have a configuration node, or an expression");
+                }
+                Resource candidate = resolver.getResource(pathCandidate);
+                if (candidate != null) {
+                    return candidate.adaptTo(Node.class);
+                } else {
+                    throw new IllegalArgumentException("write pipe expression" + pathCandidate + " does not refer to any existing resource");
+                }
             } else {
-                throw new IllegalArgumentException("write pipe is mis-configured: it should have a configuration node, or an expression");
+                confTree = getConfiguration().adaptTo(Node.class);
             }
-        } else {
-            confTree = getConfiguration().adaptTo(Node.class);
         }
+        return confTree;
     }
 
 
@@ -132,6 +142,19 @@ public class WritePipe extends BasePipe {
         return true;
     }
 
+    private void copyProperty(ModifiableValueMap targetProperties, Resource target, String key, Object value) {
+        if (value == null) {
+            //null value are not handled by modifiable value maps,
+            //removing the property if it exists
+            addPropertyToRemove(target.getChild(key));
+        } else {
+            logger.info("writing {}@{}={}", target.getPath(), key, value);
+            if (!isDryRun()){
+                targetProperties.put(key, value);
+            }
+        }
+    }
+
     /**
      * Write properties from the configuration to the target resource,
      * instantiating both property names & values
@@ -141,7 +164,7 @@ public class WritePipe extends BasePipe {
      */
     private void copyProperties(@Nullable Resource conf, Resource target)  {
         ValueMap writeMap = conf != null ? conf.adaptTo(ValueMap.class) : null;
-        ModifiableValueMap properties = target.adaptTo(ModifiableValueMap.class);
+        ModifiableValueMap targetProperties = target.adaptTo(ModifiableValueMap.class);
 
         //writing current node
         if (properties != null && writeMap != null) {
@@ -149,16 +172,7 @@ public class WritePipe extends BasePipe {
                 if (!IGNORED_PROPERTIES.contains(entry.getKey())) {
                     String key = parent != null ? bindings.instantiateExpression(entry.getKey()) : entry.getKey();
                     Object value = computeValue(target, key, entry.getValue());
-                    if (value == null) {
-                        //null value are not handled by modifiable value maps,
-                        //removing the property if it exists
-                        addPropertyToRemove(target.getChild(key));
-                    } else {
-                        logger.info("writing {}@{}={}", target.getPath(), key, value);
-                        if (!isDryRun()){
-                            properties.put(key, value);
-                        }
-                    }
+                    copyProperty(targetProperties, target, key, value);
                 }
             }
         }
@@ -177,6 +191,18 @@ public class WritePipe extends BasePipe {
         }
     }
 
+    private void copyNode(Node source, Node targetNode) throws RepositoryException {
+        String name = source.getName();
+        name = bindings.conditionalString(name);
+        if (name == null) {
+            logger.debug("name has been instantiated as null, not writing that tree");
+        } else if (!isDryRun()){
+            Node childTarget = targetNode.hasNode(name) ? targetNode.getNode(name) : targetNode.addNode(name, source.getPrimaryNodeType().getName());
+            logger.debug("writing tree {}", childTarget.getPath());
+            writeTree(source, resolver.getResource(childTarget.getPath()));
+        }
+    }
+
     /**
      * write the configured tree at the target resource, creating each node if needed, copying values.
      * @param conf configuration JCR tree to write to target resource
@@ -185,44 +211,36 @@ public class WritePipe extends BasePipe {
     private void writeTree(Node conf, Resource target) throws RepositoryException {
         copyProperties(resolver.getResource(conf.getPath()), target);
         NodeIterator childrenConf = conf.getNodes();
-        if (childrenConf.hasNext()){
-            Node targetNode = target.adaptTo(Node.class);
-            if (targetNode != null) {
-                logger.info("dubbing {} at {}", conf.getPath(), target.getPath());
-                while (childrenConf.hasNext()){
-                    Node childConf = childrenConf.nextNode();
-                    String name = childConf.getName();
-                    name = bindings.conditionalString(name);
-                    if (name == null){
-                        logger.debug("name has been instantiated as null, not writing that tree");
-                    } else if (!isDryRun()){
-                        Node childTarget = targetNode.hasNode(name) ? targetNode.getNode(name) : targetNode.addNode(name, childConf.getPrimaryNodeType().getName());
-                        logger.debug("writing tree {}", childTarget.getPath());
-                        writeTree(childConf, resolver.getResource(childTarget.getPath()));
+        Node targetNode = target.adaptTo(Node.class);
+        if (childrenConf.hasNext() && targetNode != null) {
+            logger.info("dubbing {} at {}", conf.getPath(), target.getPath());
+            while (childrenConf.hasNext()) {
+                copyNode(childrenConf.nextNode(), targetNode);
+            }
+        }
+    }
+
+    void managePropertiesToRemove() throws RepositoryException {
+        if (propertiesToRemove != null && !propertiesToRemove.isEmpty()) {
+            for (Resource propertyResource : propertiesToRemove) {
+                logger.info("removing {}", propertyResource.getPath());
+                if (!isDryRun()) {
+                    Property property = propertyResource.adaptTo(Property.class);
+                    if (property != null) {
+                        property.remove();
                     }
                 }
             }
         }
     }
 
-
     @Override
     protected Iterator<Resource> computeOutput() {
         try {
             Resource resource = getInput();
             if (resource != null) {
-                writeTree(confTree, resource);
-                if (propertiesToRemove != null && !propertiesToRemove.isEmpty()){
-                    for (Resource propertyResource : propertiesToRemove) {
-                        logger.info("removing {}", propertyResource.getPath());
-                        if (!isDryRun()){
-                            Property property = propertyResource.adaptTo(Property.class);
-                            if (property != null) {
-                                property.remove();
-                            }
-                        }
-                    }
-                }
+                writeTree(getConfTree(), resource);
+                managePropertiesToRemove();
                 return super.computeOutput();
             }
         } catch (RepositoryException e) {

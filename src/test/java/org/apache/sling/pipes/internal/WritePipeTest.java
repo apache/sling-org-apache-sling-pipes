@@ -31,8 +31,6 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import java.lang.reflect.InvocationTargetException;
-import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.Iterator;
@@ -198,5 +196,12 @@ public class WritePipeTest extends AbstractPipeTest {
         Calendar cal = props.get("date", Calendar.class);
         assertNotNull(cal);
         assertEquals(2018, cal.get(GregorianCalendar.YEAR));
+    }
+
+    @Test
+    public void testWriteDynamicCopy() throws InvocationTargetException, IllegalAccessException {
+        execute("mkdir /content/1/to/copy");
+        execute("mkdir /content/copies/one | write @ expr /content${number} @ bindings number=/1");
+        assertTrue(context.resourceResolver().getResource("/content/copies/one/to/copy") != null);
     }
 }
