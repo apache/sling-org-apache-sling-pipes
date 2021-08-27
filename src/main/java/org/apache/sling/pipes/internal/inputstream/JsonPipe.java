@@ -48,7 +48,8 @@ import java.util.stream.Collectors;
  */
 public class JsonPipe extends AbstractInputStreamPipe {
     private static Logger logger = LoggerFactory.getLogger(JsonPipe.class);
-    public static final String RESOURCE_TYPE = RT_PREFIX + "json";
+    public static final String JSON_KEY = "json";
+    public static final String RESOURCE_TYPE = RT_PREFIX + JSON_KEY;
 
     /**
      * property specifying the json path where to fetched the used value

@@ -87,6 +87,14 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
     }
 
     @Test
+    public void testParseJson() {
+        String tokenString = "json [{\"title\":\"this is the first\", \"path\":\"/content/nested/two\"}, {\"title\":\"this is the second\", \"path\":\"/content/nested/three\"}]";
+        List<CommandExecutorImpl.Token> tokens = commands.parseTokens(tokenString);
+        assertEquals("there should be 1 token", 1, tokens.size());
+        assertEquals("there should be 1 arg", 1, tokens.get(0).args.size());
+    }
+
+    @Test
     public void testQuotedTokens() {
         List<CommandExecutorImpl.Token> tokens = commands.parseTokens("some isolated items \"with quotes\"");
         assertEquals("there should be 1 token", 1, tokens.size());
@@ -216,11 +224,12 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
         request.setParameterMap(params);
         request.setMethod("POST");
         List<String> cmdList = commands.getCommandList(context.request());
-        assertEquals(4, cmdList.size());
+        assertEquals(5, cmdList.size());
         for (int i = 0; i < 3; i ++) {
             assertEquals("echo /content | $ /apps/pipes-it/fruit | children nt:unstructured", cmdList.get(i));
         }
         assertEquals ("echo /content | write one=foo nested/two=foo nested/three=foo", cmdList.get(3));
+        assertEquals("echo /content | json [{\"title\":\"this is the first\", \"path\":\"/content/nested/two\"}, {\"title\":\"this is the second\", \"path\":\"/content/nested/three\"}] @ name test | echo ${test.path}", cmdList.get(4));
     }
 
     String[] getItemsArray(JsonObject response) {

@@ -28,3 +28,7 @@ echo /content |
 write one=foo
 nested/two=foo
 nested/three=foo
+
+echo /content | json [{"title":"this is the first", "path":"/content/nested/two"},
+{"title":"this is the second", "path":"/content/nested/three"}] @ name test
+| echo ${test.path}

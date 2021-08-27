@@ -28,6 +28,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.AccessControlException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +49,7 @@ import org.apache.sling.pipes.Pipe;
 import org.apache.sling.pipes.PipeBuilder;
 import org.apache.sling.pipes.PipeExecutor;
 import org.apache.sling.pipes.Plumber;
+import org.apache.sling.pipes.internal.inputstream.JsonPipe;
 import org.jetbrains.annotations.NotNull;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -64,6 +66,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.sling.pipes.internal.CommandUtil.keyValuesToArray;
 import static org.apache.sling.pipes.internal.CommandUtil.writeToMap;
 
+import javax.json.Json;
 import javax.json.JsonException;
 import javax.servlet.Servlet;
 
@@ -86,6 +89,9 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
     static final String PIPE_SEPARATOR = WHITE_SPACE_SEPARATOR + "*\\" + SEPARATOR + WHITE_SPACE_SEPARATOR + "*";
     static final String LINE_SEPARATOR = " ";
     static final String PARAMS = "@";
+    static final List<String> JSON_EXPR_KEYS = Arrays.asList(JsonPipe.JSON_KEY);
+    static final String JSON_START = "\"[{";
+
     static final String PARAMS_SEPARATOR = WHITE_SPACE_SEPARATOR + "+" + PARAMS + WHITE_SPACE_SEPARATOR + "*";
     static final Pattern SUB_TOKEN_PATTERN = Pattern.compile("(([^\"]\\S*)|\"([^\"]+)\")\\s*");
     static final String KEY_NAME = "name";
@@ -428,6 +434,11 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
                 currentToken.pipeKey = subTokens.get(0);
                 if (subTokens.size() > 1) {
                     currentToken.args = subTokens.subList(1, subTokens.size());
+                    if (JSON_EXPR_KEYS.contains(currentToken.pipeKey) &&
+                            JSON_START.indexOf(currentToken.args.get(0).getBytes(StandardCharsets.UTF_8)[0]) > 0) {
+                        //in that case we want to concatenate all subsequent 'args' as it is a JSON expression
+                        currentToken.args = Collections.singletonList(String.join(EMPTY, currentToken.args));
+                    }
                 }
             }
             log.trace("generated following token {}", currentToken);
