@@ -106,6 +106,11 @@ public class JsonPipeTest extends AbstractPipeTest {
     }
 
     @Test
+    public void testDynamicJsonPath() throws Exception {
+        testJsonPath("{'foo':[{'test':'one'}, {'test':'two'}]}", "$.${(true?'foo':'bar')}");
+    }
+
+    @Test
     public void testSimpleRemoteJson() throws InvocationTargetException, IllegalAccessException {
         http.givenThat(get(urlEqualTo("/get/foo.json"))
                 .willReturn(aResponse().withStatus(200).withBody("{\"args\":{\"foo1\":\"bar\"}}")));

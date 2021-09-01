@@ -78,7 +78,7 @@ public class JsonPipe extends AbstractInputStreamPipe {
     boolean isRaw() {
         if (properties.containsKey(PN_RAW)) {
             Object raw = bindings.instantiateObject(properties.get(PN_RAW, String.class));
-            if (raw != null && raw instanceof Boolean) {
+            if (raw instanceof Boolean) {
                 return (Boolean) raw;
             }
             return Boolean.parseBoolean((String)raw);
@@ -105,7 +105,7 @@ public class JsonPipe extends AbstractInputStreamPipe {
                 } else {
                     String valuePath = properties.get(PN_VALUEPATH, String.class);
                     if (StringUtils.isNotBlank(valuePath)) {
-                        json = getValue(json, valuePath);
+                        json = getValue(json, bindings.instantiateExpression(valuePath));
                     }
                     if (isRaw() || !(json.getValueType() == ValueType.ARRAY || json.getValueType() == ValueType.OBJECT)) {
                         binding = JsonUtil.unbox(json);
