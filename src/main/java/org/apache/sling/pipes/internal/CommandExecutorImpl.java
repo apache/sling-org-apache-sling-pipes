@@ -39,6 +39,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestParameter;
+import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.ServletResolverConstants;
@@ -66,7 +67,6 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.sling.pipes.internal.CommandUtil.keyValuesToArray;
 import static org.apache.sling.pipes.internal.CommandUtil.writeToMap;
 
-import javax.json.Json;
 import javax.json.JsonException;
 import javax.servlet.Servlet;
 
@@ -83,6 +83,7 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
     static final String REQ_PARAM_CMD = "pipe_cmd";
     static final String REQ_PARAM_HELP = "pipe_help";
     static final String CMD_LINE_PREFIX = "cmd_line_";
+    static final String PN_DESCRIPTION = "commandParsed";
     static final String WHITE_SPACE_SEPARATOR = "\\s";
     static final String COMMENT_PREFIX = "#";
     static final String SEPARATOR = "|";
@@ -184,6 +185,8 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
                         PipeBuilder pipeBuilder = parse(resolver, command);
                         Pipe pipe = pipeBuilder.build();
                         bindings.put(CMD_LINE_PREFIX + idxLine++, pipe.getResource().getPath());
+                        ModifiableValueMap root = pipe.getResource().adaptTo(ModifiableValueMap.class);
+                        root.put(PN_DESCRIPTION, command);
                         plumber.execute(resolver, pipe, bindings, pipeWriter, true);
                     }
                 }

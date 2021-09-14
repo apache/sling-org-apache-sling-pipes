@@ -114,6 +114,8 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
 
     static final String PERMISSION_EXECUTION = "/system/sling/permissions/pipes/exec";
 
+    static final int MAX_LENGTH = 1000;
+
     public static final String PIPES_REPOSITORY_PATH = "/var/pipes";
 
     @ObjectClassDefinition(name="Apache Sling Pipes : Plumber configuration")
@@ -166,6 +168,8 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
     private List<String> allowedUsers;
 
     private Map<String, PipeMonitor> monitoredPipes;
+
+    public static final String PN_NBOUTPUTRESOURCES = "nbOutputResources";
 
     @Activate
     public void activate(Configuration configuration){
@@ -346,6 +350,7 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
         checkPermissions(resolver, configuration.executionPermissionResource());
         boolean success = false;
         PipeMonitor monitor = null;
+        ExecutionResult result = null;
         long start = System.currentTimeMillis();
         try {
             boolean readOnly = false;
@@ -365,12 +370,12 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
                 throw new IllegalStateException("Pipe is already running");
             }
             monitor = monitoredPipes.get(confResource.getPath());
-            writeStatus(pipe, STATUS_STARTED);
+            writeStatus(pipe, STATUS_STARTED, null);
             resolver.commit();
             if (monitor != null){
                 monitor.starts();
             }
-            ExecutionResult result = internalExecute(resolver, writer, pipe);
+            result = internalExecute(resolver, writer, pipe);
             if (save && pipe.modifiesContent()) {
                 persist(resolver, pipe, result, null);
             }
@@ -390,7 +395,7 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
             Thread.currentThread().interrupt();
         } finally {
             try {
-                writeStatus(pipe, STATUS_FINISHED);
+                writeStatus(pipe, STATUS_FINISHED, result);
                 resolver.commit();
             } catch (PersistenceException e) {
                 log.error("unable to make final save", e);
@@ -438,7 +443,7 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
     void persist(ResourceResolver resolver, Pipe pipe, ExecutionResult result, Resource currentResource) throws PersistenceException, InterruptedException {
         if (shouldSave(resolver, pipe, result, currentResource)) {
             log.info("[{}] saving changes...", pipe.getName());
-            writeStatus(pipe, currentResource == null ? STATUS_FINISHED : currentResource.getPath());
+            writeStatus(pipe, currentResource == null ? STATUS_FINISHED : currentResource.getPath(), result);
             resolver.commit();
             if (currentResource == null && distributor != null && StringUtils.isNotBlank(pipe.getDistributionAgent())) {
                 log.info("a distribution agent is configured, will try to distribute the changes");
@@ -473,11 +478,12 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
      * @param status status to write
      * @throws RepositoryException in case write goes wrong
      */
-    void writeStatus(Pipe pipe, String status){
+    void writeStatus(Pipe pipe, String status, ExecutionResult result){
         if (StringUtils.isNotBlank(status)){
             ModifiableValueMap vm = pipe.getResource().adaptTo(ModifiableValueMap.class);
             if( vm != null) {
                 vm.put(PN_STATUS, status);
+                vm.put(PN_NBOUTPUTRESOURCES, result != null ? result.size() : -1);
                 Calendar cal = new GregorianCalendar();
                 cal.setTime(new Date());
                 vm.put(PN_STATUS_MODIFIED, cal);
