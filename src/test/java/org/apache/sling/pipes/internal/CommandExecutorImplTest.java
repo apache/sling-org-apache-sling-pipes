@@ -32,6 +32,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -162,6 +163,12 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
         ValueMap props = context.currentResource(PATH_FRUITS).getValueMap();
         assertEquals("there should some=/content/fruits", PATH_FRUITS, props.get("some"));
         assertEquals("there should key=value", "value", props.get("key"));
+    }
+
+    @Test
+    public void testNonBreakingSpaces() throws InvocationTargetException, IllegalAccessException {
+        ExecutionResult result = execute("echo /content | mkdir test @ name child");
+        assertEquals(1, result.size());
     }
 
     @Test

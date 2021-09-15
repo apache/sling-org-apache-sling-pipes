@@ -84,7 +84,7 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
     static final String REQ_PARAM_HELP = "pipe_help";
     static final String CMD_LINE_PREFIX = "cmd_line_";
     static final String PN_DESCRIPTION = "commandParsed";
-    static final String WHITE_SPACE_SEPARATOR = "\\s";
+    static final String WHITE_SPACE_SEPARATOR = "[\\s\\h]";
     static final String COMMENT_PREFIX = "#";
     static final String SEPARATOR = "|";
     static final String PIPE_SEPARATOR = WHITE_SPACE_SEPARATOR + "*\\" + SEPARATOR + WHITE_SPACE_SEPARATOR + "*";
