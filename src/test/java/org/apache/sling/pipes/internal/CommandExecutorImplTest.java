@@ -104,11 +104,13 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
 
     @Test
     public void testKeyValueToArray() {
-        assertArrayEquals(new String[]{"one","two","three","four"}, keyValuesToArray(Arrays.asList("one=two","three=four")));
-        assertArrayEquals(new String[]{"one","two","three","${four}"}, keyValuesToArray(Arrays.asList("one=two","three=${four}")));
-        assertArrayEquals(new String[]{"one","two","three","${four == 'blah' ? 'five' : 'six'}"},
+        assertArrayEquals("1", new String[]{"one","two","three","four"}, keyValuesToArray(Arrays.asList("one=two","three=four")));
+        assertArrayEquals("2", new String[]{"one","two","three","${four}"}, keyValuesToArray(Arrays.asList("one=two","three=${four}")));
+        assertArrayEquals("3", new String[]{"${one == 'check'? 'three':'four'}","two"}, keyValuesToArray((Arrays.asList("${one == 'check'? 'three':'four'}=two"))));
+        assertArrayEquals("4", new String[]{"a_b-c","two"}, keyValuesToArray((Arrays.asList("a_b-c=two"))));
+        assertArrayEquals("5", new String[]{"one","two","three","${four == 'blah' ? 'five' : 'six'}"},
             keyValuesToArray(Arrays.asList("one=two","three=${four == 'blah' ? 'five' : 'six'}")));
-        assertArrayEquals(new String[]{"jcr:content/singer","${'ringo' == one ? false : true}"}, keyValuesToArray(Arrays.asList("jcr:content/singer=${'ringo' == one ? false : true}")));
+        assertArrayEquals("6", new String[]{"jcr:content/singer","${'ringo' == one ? false : true}"}, keyValuesToArray(Arrays.asList("jcr:content/singer=${'ringo' == one ? false : true}")));
     }
 
     @Test

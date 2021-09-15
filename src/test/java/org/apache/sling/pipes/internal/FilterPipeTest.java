@@ -113,7 +113,7 @@ public class FilterPipeTest extends AbstractPipeTest {
 
     @Test
     public void testBadTestFails() throws InvocationTargetException, IllegalAccessException {
-        ExecutionResult result = execute("echo /content/fruits | grep slingPipesFilter_test=${'some string'}");
+        ExecutionResult result = execute("echo /content/fruits | grep slingPipesFilter_test=${'some string'}");
         assertEquals(0, result.size());
     }
 

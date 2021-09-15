@@ -152,14 +152,10 @@ public class PlumberServletTest extends AbstractPipeTest {
 
     @Test
     public void testAdditionalBindingsAndWriter() throws Exception {
-        String testBinding = "testBinding";
-        String testBindingLength = testBinding + "Length";
-        String bindingValue = "testBindingValue";
-        String pathLengthParam = "pathLength";
-        String bindings = "{\"" + testBinding + "\":\"" + bindingValue + "\"}";
-        String respObject =  pathLengthParam + "=path.get(\"dummyGrandChild\").length()," + testBindingLength + "=" + testBinding + ".length()";
+        String bindings = "{\"testBinding\":\"testBindingValue\"}";
+        String respObject =  "pathLength=path.get(\"dummyGrandChild\").length(),testBindingValue=testBinding.length()";
         SlingHttpServletRequest request =
-                mockPlumberServletRequest(context.resourceResolver(), "json", dummyTreePath, null, bindings.toString(), respObject.toString(), null, null);
+                mockPlumberServletRequest(context.resourceResolver(), "json", dummyTreePath, null, bindings, respObject, null, null);
         servlet.execute(request, response, false);
         assertDummyTree();
         JsonObject response = Json.createReader(new StringReader(stringResponse.toString())).readObject();
@@ -169,13 +165,13 @@ public class PlumberServletTest extends AbstractPipeTest {
             assertNotNull("there should be an object returned at each time", object);
             String path = object.getString(OutputWriter.PATH_KEY);
             assertNotNull("the string path should be returned for each item, containing the path of the resource");
-            String pathLength = object.getString(pathLengthParam);
+            String pathLength = object.getString("pathLength");
             assertNotNull("there should be a pathLength param, as specified in the writer", pathLength);
             assertEquals("Pathlength should be the string representation of the path length", path.length() + "", pathLength);
-            String testBindingLengthValue = object.getString(testBindingLength);
+            String testBindingLengthValue = object.getString("testBindingValue", null);
             assertNotNull("testBindingLength should be there", testBindingLengthValue);
             assertEquals("testBindingLength should be the string representation of the additional binding length",
-                    bindingValue.length() + "", testBindingLengthValue);
+                    "testBindingValue".length() + "", testBindingLengthValue);
         }
     }
 

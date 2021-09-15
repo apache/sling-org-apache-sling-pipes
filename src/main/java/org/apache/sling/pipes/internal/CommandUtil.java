@@ -24,7 +24,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -37,19 +37,20 @@ import static org.apache.sling.pipes.PipeBindings.INJECTED_SCRIPT_REGEXP;
 public class CommandUtil {
     static final String PAIR_SEP = ",";
     static final String KEY_VALUE_SEP = "=";
-    static final String FIRST_TOKEN = "first";
-    static final String SECOND_TOKEN = "second";
+    static final String FIRST_KEY = "first";
+    static final String SECOND_KEY = "second";
     static final String PN_JCR_MIXIN = "jcr:mixinTypes";
     static final Pattern MIXINS_ARRAY_PATTERN = Pattern.compile("^\\s*\\[(.*)\\]\\s*$");
     private static final Pattern UNEMBEDDEDSCRIPT_PATTERN = Pattern.compile("^(\\d+(\\.\\d+)?)|" + //21.42
-            "(\\[.*]$)|" + //['one','two']
-            "(\\w[\\w_\\-\\d]+\\..+)|" + //map.field...
-            "(\\w[\\w_\\-\\d]+\\['.+'])|" + //map['field']
-            "(true$|false$)|" + //boolean
-            "(new .*)|" + //instantiation
+            "\\[.*]$|" + //['one','two']
+            "[\\w_\\-]+\\..+|" + //map.field...
+            "[\\w_\\-]+\\['.+']|" + //map['field']
+            "true$|false$|" + //boolean
+            "new .*|" + //instantiation
             "(.*'$)"); // 'string'
-    static final String CONFIGURATION_TOKEN = "(?<" + FIRST_TOKEN + ">[\\w/\\:]+)\\s*" + KEY_VALUE_SEP
-            + "(?<" + SECOND_TOKEN + ">[(\\w*)|" + INJECTED_SCRIPT_REGEXP + "]+)";
+    static final String EXPR_TOKEN = "([^=]+|" + INJECTED_SCRIPT_REGEXP + ")+";
+    static final String CONFIGURATION_TOKEN = "\\s*(?<" + FIRST_KEY + ">" + EXPR_TOKEN + ")\\s*" + KEY_VALUE_SEP
+            + "\\s*(?<" + SECOND_KEY + ">(" + EXPR_TOKEN + ")+)\\s*";
     public static final Pattern CONFIGURATION_PATTERN = Pattern.compile(CONFIGURATION_TOKEN);
 
     private CommandUtil() {
@@ -110,12 +111,12 @@ public class CommandUtil {
      * @param valueTransformer before adding it to the map, that function will be applied to found value
      * @return map of key and (transformed) value
      */
-    public static Map stringToMap(@NotNull String input, Function<String, String> valueTransformer) {
+    public static Map<String, Object> stringToMap(@NotNull String input, UnaryOperator<String> valueTransformer) {
         Map<String, Object> map = new HashMap<>();
         for (String pair : input.split(PAIR_SEP) ){
             Matcher matcher = CONFIGURATION_PATTERN.matcher(pair);
             if (matcher.find()) {
-                map.put(matcher.group(FIRST_TOKEN), valueTransformer.apply(matcher.group(SECOND_TOKEN)));
+                map.put(matcher.group(FIRST_KEY), valueTransformer.apply(matcher.group(SECOND_KEY)));
             }
         }
         return map;
@@ -131,8 +132,8 @@ public class CommandUtil {
             for (String pair : o) {
                 Matcher matcher = CONFIGURATION_PATTERN.matcher(pair.trim());
                 if (matcher.matches()) {
-                    args.add(matcher.group(FIRST_TOKEN));
-                    args.add(matcher.group(SECOND_TOKEN));
+                    args.add(matcher.group(FIRST_KEY));
+                    args.add(matcher.group(SECOND_KEY));
                 }
             }
         }

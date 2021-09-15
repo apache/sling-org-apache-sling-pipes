@@ -16,16 +16,41 @@
  */
 package org.apache.sling.pipes.internal;
 
+import static org.apache.sling.pipes.internal.CommandUtil.CONFIGURATION_PATTERN;
+import static org.apache.sling.pipes.internal.CommandUtil.FIRST_KEY;
+import static org.apache.sling.pipes.internal.CommandUtil.SECOND_KEY;
+
 import junit.framework.TestCase;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 public class CommandUtilTest extends TestCase {
 
+
+    private void assertMatch(Pattern pattern, String token, String first, String second) {
+        Matcher matcher = pattern.matcher(token);
+        assertTrue(pattern.toString() + " should match with " + token, matcher.matches());
+        assertEquals("first token should be " + first, first, matcher.group(FIRST_KEY));
+        assertEquals("second token should be " + second, second, matcher.group(SECOND_KEY));
+    }
+    @Test
+    public void testTokenMatch() {
+        assertMatch(CONFIGURATION_PATTERN, "foo=bar", "foo", "bar");
+        assertMatch(CONFIGURATION_PATTERN, "${foo}=bar", "${foo}", "bar");
+        assertMatch(CONFIGURATION_PATTERN, "foo=${bar}", "foo", "${bar}");
+        assertMatch(CONFIGURATION_PATTERN, "foo='bar'", "foo", "'bar'");
+        assertMatch(CONFIGURATION_PATTERN, "foo=${'bar'}", "foo", "${'bar'}");
+        assertMatch(CONFIGURATION_PATTERN, "${foo == bar ? 1 : 2}=bar", "${foo == bar ? 1 : 2}", "bar");
+        assertMatch(CONFIGURATION_PATTERN, "foo=${foo == bar ? 1 : 2}", "foo", "${foo == bar ? 1 : 2}");
+        assertMatch(CONFIGURATION_PATTERN, "foo/bar=check/some", "foo/bar", "check/some");
+        assertMatch(CONFIGURATION_PATTERN, "foo:bar='.+'", "foo:bar", "'.+'");
+    }
     @Test
     public void testEmbedIfNeeded() {
         assertEquals(2, CommandUtil.embedIfNeeded(2));
