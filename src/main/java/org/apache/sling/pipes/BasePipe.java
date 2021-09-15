@@ -336,11 +336,11 @@ public class BasePipe implements Pipe {
             if (StringUtils.isBlank(path)){
                 Resource input = getPreviousResource();
                 if (input != null){
-                    path = resource.getPath();
+                    path = input.getPath();
                 }
             }
             bindings.setCurrentError(path);
-            logger.error("error with pipe execution from {}", path, e);
+            logger.error("error with pipe execution from {}, running on resource {}", resource.getPath(), path, e);
         }
         return EMPTY_ITERATOR;
     }

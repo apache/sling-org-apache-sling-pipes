@@ -144,4 +144,16 @@ public class PipeBindingsTest extends AbstractPipeTest {
         assertTrue(result.size() > 0);
         assertEquals("/content/fruits/apple", result.currentPathSet.iterator().next());
     }
+
+    @Test
+    public void testContextualError() throws InvocationTargetException, IllegalAccessException {
+        ExecutionResult first = execute("json {'one':{'foo':'bar'},'two':{'another':'one'},'three':{'foo':'longer'}} | " +
+                "mkdir /content/context/${one.key} | " +
+                "write ${one.value.foo?'foo':'blah'}=one.value.foo");
+        //the following should fail for /content/context/two
+        ExecutionResult result = execute("echo /content/context " +
+                "| children sling:Folder @ name child " +
+                "| write foo=${child.foo?child.foo:nonexistingFunction(nonexistingVariable)}");
+        assertEquals(2, result.size());
+    }
 }
