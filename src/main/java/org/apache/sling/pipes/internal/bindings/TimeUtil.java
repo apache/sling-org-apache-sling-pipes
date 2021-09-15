@@ -17,14 +17,11 @@
 package org.apache.sling.pipes.internal.bindings;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
-import java.util.Locale;
 
 /**
  * Utility class to be used in bindings

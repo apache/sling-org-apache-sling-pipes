@@ -16,8 +16,6 @@
  */
 package org.apache.sling.pipes.internal.bindings;
 
-import java.text.DateFormat;
-import java.util.Date;
 import java.util.Map;
 
 import org.apache.commons.jexl3.JexlBuilder;
