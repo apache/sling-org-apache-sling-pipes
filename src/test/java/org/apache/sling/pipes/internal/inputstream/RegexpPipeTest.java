@@ -80,4 +80,17 @@ public class RegexpPipeTest extends AbstractPipeTest {
         assertEquals("one created resource's domain should be somesite", "http://somesite.com",
                 context.resourceResolver().getResource("/content/img/1.png/domain").adaptTo(String.class));
     }
+
+    @Test
+    public void testRegexAsIsUrl() throws Exception {
+        Pipe pipe = plumber.newPipe(context.resourceResolver())
+                .echo("/content")
+                .egrep("https://sling.apache.org/documentation/bundles/sling-pipes/readers.html")
+                .name("result").with("pattern","(?<domain>https?://[^/]+)(?<uri>[^\"^\']+)")
+                .with("url_mode","as_is").build();
+        Iterator<Resource> output = pipe.getOutput();
+        IteratorUtils.toList(output);
+        assertEquals("domain should be read from the egrep expression as is", "https://sling.apache.org",pipe.getBindings().instantiateExpression("${result.domain}"));
+        assertEquals("uri should be read from the egrep expression as is", "/documentation/bundles/sling-pipes/readers.html",pipe.getBindings().instantiateExpression("${result.uri}"));
+    }
 }
