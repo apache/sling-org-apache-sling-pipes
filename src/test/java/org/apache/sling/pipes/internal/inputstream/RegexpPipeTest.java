@@ -93,4 +93,21 @@ public class RegexpPipeTest extends AbstractPipeTest {
         assertEquals("domain should be read from the egrep expression as is", "https://sling.apache.org",pipe.getBindings().instantiateExpression("${result.domain}"));
         assertEquals("uri should be read from the egrep expression as is", "/documentation/bundles/sling-pipes/readers.html",pipe.getBindings().instantiateExpression("${result.uri}"));
     }
+
+    @Test
+    public void readThePatternFromTheBindingsIfAvailable() throws Exception {
+        String htmlPath = "/content/test/standardTest.html";
+        context.load().binaryFile("/standardTest.html", htmlPath);
+        Pipe pipe = plumber.newPipe(context.resourceResolver())
+                .echo("/content")
+                .json("{'items': [{'pattern': '(?<domain>http://somesite.com/[^/]+)(?<uri>.*/1.png)'}]}").with("valuePath", "$.items").name("json")
+                .egrep(htmlPath).name("location").with("pattern","${json.pattern}")
+                .write("test","${location.uri}").build();
+        Iterator<Resource> output = pipe.getOutput();
+        output.next();
+        Resource result = context.resourceResolver().getResource("/content/test");
+        assertNotNull("there should be a test property", result);
+        assertEquals("resource should have test property with value /img/1.png ", "/img/1.png",
+                context.resourceResolver().getResource("/content/test").adaptTo(String.class));
+    }
 }
