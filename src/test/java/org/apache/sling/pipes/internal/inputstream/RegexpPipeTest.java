@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -109,5 +110,18 @@ public class RegexpPipeTest extends AbstractPipeTest {
         assertNotNull("there should be a test property", result);
         assertEquals("resource should have test property with value /img/1.png ", "/img/1.png",
                 context.resourceResolver().getResource("/content/test").adaptTo(String.class));
+    }
+
+    @Test
+    public void validatePartiallyValidBindingExpr() throws Exception {
+        String htmlPath = "/content/test/standardTest.html";
+        context.load().binaryFile("/standardTest.html", htmlPath);
+        Pipe pipe = plumber.newPipe(context.resourceResolver())
+                .echo("/content")
+                .json("{'items': [{'pattern': '(?<domain>http://somesite.com/[^/]+)(?<uri>.*/1.png)'}]}").with("valuePath", "$.items").name("json")
+                .egrep(htmlPath).name("location").with("pattern","${json.invalid}")
+                .write("test","${location.uri}").build();
+        Iterator<Resource> output = pipe.getOutput();
+        assertFalse("pipe executed with empty output", output.hasNext());
     }
 }
