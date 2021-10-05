@@ -165,6 +165,7 @@ public class WritePipe extends BasePipe {
     private void copyProperties(@Nullable Resource conf, Resource target)  {
         ValueMap writeMap = conf != null ? conf.adaptTo(ValueMap.class) : null;
         ModifiableValueMap targetProperties = target.adaptTo(ModifiableValueMap.class);
+        boolean modified = false;
 
         //writing current node
         if (properties != null && writeMap != null) {
@@ -173,8 +174,12 @@ public class WritePipe extends BasePipe {
                     String key = parent != null ? bindings.instantiateExpression(entry.getKey()) : entry.getKey();
                     Object value = computeValue(target, key, entry.getValue());
                     copyProperty(targetProperties, target, key, value);
+                    modified = true;
                 }
             }
+        }
+        if (modified) {
+            plumber.markWithJcrLastModified(this, target);
         }
     }
 

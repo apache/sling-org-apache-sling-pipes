@@ -20,6 +20,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.event.jobs.Job;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -168,6 +169,12 @@ public interface Plumber {
      * @return referenced resource, null otherwise
      */
     @Nullable Resource getReferencedResource(Resource referrer, String reference);
+
+    /**
+     * marks a given resource as updated
+     * @param resource resource to mark
+     */
+    void markWithJcrLastModified(@NotNull Pipe pipe, @NotNull Resource resource);
 
     /*
      * Generates unique pipe path for persistence sake

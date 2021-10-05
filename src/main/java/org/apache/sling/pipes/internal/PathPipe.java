@@ -80,6 +80,7 @@ public class PathPipe extends BasePipe {
         try {
             String path = isRootPath(expr) ? expr : getInput().getPath() + SLASH + expr;
             logger.info("creating path {}", path);
+            boolean modified = resolver.getResource(path) == null;
             if (!isDryRun()) {
                 if (StringUtils.isNotBlank(nodeType)) {
                     //in that case we are in a "JCR" mode
@@ -88,6 +89,9 @@ public class PathPipe extends BasePipe {
                     ResourceUtil.getOrCreateResource(resolver, path, resourceType, intermediateType, autosave);
                 }
                 Resource resource = resolver.getResource(path);
+                if (modified) {
+                    plumber.markWithJcrLastModified(this, resource);
+                }
                 output = Collections.singleton(resource).iterator();
             }
         } catch (PersistenceException | RepositoryException e) {

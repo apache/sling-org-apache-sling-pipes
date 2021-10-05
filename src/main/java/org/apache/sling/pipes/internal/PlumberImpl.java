@@ -48,6 +48,7 @@ import org.apache.sling.pipes.PipeExecutor;
 import org.apache.sling.pipes.Plumber;
 import org.apache.sling.pipes.PlumberMXBean;
 import org.apache.sling.pipes.internal.bindings.ConfigurationMap;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -85,6 +86,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.apache.jackrabbit.JcrConstants.JCR_LASTMODIFIED;
 import static org.apache.sling.api.resource.ResourceResolverFactory.SUBSERVICE;
 import static org.apache.sling.pipes.BasePipe.PN_STATUS;
 import static org.apache.sling.pipes.BasePipe.PN_STATUS_MODIFIED;
@@ -114,7 +116,9 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
 
     static final String PERMISSION_EXECUTION = "/system/sling/permissions/pipes/exec";
 
-    static final int MAX_LENGTH = 1000;
+    static final String JCR_LAST_MODIFIED_BY = JCR_LASTMODIFIED + "By";
+
+    static final String JCR_LAST_MODIFIED_BY_PIPE = JCR_LAST_MODIFIED_BY + "Pipe";
 
     public static final String PIPES_REPOSITORY_PATH = "/var/pipes";
 
@@ -140,6 +144,9 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
 
         @AttributeDefinition(description = "max age (in days) of automatically generated pipe persistence")
         int maxAge() default 31;
+
+        @AttributeDefinition(description = "should add pipe path to updated properties")
+        boolean mark_pipe_path() default false;
 
         @AttributeDefinition(description = "schedule of purge process")
         String scheduler_expression() default "0 0 12 */7 * ?";
@@ -275,6 +282,20 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
             }
         }
         return null;
+    }
+
+    @Override
+    public void markWithJcrLastModified(@NotNull Pipe pipe, @NotNull Resource resource) {
+        if (!pipe.isDryRun()) {
+            ModifiableValueMap mvm = resource.adaptTo(ModifiableValueMap.class);
+            if (mvm != null) {
+                mvm.put(JCR_LASTMODIFIED, Calendar.getInstance());
+                mvm.put(JCR_LAST_MODIFIED_BY, resource.getResourceResolver().getUserID());
+                if (configuration.mark_pipe_path()) {
+                    mvm.put(JCR_LAST_MODIFIED_BY_PIPE, pipe.getResource().getPath());
+                }
+            }
+        }
     }
 
     @Override

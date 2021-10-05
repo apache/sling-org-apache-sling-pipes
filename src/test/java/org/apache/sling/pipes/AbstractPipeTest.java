@@ -79,6 +79,7 @@ public class AbstractPipeTest {
         context.registerInjectActivateService(plumber, "authorizedUsers", new String[]{},
                 "bufferSize", PlumberImpl.DEFAULT_BUFFER_SIZE,
                 "executionPermissionResource", PATH_FRUITS,
+                "mark.pipe.path",true,
                 "referencesPaths", new String [] { "/conf/global/sling/pipes", "/apps/scripts" });
         plumber.registerPipe("slingPipes/dummyNull", DummyNull.class);
         plumber.registerPipe("slingPipes/dummySearch", DummySearch.class);

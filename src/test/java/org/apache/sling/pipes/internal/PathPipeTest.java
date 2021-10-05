@@ -19,9 +19,9 @@ package org.apache.sling.pipes.internal;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.pipes.AbstractPipeTest;
 import org.apache.sling.pipes.Pipe;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.jcr.Node;
@@ -29,8 +29,11 @@ import javax.jcr.Node;
 import static org.apache.sling.jcr.resource.JcrResourceConstants.NT_SLING_FOLDER;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+
+import java.lang.reflect.InvocationTargetException;
+import java.time.Instant;
+import java.util.Calendar;
 
 /**
  * Testing path pipe using pipe builder
@@ -73,4 +76,22 @@ public class PathPipeTest extends AbstractPipeTest {
         plumber.newPipe(resolver).echo(PATH_FRUITS).mkdir(WATERMELON_RELATIVEPATH).run();
         assertNotNull("Resource should be here & saved", resolver.getResource(WATERMELON_FULL_PATH));
     }
+    @Test
+    public void testJcrMark() throws InvocationTargetException, IllegalAccessException {
+        Instant now = Instant.now();
+        String path = "/content/my/new/path";
+        execute("mkdir " + path);
+        ValueMap fruits = context.resourceResolver().getResource(path).adaptTo(ValueMap.class);
+        assertNotNull(fruits.get("jcr:lastModified", Calendar.class));
+        Instant modified = Instant.ofEpochMilli(fruits.get("jcr:lastModified", Calendar.class).getTimeInMillis());
+        assertTrue(modified.isAfter(now));
+        assertNotNull(fruits.get("jcr:lastModifiedBy", String.class));
+        //we configured the plumber to mark pipe path
+        assertNotNull(fruits.get("jcr:lastModifiedByPipe", String.class));
+        execute("mkdir " + path);
+        fruits = context.resourceResolver().getResource(path).adaptTo(ValueMap.class);
+        Instant modifiedAgain = Instant.ofEpochMilli(fruits.get("jcr:lastModified", Calendar.class).getTimeInMillis());
+        assertEquals("path should not mark *again* a path already created", modified, modifiedAgain);
+    }
+    
 }
