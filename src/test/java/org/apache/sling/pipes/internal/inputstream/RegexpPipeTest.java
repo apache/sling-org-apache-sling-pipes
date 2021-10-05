@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -79,5 +80,48 @@ public class RegexpPipeTest extends AbstractPipeTest {
         assertEquals("third should be /content/img/2.png", "/content/img/2.png", paths.get(2));
         assertEquals("one created resource's domain should be somesite", "http://somesite.com",
                 context.resourceResolver().getResource("/content/img/1.png/domain").adaptTo(String.class));
+    }
+
+    @Test
+    public void testRegexAsIsUrl() throws Exception {
+        Pipe pipe = plumber.newPipe(context.resourceResolver())
+                .echo("/content")
+                .egrep("https://sling.apache.org/documentation/bundles/sling-pipes/readers.html")
+                .name("result").with("pattern","(?<domain>https?://[^/]+)(?<uri>[^\"^\']+)")
+                .with("url_mode","as_is").build();
+        Iterator<Resource> output = pipe.getOutput();
+        IteratorUtils.toList(output);
+        assertEquals("domain should be read from the egrep expression as is", "https://sling.apache.org",pipe.getBindings().instantiateExpression("${result.domain}"));
+        assertEquals("uri should be read from the egrep expression as is", "/documentation/bundles/sling-pipes/readers.html",pipe.getBindings().instantiateExpression("${result.uri}"));
+    }
+
+    @Test
+    public void readThePatternFromTheBindingsIfAvailable() throws Exception {
+        String htmlPath = "/content/test/standardTest.html";
+        context.load().binaryFile("/standardTest.html", htmlPath);
+        Pipe pipe = plumber.newPipe(context.resourceResolver())
+                .echo("/content")
+                .json("{'items': [{'pattern': '(?<domain>http://somesite.com/[^/]+)(?<uri>.*/1.png)'}]}").with("valuePath", "$.items").name("json")
+                .egrep(htmlPath).name("location").with("pattern","${json.pattern}")
+                .write("test","${location.uri}").build();
+        Iterator<Resource> output = pipe.getOutput();
+        output.next();
+        Resource result = context.resourceResolver().getResource("/content/test");
+        assertNotNull("there should be a test property", result);
+        assertEquals("resource should have test property with value /img/1.png ", "/img/1.png",
+                context.resourceResolver().getResource("/content/test").adaptTo(String.class));
+    }
+
+    @Test
+    public void validatePartiallyValidBindingExpr() throws Exception {
+        String htmlPath = "/content/test/standardTest.html";
+        context.load().binaryFile("/standardTest.html", htmlPath);
+        Pipe pipe = plumber.newPipe(context.resourceResolver())
+                .echo("/content")
+                .json("{'items': [{'pattern': '(?<domain>http://somesite.com/[^/]+)(?<uri>.*/1.png)'}]}").with("valuePath", "$.items").name("json")
+                .egrep(htmlPath).name("location").with("pattern","${json.invalid}")
+                .write("test","${location.uri}").build();
+        Iterator<Resource> output = pipe.getOutput();
+        assertFalse("pipe executed with empty output", output.hasNext());
     }
 }

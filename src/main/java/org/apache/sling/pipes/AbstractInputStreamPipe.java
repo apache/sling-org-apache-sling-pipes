@@ -51,6 +51,9 @@ public abstract class AbstractInputStreamPipe extends BasePipe {
     private static final String AUTH_HEADER = "Authentication";
 
     private static final String BASIC_PREFIX = "Basic ";
+    private static final String PN_URL_MODE = "url_mode";
+    private static final String URL_MODE_FETCH = "FETCH";
+    private static final String URL_MODE_AS_IS = "AS_IS";
 
     protected Object binding;
 
@@ -71,7 +74,7 @@ public abstract class AbstractInputStreamPipe extends BasePipe {
 
     InputStream getInputStream() throws IOException {
         String expr = getExpr();
-        if (expr.startsWith(REMOTE_START)) {
+        if (expr.startsWith(REMOTE_START) && !properties.get(PN_URL_MODE, URL_MODE_FETCH).equalsIgnoreCase(URL_MODE_AS_IS)) {
             //first look at
             String urlExpression = getExpr();
             if (StringUtils.isNotBlank(urlExpression)) {

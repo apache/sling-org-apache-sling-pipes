@@ -55,7 +55,11 @@ public class RegexpPipe extends AbstractInputStreamPipe {
     public Iterator<Resource> getOutput(InputStream inputStream) {
         Iterator<Resource> output = EMPTY_ITERATOR;
         try {
-            String patternString = properties.get(PN_PATTERN, String.class);
+            String patternString = bindings.instantiateExpression(properties.get(PN_PATTERN, String.class));
+            if (patternString == null){
+                logger.debug("pattern {} evaluates as empty.", properties.get(PN_PATTERN, String.class));
+                return output;
+            }
             final Collection<String> names = getGroupNames(patternString);
             if (names.isEmpty()){
                 logger.debug("no name defined, will take the whole match");
@@ -111,4 +115,6 @@ public class RegexpPipe extends AbstractInputStreamPipe {
         }
         return names;
     }
+
+
 }
