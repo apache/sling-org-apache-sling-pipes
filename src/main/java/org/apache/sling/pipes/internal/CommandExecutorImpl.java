@@ -98,6 +98,12 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
     static final String KEY_NAME = "name";
     static final String KEY_PATH = "path";
     static final String KEY_EXPR = "expr";
+    static final String DECL_BINDING = "binding";
+    static final String DECL_BINDING_CONTENT = "declcontent";
+    static final Pattern DECL_BINDING_PATTERN = Pattern.compile(DECL_BINDING + WHITE_SPACE_SEPARATOR + "*"
+            + "(?<" + DECL_BINDING + ">[\\w_\\-\\d]+)"
+            + WHITE_SPACE_SEPARATOR + "*=" + WHITE_SPACE_SEPARATOR + "*" +
+            "(?<" +  DECL_BINDING_CONTENT + ">.*)");
 
     private static final String HELP_START =
         "\n a <pipe token> is <pipe> <expr|conf>? (<options>)?" +
@@ -126,11 +132,23 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
         help = null;
     }
 
-    boolean isCommandCandidate(String line) {
-        return StringUtils.isNotBlank(line) && !line.startsWith(COMMENT_PREFIX);
+    boolean isBlankLine(String line) {
+        return StringUtils.isBlank(line) || line.startsWith(COMMENT_PREFIX);
     }
 
-    List<String> getCommandList(SlingHttpServletRequest request) throws IOException {
+    boolean isJsonBinding(String line) {
+        return line.indexOf(DECL_BINDING) >= 0;
+    }
+
+    private void handleInputEnd(StringBuilder builder, String currentBinding, List<String> cmds, Map<String, Object> bindings) {
+        if (StringUtils.isBlank(currentBinding) && builder.length() > 0) {
+            cmds.add(builder.toString().trim());
+        } else if (StringUtils.isNoneBlank(currentBinding, builder)) {
+            bindings.put(currentBinding, builder.toString().trim());
+        }
+    }
+
+    List<String> getCommandList(SlingHttpServletRequest request, Map<String, Object> bindings) throws IOException {
         List<String> cmds = new ArrayList<>();
         if (request.getParameterMap().containsKey(REQ_PARAM_CMD)) {
             cmds.add(request.getParameter(REQ_PARAM_CMD));
@@ -140,18 +158,27 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
                 InputStream is = paramFile.getInputStream();
                 BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
                 String line;
-                StringBuilder cmdBuilder = new StringBuilder();
+                String currentBinding = null;
+                StringBuilder readerBuilder = new StringBuilder();
                 while ((line = reader.readLine()) != null) {
-                    if (isCommandCandidate(line)) {
-                        cmdBuilder.append(LINE_SEPARATOR + line.trim());
-                    } else if (cmdBuilder.length() > 0){
-                        cmds.add(cmdBuilder.toString().trim());
-                        cmdBuilder = new StringBuilder();
+                    if (isBlankLine(line)) {
+                        if (readerBuilder.length() > 0) {
+                            handleInputEnd(readerBuilder, currentBinding, cmds, bindings);
+                            readerBuilder = new StringBuilder();
+                            currentBinding = null;
+                        }
+                    }  else if (isJsonBinding(line)) {
+                        Matcher matcher = DECL_BINDING_PATTERN.matcher(line);
+                        if (matcher.find()) {
+                            currentBinding = matcher.group(DECL_BINDING);
+                            readerBuilder.append(matcher.group(DECL_BINDING_CONTENT).trim());
+                        }
+                    } else {
+                        //depending on what we are appending, we keep lines return or not
+                        readerBuilder.append((StringUtils.isBlank(currentBinding) ? LINE_SEPARATOR : "\n") + line.trim());
                     }
                 }
-                if (cmdBuilder.length() > 0) {
-                    cmds.add(cmdBuilder.toString().trim());
-                }
+                handleInputEnd(readerBuilder, currentBinding, cmds, bindings);
             }
         }
         return cmds;
@@ -167,7 +194,7 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
             } else {
                 ResourceResolver resolver = request.getResourceResolver();
                 Map<String, Object> bindings = plumber.getBindingsFromRequest(request, true);
-                List<String> cmds = getCommandList(request);
+                List<String> cmds = getCommandList(request, bindings);
                 if (cmds.isEmpty()) {
                     writer.println("No command to execute!");
                 }

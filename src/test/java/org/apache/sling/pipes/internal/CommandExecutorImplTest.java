@@ -37,8 +37,12 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
+import static org.apache.sling.pipes.internal.CommandExecutorImpl.DECL_BINDING;
+import static org.apache.sling.pipes.internal.CommandExecutorImpl.DECL_BINDING_CONTENT;
+import static org.apache.sling.pipes.internal.CommandExecutorImpl.DECL_BINDING_PATTERN;
 import static org.apache.sling.pipes.internal.CommandExecutorImpl.PARAMS_SEPARATOR;
 import static org.apache.sling.pipes.internal.CommandUtil.keyValuesToArray;
 import static org.junit.Assert.assertArrayEquals;
@@ -232,7 +236,7 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
         MockSlingHttpServletRequest request = context.request();
         request.setParameterMap(params);
         request.setMethod("POST");
-        List<String> cmdList = commands.getCommandList(context.request());
+        List<String> cmdList = commands.getCommandList(context.request(), new HashMap<>());
         assertEquals(5, cmdList.size());
         for (int i = 0; i < 3; i ++) {
             assertEquals("echo /content | $ /apps/pipes-it/fruit | children nt:unstructured", cmdList.get(i));
@@ -247,12 +251,16 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
         return items.toArray(new String[jsonItems.size()]);
     }
 
+    JsonObject executeFile(String fileName) throws IOException, ServletException {
+        Map<String, Object> params = new HashMap<>();
+        params.put(CommandExecutorImpl.REQ_PARAM_FILE, IOUtils.toString(getClass().getResourceAsStream("/" + fileName
+                + ".txt"), "UTF-8"));
+        return testServlet(params);
+    }
+
     @Test
     public void testChainedCommand() throws IOException, ServletException {
-        Map<String, Object> params = new HashMap<>();
-        params.put(CommandExecutorImpl.REQ_PARAM_FILE, IOUtils.toString(getClass().getResourceAsStream("/chainedCommand"
-            + ".txt"), "UTF-8"));
-        JsonObject response = testServlet(params);
+        JsonObject response = executeFile("chainedCommand");
         assertEquals(5, response.getJsonNumber("size").intValue());
         assertArrayEquals(new String[]{ "/content/fruits/banana/isnota/pea","/content/fruits/banana/isnota/carrot",
             "/content/fruits/apple/isnota/pea","/content/fruits/apple/isnota/plum",
@@ -261,12 +269,34 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
 
     @Test
     public void testFileCommandServlet() throws IOException, ServletException {
-        Map<String, Object> params = new HashMap<>();
-        params.put(CommandExecutorImpl.REQ_PARAM_FILE, IOUtils.toString(getClass().getResourceAsStream("/testcommand"
-                + ".txt"), "UTF-8"));
-        JsonObject response = testServlet(params);
+        JsonObject response = executeFile("testcommand");
         assertEquals(5, response.getJsonNumber("size").intValue());
         assertArrayEquals(new String[]{"/content/beatles/john", "/content/beatles/paul", "/content/beatles/georges",
                 "/content/beatles/ringo", "/content/beatles/ringo/jcr:content"}, getItemsArray(response));
+    }
+
+
+    void assertDeclBinding(String input, String expectedBinding, String expectedContent) {
+        Matcher matcher = DECL_BINDING_PATTERN.matcher(input);
+        assertTrue(input + " should match", matcher.matches());
+        assertEquals("binding should be " + expectedBinding, expectedBinding, matcher.group(DECL_BINDING));
+        assertEquals("content should be " + expectedContent, expectedContent, matcher.group(DECL_BINDING_CONTENT));
+    }
+
+    @Test
+    public void testDeclBindingPattern() {
+        assertDeclBinding("binding blah = {\"foo\":\"bar\"}", "blah", "{\"foo\":\"bar\"}");
+        assertDeclBinding("binding blah={\"foo\":\"bar\"}", "blah", "{\"foo\":\"bar\"}");
+        assertDeclBinding("binding blah = {", "blah", "{");
+        assertDeclBinding("binding csvStart = name,title", "csvStart", "name,title");
+        assertDeclBinding("binding csvStart =", "csvStart", "");
+    }
+
+    @Test
+    public void testDeclaredBindingBasedInit() throws ServletException, IOException {
+        JsonObject response = executeFile("declbasedinit");
+        assertEquals(4, response.getJsonNumber("size").intValue());
+        assertArrayEquals(new String[]{"/content/pages/1/leaves/child1","/content/pages/1/leaves/child2",
+                "/content/pages/2/leaves/child1","/content/pages/2/leaves/child2"}, getItemsArray(response));
     }
 }
