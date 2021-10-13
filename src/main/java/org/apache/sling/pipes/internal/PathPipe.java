@@ -89,7 +89,7 @@ public class PathPipe extends BasePipe {
                     ResourceUtil.getOrCreateResource(resolver, path, resourceType, intermediateType, autosave);
                 }
                 Resource resource = resolver.getResource(path);
-                if (modified) {
+                if (modified && resource != null) {
                     plumber.markWithJcrLastModified(this, resource);
                 }
                 output = Collections.singleton(resource).iterator();

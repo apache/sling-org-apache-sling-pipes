@@ -42,9 +42,8 @@ public class ContainerPipe extends SuperPipe {
      * @param plumber plumber
      * @param resource container's configuration resource
      * @param upperBindings pipe bindings
-     * @throws Exception bad configuration handling
      */
-    public ContainerPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception{
+    public ContainerPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) {
         super(plumber, resource, upperBindings);
     }
 

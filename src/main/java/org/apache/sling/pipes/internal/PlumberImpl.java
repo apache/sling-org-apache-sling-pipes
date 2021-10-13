@@ -146,9 +146,11 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
         int maxAge() default 31;
 
         @AttributeDefinition(description = "should add pipe path to updated properties")
+        @SuppressWarnings("squid:S100") // osgi convention
         boolean mark_pipe_path() default false;
 
         @AttributeDefinition(description = "schedule of purge process")
+        @SuppressWarnings("squid:S100") // osgi convention
         String scheduler_expression() default "0 0 12 */7 * ?";
     }
 
@@ -599,7 +601,7 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
         log.debug("starting removal of {}", resource);
         Resource parent = resource.getParent();
         resource.getResourceResolver().delete(resource);
-        if (!parent.hasChildren() && !PIPES_REPOSITORY_PATH.equals(parent.getPath())) {
+        if (parent != null && !parent.hasChildren() && !PIPES_REPOSITORY_PATH.equals(parent.getPath())) {
             cleanResourceAndEmptyParents(parent);
         }
     }
@@ -616,7 +618,7 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
             }
         };
         visitor.accept(resolver.getResource(PIPES_REPOSITORY_PATH));
-        if (pipesToRemove.size() > 0) {
+        if (!pipesToRemove.isEmpty()) {
             log.info("about to remove {} pipe instances", pipesToRemove.size());
             for (String path : pipesToRemove) {
                 cleanResourceAndEmptyParents(resolver.getResource(path));

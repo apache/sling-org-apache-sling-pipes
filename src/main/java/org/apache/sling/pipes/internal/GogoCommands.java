@@ -59,7 +59,8 @@ public class GogoCommands {
 
     @Reference
     Plumber plumber;
-    
+
+    @SuppressWarnings("squid:S106") // we want here output of the error
     PrintStream print() {
         return System.out;
     }

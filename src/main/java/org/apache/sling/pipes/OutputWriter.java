@@ -97,7 +97,7 @@ public abstract class OutputWriter {
         }
         String writerParam = request.getParameter(PARAM_WRITER);
         if (StringUtils.isNotBlank(writerParam)){
-            customOutputs = stringToMap(writerParam, s -> PipeBindings.embedAsScript(s));
+            customOutputs = stringToMap(writerParam, PipeBindings::embedAsScript);
         }
         setWriter(response.getWriter());
         initResponse(response);

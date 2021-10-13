@@ -29,7 +29,7 @@ import java.util.Iterator;
  */
 public abstract class AbstractSlingQueryPipe extends BasePipe {
 
-    public AbstractSlingQueryPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) {
+    protected AbstractSlingQueryPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) {
         super(plumber, resource, upperBindings);
     }
     @Override
@@ -48,6 +48,7 @@ public abstract class AbstractSlingQueryPipe extends BasePipe {
      * generate outputs out of input resource and abstract query
      * @return output's resource iterator, empty in case input is null
      */
+    @Override
     protected Iterator<Resource> computeOutput() {
         Resource resource = getInput();
         if (resource != null) {

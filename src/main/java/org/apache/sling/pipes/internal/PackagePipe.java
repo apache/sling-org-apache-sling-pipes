@@ -69,9 +69,8 @@ public class PackagePipe extends BasePipe {
      * @param plumber  plumber
      * @param resource configuration resource
      * @param upperBindings super pipe's bindings
-     * @throws Exception in case configuration is not working
      */
-    public PackagePipe(Plumber plumber, Resource resource, PipeBindings upperBindings) throws Exception {
+    public PackagePipe(Plumber plumber, Resource resource, PipeBindings upperBindings) {
         super(plumber, resource, upperBindings);
         assemble = properties.get(PN_ASSEMBLE, true);
         checkExistence = properties.get(PN_CHECKEXISTENCE, true);

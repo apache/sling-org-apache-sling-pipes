@@ -91,13 +91,13 @@ public class AuthorizablePipe extends BasePipe {
             if (auth != null) {
                 logger.debug("Retrieved authorizable {}", auth.getID());
                 if (StringUtils.isNotBlank(addToGroup)) {
-                    addToGroup(auth);
+                    addAuthorizableToGroup(auth);
                 }
                 if (StringUtils.isNotBlank(addMembers)) {
-                    addMembers(auth);
+                    addMembersToAuthorizable(auth);
                 }
                 if (bindMembers) {
-                    bindMembers(auth);
+                    bindMembersToAuthorizable(auth);
                 }
                 Resource resource = resolver.getResource(auth.getPath());
                 return Collections.singleton(resource).iterator();
@@ -140,7 +140,7 @@ public class AuthorizablePipe extends BasePipe {
      * Add current authorizable to configured addToGroup expression (should resolve as a group id)
      * @param auth authorizable to add to the group
      */
-    void addToGroup(Authorizable auth){
+    void addAuthorizableToGroup(Authorizable auth){
         try {
             //if addToGroup is set to true, we try to find the corresponding
             //group and to add current auth to it as a member
@@ -161,7 +161,7 @@ public class AuthorizablePipe extends BasePipe {
      * Add to current authorizable (that should be a group) the configured members in addMembers expression
      * @param auth group to which members should be added
      */
-    void addMembers(Authorizable auth) {
+    void addMembersToAuthorizable(Authorizable auth) {
         try {
             if (auth.isGroup()) {
                 Group group = (Group)auth;
@@ -191,7 +191,7 @@ public class AuthorizablePipe extends BasePipe {
      * add current group's members to the bindings
      * @param auth group whose members should be bound in the pipe bindings
      */
-    void bindMembers(Authorizable auth){
+    void bindMembersToAuthorizable(Authorizable auth){
         try {
             if (auth.isGroup()){
                 Group group = (Group)auth;

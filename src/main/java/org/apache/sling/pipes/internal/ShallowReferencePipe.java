@@ -38,9 +38,11 @@ public class ShallowReferencePipe extends ReferencePipe {
 
     @Override
     public void before() {
+        //we don't want anything to be executed before
     }
 
     @Override
     public void after() {
+        //we don't want anything to be executed after
     }
 }

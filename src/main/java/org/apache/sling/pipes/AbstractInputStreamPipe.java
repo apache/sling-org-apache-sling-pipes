@@ -42,7 +42,7 @@ public abstract class AbstractInputStreamPipe extends BasePipe {
 
     public static final String REMOTE_START = "http";
 
-    protected static final Pattern VALID_PATH = Pattern.compile("/([\\w\\d\\.-_]+/)+[\\w\\d\\.-_]+");
+    protected static final Pattern VALID_PATH = Pattern.compile("/([\\w\\.\\-_]+/)+[\\w\\.\\-_]+");
 
     public static final String BINDING_IS = "org.apache.sling.pipes.RequestInputStream";
 

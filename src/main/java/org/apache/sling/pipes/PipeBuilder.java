@@ -217,6 +217,7 @@ public interface PipeBuilder {
      */
     @PipeExecutor(command = "$", resourceType = FindPipe.RESOURCE_TYPE, pipeClass = FindPipe.class,
             description = "find resource from the current, with the given expression as a parameter")
+    @SuppressWarnings("squid:S100") // we use that not very conventionnal name to match jQuery well known constant
     PipeBuilder $(String expr);
 
     /**

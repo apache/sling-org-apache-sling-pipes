@@ -184,49 +184,39 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
         return cmds;
     }
 
-    @Override
-    protected void doPost(@NotNull SlingHttpServletRequest request, @NotNull SlingHttpServletResponse response) throws IOException {
-        String currentCommand = null;
+    protected void executeCommands(@NotNull SlingHttpServletRequest request, @NotNull SlingHttpServletResponse response) throws IOException {
         PrintWriter writer = response.getWriter();
+        String currentCommand = null;
         try {
-            if (request.getParameter(REQ_PARAM_HELP) != null) {
-                writer.println(help());
-            } else {
-                ResourceResolver resolver = request.getResourceResolver();
-                Map<String, Object> bindings = plumber.getBindingsFromRequest(request, true);
-                List<String> cmds = getCommandList(request, bindings);
-                if (cmds.isEmpty()) {
-                    writer.println("No command to execute!");
-                }
-                short idxLine = 0;
-
-                OutputWriter pipeWriter = getWriter(request, response);
-                if (pipeWriter == null) {
-                    pipeWriter = new NopWriter();
-                }
-                pipeWriter.disableAutoClose();
-                pipeWriter.init(request, response);
-                for (String command : cmds) {
-                    if (StringUtils.isNotBlank(command)) {
-                        currentCommand = command;
-                        PipeBuilder pipeBuilder = parse(resolver, command);
-                        Pipe pipe = pipeBuilder.build();
-                        bindings.put(CMD_LINE_PREFIX + idxLine++, pipe.getResource().getPath());
-                        ModifiableValueMap root = pipe.getResource().adaptTo(ModifiableValueMap.class);
-                        root.put(PN_DESCRIPTION, command);
-                        plumber.execute(resolver, pipe, bindings, pipeWriter, true);
-                    }
-                }
-                pipeWriter.ends();
+            ResourceResolver resolver = request.getResourceResolver();
+            Map<String, Object> bindings = plumber.getBindingsFromRequest(request, true);
+            List<String> cmds = getCommandList(request, bindings);
+            if (cmds.isEmpty()) {
+                writer.println("No command to execute!");
             }
-            writer.println("");
-            response.setStatus(SC_OK);
-        }
-        catch (AccessControlException e) {
-            response.setStatus(SC_FORBIDDEN);
-            response.sendError(SC_FORBIDDEN);
-        }
-        catch (IllegalAccessException | InvocationTargetException e) {
+            short idxLine = 0;
+
+            OutputWriter pipeWriter = getWriter(request, response);
+            if (pipeWriter == null) {
+                pipeWriter = new NopWriter();
+            }
+            pipeWriter.disableAutoClose();
+            pipeWriter.init(request, response);
+            for (String command : cmds) {
+                if (StringUtils.isNotBlank(command)) {
+                    currentCommand = command;
+                    PipeBuilder pipeBuilder = parse(resolver, command);
+                    Pipe pipe = pipeBuilder.build();
+                    bindings.put(CMD_LINE_PREFIX + idxLine++, pipe.getResource().getPath());
+                    ModifiableValueMap root = pipe.getResource().adaptTo(ModifiableValueMap.class);
+                    if (root != null) {
+                        root.put(PN_DESCRIPTION, command);
+                    }
+                    plumber.execute(resolver, pipe, bindings, pipeWriter, true);
+                }
+            }
+            pipeWriter.ends();
+        }  catch (IllegalAccessException | InvocationTargetException e) {
             writer.println("Error executing " + currentCommand);
             e.printStackTrace(writer);
             response.setStatus(SC_INTERNAL_SERVER_ERROR);
@@ -239,6 +229,24 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
             response.setStatus(SC_NOT_ACCEPTABLE);
             response.sendError(SC_NOT_ACCEPTABLE);
             writer.println(help());
+        }
+    }
+
+    @Override
+    protected void doPost(@NotNull SlingHttpServletRequest request, @NotNull SlingHttpServletResponse response) throws IOException {
+        PrintWriter writer = response.getWriter();
+        try {
+            if (request.getParameter(REQ_PARAM_HELP) != null) {
+                writer.println(help());
+            } else {
+                executeCommands(request, response);
+            }
+            writer.println("");
+            response.setStatus(SC_OK);
+        }
+        catch (AccessControlException e) {
+            response.setStatus(SC_FORBIDDEN);
+            response.sendError(SC_FORBIDDEN);
         }
     }
 

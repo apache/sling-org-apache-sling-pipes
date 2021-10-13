@@ -16,18 +16,13 @@
  */
 package org.apache.sling.pipes.internal;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.OutputWriter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.json.Json;
-import javax.json.JsonValue;
 import javax.json.stream.JsonGenerator;
-import javax.script.ScriptException;
 import java.io.StringWriter;
 import java.util.Map;
 
@@ -35,8 +30,6 @@ import java.util.Map;
  * default output writer, that outputs JSON with size and output resources' path
  */
 public class JsonWriter extends OutputWriter {
-    private static final Logger LOGGER = LoggerFactory.getLogger(JsonWriter.class);
-
     protected JsonGenerator jsonGenerator;
 
     public static final String JSON_EXTENSION = "json";

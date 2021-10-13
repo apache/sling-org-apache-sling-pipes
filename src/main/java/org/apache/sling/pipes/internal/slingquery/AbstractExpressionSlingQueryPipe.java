@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class AbstractExpressionSlingQueryPipe extends AbstractSlingQueryPipe {
     Logger logger = LoggerFactory.getLogger(AbstractExpressionSlingQueryPipe.class);
-    public AbstractExpressionSlingQueryPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) {
+    protected AbstractExpressionSlingQueryPipe(Plumber plumber, Resource resource, PipeBindings upperBindings) {
         super(plumber, resource, upperBindings);
     }
 
