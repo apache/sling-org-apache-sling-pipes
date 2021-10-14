@@ -19,6 +19,7 @@
 package org.apache.sling.pipes.it;
 
 import javax.inject.Inject;
+import javax.servlet.Servlet;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.sling.api.resource.LoginException;
@@ -58,6 +59,10 @@ public abstract class PipesTestSupport extends TestSupport {
 
     @Inject
     protected Plumber plumber;
+
+    @Inject
+    @Filter("(sling.servlet.resourceTypes=slingPipes/plumber)")
+    private Servlet plumberServlet;
 
     @Inject
     protected AuthenticationSupport authenticationSupport;
