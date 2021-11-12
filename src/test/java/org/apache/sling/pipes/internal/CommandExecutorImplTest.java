@@ -66,6 +66,7 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
         context.load().json("/initial-content/content/fruits.json", PATH_FRUITS);
         commands = new CommandExecutorImpl();
         commands.plumber = plumber;
+        commands.enabled = true;
     }
 
     @Test
@@ -207,8 +208,16 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
         assertEquals(200, response.getStatus());
         return response.getOutputAsString();
     }
+
     JsonObject testServlet(Map<String,Object> params) throws ServletException, IOException {
         return (JsonObject) JsonUtil.parse(testRawServlet(params));
+    }
+
+    @Test
+    public void testDisable() throws IOException {
+        commands.enabled = false;
+        commands.doPost(context.request(), context.response());
+        assertEquals(503, context.response().getStatus());
     }
 
     @Test

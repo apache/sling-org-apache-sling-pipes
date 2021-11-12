@@ -27,8 +27,13 @@ import org.apache.sling.pipes.BasePipe;
 import org.apache.sling.pipes.OutputWriter;
 import org.apache.sling.pipes.Plumber;
 import org.apache.sling.pipes.internal.slingquery.ChildrenPipe;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
@@ -44,17 +49,12 @@ import java.util.Map;
  */
 @Component(service = {Servlet.class},
         property= {
-                ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES + "=" + RESOURCE_TYPE,
-                ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES + "=" + ContainerPipe.RESOURCE_TYPE,
-                ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES + "=" + ManifoldPipe.RESOURCE_TYPE,
-                ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES + "=" + AuthorizablePipe.RESOURCE_TYPE,
-                ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES + "=" + WritePipe.RESOURCE_TYPE,
-                ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES + "=" + ChildrenPipe.RESOURCE_TYPE,
                 ServletResolverConstants.SLING_SERVLET_METHODS + "=GET",
                 ServletResolverConstants.SLING_SERVLET_METHODS + "=POST",
                 ServletResolverConstants.SLING_SERVLET_EXTENSIONS + "=json",
                 ServletResolverConstants.SLING_SERVLET_EXTENSIONS + "=csv"
         })
+@Designate(ocd = PlumberServlet.Configuration.class)
 public class PlumberServlet extends AbstractPlumberServlet {
     public static final String RESOURCE_TYPE = "slingPipes/plumber";
 
@@ -67,18 +67,47 @@ public class PlumberServlet extends AbstractPlumberServlet {
     @Reference
     Plumber plumber;
 
+    boolean enabled = false;
+
+    @Activate
+    @Modified
+    public void activate(Configuration configuration) {
+        enabled = configuration.enabled();
+    }
+
+    @ObjectClassDefinition(name="Apache Sling Pipes : Plumber Servlet Configuration")
+    public @interface Configuration {
+        @AttributeDefinition(description="Enable servlet to execute pipe, if disabled will return 503")
+        boolean enabled() default true;
+
+        @AttributeDefinition(description="Resource types with which that servlet can be called")
+        String[] sling_servlet_resourceTypes() default { RESOURCE_TYPE, ContainerPipe.RESOURCE_TYPE, 
+            ManifoldPipe.RESOURCE_TYPE, AuthorizablePipe.RESOURCE_TYPE,
+            WritePipe.RESOURCE_TYPE, ChildrenPipe.RESOURCE_TYPE };
+    }
+
     @Override
     protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response) throws ServletException, IOException {
-        if (Arrays.asList(request.getRequestPathInfo().getSelectors()).contains(BasePipe.PN_STATUS)){
-            response.getWriter().append(plumber.getStatus(request.getResource()));
+        if (enabled) {
+            if (Arrays.asList(request.getRequestPathInfo().getSelectors()).contains(BasePipe.PN_STATUS)){
+                response.getWriter().append(plumber.getStatus(request.getResource()));
+            } else {
+                execute(request, response, false);
+            }
         } else {
-            execute(request, response, false);
+            response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+            response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, "http service has been disabled");
         }
     }
 
     @Override
     protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response) throws ServletException, IOException {
-        execute(request, response, true);
+        if (enabled) {
+            execute(request, response, true);
+        } else {
+            response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+            response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, "http service has been disabled");
+        }
     }
 
     /**

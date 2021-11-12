@@ -75,6 +75,7 @@ public class PlumberServletTest extends AbstractPipeTest {
         context.load().json("/container.json", containersPath);
         context.load().json("/write.json", writePath);
         servlet.plumber = plumber;
+        servlet.enabled = true;
         stringResponse = new StringWriter();
         try {
             response = mockPlumberServletResponse(stringResponse);

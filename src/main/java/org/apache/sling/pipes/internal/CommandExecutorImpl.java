@@ -56,6 +56,9 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.metatype.annotations.AttributeDefinition;
+import org.osgi.service.metatype.annotations.Designate;
+import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,6 +72,7 @@ import static org.apache.sling.pipes.internal.CommandUtil.writeToMap;
 
 import javax.json.JsonException;
 import javax.servlet.Servlet;
+import javax.servlet.http.HttpServletResponse;
 
 @Component(service = {Servlet.class, CommandExecutor.class}, property= {
     ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES + "=" + CommandExecutorImpl.RESOURCE_TYPE,
@@ -76,6 +80,7 @@ import javax.servlet.Servlet;
     ServletResolverConstants.SLING_SERVLET_EXTENSIONS + "=json",
     ServletResolverConstants.SLING_SERVLET_EXTENSIONS + "=csv"
 })
+@Designate(ocd = CommandExecutorImpl.Configuration.class)
 public class CommandExecutorImpl extends AbstractPlumberServlet implements CommandExecutor {
     final Logger log = LoggerFactory.getLogger(CommandExecutorImpl.class);
     public static final String RESOURCE_TYPE = "slingPipes/exec";
@@ -124,12 +129,21 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
     @Reference
     Plumber plumber;
 
+    boolean enabled = false;
+
     @Activate
     @Modified
-    public void activate(){
+    public void activate(Configuration configuration){
+        enabled = configuration.enabled();
         methodMap = null;
         executorMap = null;
         help = null;
+    }
+
+    @ObjectClassDefinition(name="Apache Sling Pipes : Command Executor Configuration")
+    public @interface Configuration {
+        @AttributeDefinition(description="Enable command executor to be executed from servlet, if not, sends 503")
+        boolean enabled() default true;
     }
 
     boolean isBlankLine(String line) {
@@ -234,19 +248,24 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
 
     @Override
     protected void doPost(@NotNull SlingHttpServletRequest request, @NotNull SlingHttpServletResponse response) throws IOException {
-        PrintWriter writer = response.getWriter();
-        try {
-            if (request.getParameter(REQ_PARAM_HELP) != null) {
-                writer.println(help());
-            } else {
-                executeCommands(request, response);
+        if (enabled) {
+            PrintWriter writer = response.getWriter();
+            try {
+                if (request.getParameter(REQ_PARAM_HELP) != null) {
+                    writer.println(help());
+                } else {
+                    executeCommands(request, response);
+                }
+                writer.println("");
+                response.setStatus(SC_OK);
             }
-            writer.println("");
-            response.setStatus(SC_OK);
-        }
-        catch (AccessControlException e) {
-            response.setStatus(SC_FORBIDDEN);
-            response.sendError(SC_FORBIDDEN);
+            catch (AccessControlException e) {
+                response.setStatus(SC_FORBIDDEN);
+                response.sendError(SC_FORBIDDEN);
+            }    
+        } else {
+            response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+            response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, "http service has been disabled");
         }
     }
 
