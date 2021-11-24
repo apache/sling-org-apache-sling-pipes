@@ -141,6 +141,16 @@ public class JsonPipeTest extends AbstractPipeTest {
     }
 
     @Test
+    public void testIndex() throws InvocationTargetException, IllegalAccessException {
+        ExecutionResult results = execute("echo /content " +
+                "| json [\"blah\",\"blah\"] @ name dumbArray " +
+                "| json {\"foo\":\"blah\",\"bar\":\"blah\"} @ name dumbObject" +
+                "| mkdir /content/o_${dumbObject_index}/a_${dumbArray_index}");
+        assertEquals(4, results.size());
+        assertTrue(results.toString().contains("[\"/content/o_0/a_0\",\"/content/o_1/a_0\",\"/content/o_0/a_1\",\"/content/o_1/a_1\"]"));
+    }
+
+    @Test
     @Ignore
     public void testAuthentifiedRemoteJson() throws InvocationTargetException, IllegalAccessException {
         http.givenThat(get(urlEqualTo("/get/profile.json")).withBasicAuth("jdoe","jdoe")

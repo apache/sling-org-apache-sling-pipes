@@ -67,6 +67,8 @@ public class JsonPipe extends AbstractInputStreamPipe {
 
     protected static final String OBJ_START = ".";
 
+    protected static final String INDEX_SUFFIX = "_index";
+
     protected static final Pattern JSONPATH_FIRSTTOKEN = Pattern.compile("^\\" + JSONPATH_ROOT + "([\\" + OBJ_START + "\\" + ARRAY_START + "])([^\\" + OBJ_START + "\\]\\" + ARRAY_START + "]+)\\]?");
 
     JsonBindingIterator internalIterator;
@@ -126,6 +128,7 @@ public class JsonPipe extends AbstractInputStreamPipe {
         Collection<Object> jsonValues;
         Iterator<Object> internal;
         final Resource inputResource;
+        int index = 0;
 
         JsonBindingIterator(JsonStructure json, Resource inputResource) {
             jsonValues = json.getValueType() == ValueType.ARRAY ?
@@ -148,6 +151,7 @@ public class JsonPipe extends AbstractInputStreamPipe {
                 throw new NoSuchElementException();
             }
             binding = internal.next();
+            getBindings().addBinding(getName() + INDEX_SUFFIX, index ++);
             return inputResource;
         }
     }
