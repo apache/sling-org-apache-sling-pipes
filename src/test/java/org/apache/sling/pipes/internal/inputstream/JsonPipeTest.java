@@ -54,9 +54,6 @@ public class JsonPipeTest extends AbstractPipeTest {
         context.load().json("/json.json", "/content/json");
     }
 
-    private static final int PORT = 1234;
-    private static final String baseUrl = "http://127.0.0.1:" + PORT;
-
     @Rule
     public WireMockRule http = new WireMockRule(PORT);
 
