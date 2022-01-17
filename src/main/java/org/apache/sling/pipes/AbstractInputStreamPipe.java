@@ -117,8 +117,12 @@ public abstract class AbstractInputStreamPipe extends BasePipe {
             return getOutput(is);
         }  catch (IOException e) {
             throw new IllegalArgumentException(e);
-        } finally {
-            IOUtils.closeQuietly(is);
         }
+    }
+
+    @Override
+    public void after() {
+        super.after();
+        IOUtils.closeQuietly(is);
     }
 }

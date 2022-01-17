@@ -63,6 +63,9 @@ public class AbstractPipeTest {
     protected static final String NN_COMPLEX = "complex";
     protected static final String PN_INDEX = "/index";
 
+    protected static final int PORT = 1234;
+    protected static final String baseUrl = "http://127.0.0.1:" + PORT;
+
     protected Plumber plumber;
 
     protected CommandExecutor commandsExecutor;
