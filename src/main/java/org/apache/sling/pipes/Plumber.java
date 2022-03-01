@@ -180,4 +180,9 @@ public interface Plumber {
      * Generates unique pipe path for persistence sake
      */
     String generateUniquePath();
+
+    /**
+     * @return flag indicating wether additional scripts can be executed
+     */
+    boolean allowAdditionalScripts();
 }

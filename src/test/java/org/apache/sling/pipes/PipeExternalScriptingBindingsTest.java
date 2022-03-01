@@ -47,7 +47,7 @@ public class PipeExternalScriptingBindingsTest extends AbstractPipeTest {
 
     private PipeBindings getDummyTreeBinding(String scriptEngine) throws Exception{
         Resource resource = context.resourceResolver().getResource(PATH_PIPE + "/" + ContainerPipeTest.NN_DUMMYTREE);
-        PipeBindings bindings = new PipeBindings(resource);
+        PipeBindings bindings = new PipeBindings(resource, true);
         bindings.initializeScriptEngine(scriptEngine);
         return bindings;
     }

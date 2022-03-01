@@ -149,6 +149,9 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
         @SuppressWarnings("squid:S100") // osgi convention
         boolean mark_pipe_path() default false;
 
+        @AttributeDefinition(description = "should allow additional scripts feature for any pipe")
+        boolean allow_additional_scripts() default true;
+
         @AttributeDefinition(description = "schedule of purge process")
         @SuppressWarnings("squid:S100") // osgi convention
         String scheduler_expression() default "0 0 12 */7 * ?";
@@ -278,7 +281,8 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
         } else {
             try {
                 Class<? extends Pipe> pipeClass = registry.get(resource.getResourceType());
-                return pipeClass.getDeclaredConstructor(Plumber.class, Resource.class, PipeBindings.class).newInstance(this, resource, upperBindings);
+                return pipeClass.getDeclaredConstructor(Plumber.class, Resource.class, PipeBindings.class)
+                        .newInstance(this, resource, upperBindings);
             } catch (Exception e) {
                 log.error("Unable to properly instantiate the pipe configured in {}", resource.getPath(), e);
             }
@@ -301,8 +305,7 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
     }
 
     @Override
-    public Map<String, Object> getBindingsFromRequest(SlingHttpServletRequest request, boolean writeAllowed) throws IOException
-    {
+    public Map<String, Object> getBindingsFromRequest(SlingHttpServletRequest request, boolean writeAllowed) throws IOException {
         Map<String, Object> bindings = new HashMap<>();
         String dryRun = request.getParameter(BasePipe.DRYRUN_KEY);
         if (StringUtils.isNotBlank(dryRun) && !dryRun.equals(Boolean.FALSE.toString())) {
@@ -368,6 +371,7 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
         checkError(pipe, result);
         return result;
     }
+
     @Override
     public ExecutionResult execute(ResourceResolver resolver, Pipe pipe, Map additionalBindings, OutputWriter writer, boolean save) {
         checkPermissions(resolver, configuration.executionPermissionResource());
@@ -381,6 +385,7 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
                 pipe.getBindings().addBindings(additionalBindings);
                 readOnly = (Boolean)additionalBindings.getOrDefault(BasePipe.READ_ONLY, false);
             }
+
             if (! pipe.isDryRun() && readOnly && pipe.modifiesContent()) {
                 throw new IllegalArgumentException("This pipe modifies content, you should use a POST request");
             }
@@ -626,6 +631,11 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
             resolver.commit();
             log.info("purge done.");
         }
+    }
+
+    @Override
+    public boolean allowAdditionalScripts() {
+        return configuration.allow_additional_scripts();
     }
 
     @Override

@@ -18,6 +18,8 @@ package org.apache.sling.pipes;
 
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.pipes.internal.NopWriter;
+import org.apache.sling.pipes.internal.PlumberImpl;
 import org.apache.sling.testing.mock.caconfig.MockContextAwareConfig;
 import org.junit.Before;
 import org.junit.Test;
@@ -29,6 +31,7 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -46,7 +49,7 @@ public class PipeBindingsTest extends AbstractPipeTest {
 
     private PipeBindings getDummyTreeBinding() throws Exception{
         Resource resource = context.resourceResolver().getResource(PATH_PIPE + "/" + ContainerPipeTest.NN_DUMMYTREE);
-        return new PipeBindings(resource);
+        return new PipeBindings(resource, true);
     }
 
     @Test
@@ -126,6 +129,22 @@ public class PipeBindingsTest extends AbstractPipeTest {
     }
 
     @Test
+    public void testDisabledAdditionalScript() throws Exception {
+        context.load().binaryFile("/testSum.js", "/content/test/testSum.js");
+        Resource resource = context.resourceResolver().getResource(MOREBINDINGS);
+        context.registerInjectActivateService(plumber, "authorizedUsers", new String[]{},
+                "bufferSize", PlumberImpl.DEFAULT_BUFFER_SIZE,
+                "executionPermissionResource", PATH_FRUITS,
+                "mark.pipe.path",true,
+                "referencesPaths", new String [] { "/conf/global/sling/pipes", "/apps/scripts" },
+                "allow.additional.scripts", false);
+        assertThrows(RuntimeException.class, () -> {
+            BasePipe pipe = (BasePipe)plumber.getPipe(resource);
+            plumber.execute(context.resourceResolver(), pipe, null, new NopWriter(), true);
+        });
+    }
+
+    @Test
     public void testNameBinding() throws Exception {
         Pipe pipe = getPipe(PATH_PIPE + "/" + ContainerPipeTest.NN_ONEPIPE);
         Iterator<Resource> output = pipe.getOutput();
@@ -156,4 +175,5 @@ public class PipeBindingsTest extends AbstractPipeTest {
                 "| write foo=${child.foo?child.foo:nonexistingFunction(nonexistingVariable)}");
         assertEquals(2, result.size());
     }
+
 }

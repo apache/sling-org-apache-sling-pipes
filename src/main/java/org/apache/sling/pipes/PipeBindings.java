@@ -37,6 +37,7 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -86,12 +87,14 @@ public class PipeBindings {
 
     Map<String, Resource> outputResources = new HashMap<>();
 
+    boolean allowAdditionalScripts = true;
+
     String currentError;
 
     Plumber plumber;
 
     public PipeBindings(@NotNull Plumber plumber, @NotNull Resource resource) {
-        this(resource);
+        this(resource, plumber.allowAdditionalScripts());
         this.plumber = plumber;
     }
 
@@ -100,6 +103,16 @@ public class PipeBindings {
      * @param resource pipe's configuration resource
      */
     public PipeBindings(@NotNull Resource resource) {
+        this(resource, false);
+    }
+
+    /**
+     * public constructor, built from pipe's resource
+     * @param resource pipe's configuration resource
+     * @param allowAdditionalScripts flag allowing additional scripts
+     */
+    public PipeBindings(@NotNull Resource resource, boolean allowAdditionalScripts) {
+        this.allowAdditionalScripts = allowAdditionalScripts;
     	//Setup script engines
         String engineName = resource.getValueMap().get(PN_ENGINE, String.class);
         if (StringUtils.isNotBlank(engineName)) {
@@ -149,6 +162,9 @@ public class PipeBindings {
      * @param path path of the script file
      */
     public void addScript(ResourceResolver resolver, String path) {
+        if (!allowAdditionalScripts) {
+            throw new RejectedExecutionException("additional scripts are not allowed per configuration");
+        }
         InputStream is = null;
         try {
             if (path.startsWith("http")) {
