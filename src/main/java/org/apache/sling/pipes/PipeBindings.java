@@ -37,7 +37,6 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.RejectedExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -163,7 +162,7 @@ public class PipeBindings {
      */
     public void addScript(ResourceResolver resolver, String path) {
         if (!allowAdditionalScripts) {
-            throw new RejectedExecutionException("additional scripts are not allowed per configuration");
+            throw new SecurityException("additional scripts are not allowed per configuration");
         }
         InputStream is = null;
         try {
