@@ -21,6 +21,8 @@ import org.apache.sling.pipes.internal.JsonUtil;
 import org.junit.Test;
 
 import javax.json.JsonObject;
+
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -96,6 +98,12 @@ public class PipeBuilderTest extends AbstractPipeTest {
             String writtenPath = context.resourceResolver().getResource(path).adaptTo(ValueMap.class).get("jcr:path", String.class);
             assertEquals("written path should be the same as actual path", path, writtenPath);
         }
+    }
+    @Test
+    public void whitespaces() throws InvocationTargetException, IllegalAccessException {
+        execute("echo /content/fruits | write jcr:title=\"white space\"");
+        assertEquals("property should have been written correctly",
+                "white space", context.resourceResolver().getResource(PATH_FRUITS).getValueMap().get("jcr:title"));
     }
 
     @Test

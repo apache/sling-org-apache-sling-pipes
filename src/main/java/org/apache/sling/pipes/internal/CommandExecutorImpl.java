@@ -89,6 +89,8 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
     static final String REQ_PARAM_HELP = "pipe_help";
     static final String CMD_LINE_PREFIX = "cmd_line_";
     static final String PN_DESCRIPTION = "commandParsed";
+
+    static final String TOKEN = "token";
     static final String WHITE_SPACE_SEPARATOR = "[\\s\\h]";
     static final String COMMENT_PREFIX = "#";
     static final String SEPARATOR = "|";
@@ -97,9 +99,8 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
     static final String PARAMS = "@";
     static final List<String> JSON_EXPR_KEYS = Arrays.asList(JsonPipe.JSON_KEY);
     static final String JSON_START = "\"[{";
-
     static final String PARAMS_SEPARATOR = WHITE_SPACE_SEPARATOR + "+" + PARAMS + WHITE_SPACE_SEPARATOR + "*";
-    static final Pattern SUB_TOKEN_PATTERN = Pattern.compile("(([^\"]\\S*)|\"([^\"]+)\")\\s*");
+    static final Pattern SUB_TOKEN_PATTERN = Pattern.compile("\\s*(?<" + TOKEN + ">((\"[^\"]*\")|([^\\s\"]+))*)\\s*" );
     static final String KEY_NAME = "name";
     static final String KEY_PATH = "path";
     static final String KEY_EXPR = "expr";
@@ -468,7 +469,10 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
         List<String> subTokens = new ArrayList<>();
         Matcher matcher = SUB_TOKEN_PATTERN.matcher(token);
         while (matcher.find()){
-            subTokens.add(matcher.group(2) != null ? matcher.group(2) : matcher.group(3));
+            String subToken = matcher.group(TOKEN);
+            if (StringUtils.isNotBlank(subToken)) {
+                subTokens.add(CommandUtil.trimQuotes(subToken));
+            }
         }
         return subTokens;
     }

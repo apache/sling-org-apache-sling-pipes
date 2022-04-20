@@ -19,18 +19,21 @@ package org.apache.sling.pipes.internal;
 import static org.apache.sling.pipes.internal.CommandUtil.CONFIGURATION_PATTERN;
 import static org.apache.sling.pipes.internal.CommandUtil.FIRST_KEY;
 import static org.apache.sling.pipes.internal.CommandUtil.SECOND_KEY;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-import junit.framework.TestCase;
-
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.sling.pipes.AbstractPipeTest;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class CommandUtilTest extends TestCase {
+public class CommandUtilTest extends AbstractPipeTest {
 
 
     private void assertMatch(Pattern pattern, String token, String first, String second) {
@@ -81,5 +84,17 @@ public class CommandUtilTest extends TestCase {
         assertEquals("/some/path", map.get("p2"));
         assertEquals("${['one','two']}", map.get("p3"));
         Assert.assertArrayEquals(new String [] {"rep:versionable", "some:OtherMixin"}, (String[])map.get("jcr:mixinTypes"));
+    }
+
+    @Test
+    public void testTrimQuotes() {
+        assertEquals("blah", CommandUtil.trimQuotes("\"blah\""));
+        assertEquals("blah", CommandUtil.trimQuotes("blah"));
+    }
+
+    @Test
+    public void testKeyValuesToArray() {
+        assertArrayEquals(new String[] {"foo","bar","another","with spaces "},
+                CommandUtil.keyValuesToArray(Arrays.asList("foo=bar","another=\"with spaces \"")));
     }
 }

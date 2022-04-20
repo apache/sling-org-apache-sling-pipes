@@ -301,6 +301,18 @@ public class CommandExecutorImplTest extends AbstractPipeTest {
         assertDeclBinding("binding csvStart =", "csvStart", "");
     }
 
+
+    void assertSpaceSeparatedTokens(String input, String... tokens) {
+        assertArrayEquals(tokens,  commands.getSpaceSeparatedTokens(input).toArray());
+    }
+    @Test
+    public void getSpaceSeparatedToken() {
+        assertSpaceSeparatedTokens("rm","rm");
+        assertSpaceSeparatedTokens("write foo=bar a=b", "write", "foo=bar", "a=b");
+        assertSpaceSeparatedTokens("check \"foo bar\"", "check", "foo bar");
+        assertSpaceSeparatedTokens("write prop=\"foo bar\"","write", "prop=\"foo bar\"");
+    }
+
     @Test
     public void testDeclaredBindingBasedInit() throws ServletException, IOException {
         JsonObject response = executeFile("declbasedinit");

@@ -40,6 +40,8 @@ public class CommandUtil {
     static final String FIRST_KEY = "first";
     static final String SECOND_KEY = "second";
     static final String PN_JCR_MIXIN = "jcr:mixinTypes";
+
+    static final String QUOTE = "\"";
     static final Pattern MIXINS_ARRAY_PATTERN = Pattern.compile("^\\s*\\[(.*)\\]\\s*$");
     private static final Pattern UNEMBEDDEDSCRIPT_PATTERN = Pattern.compile("^(\\d+(\\.\\d+)?)|" + //21.42
             "\\[.*]$|" + //['one','two']
@@ -123,6 +125,17 @@ public class CommandUtil {
     }
 
     /**
+     * @param quotedString non null string with or without quotes
+     * @return if the string is wrapped with <code>"</code>, strip them away, otherwise return same string
+     */
+    public static String trimQuotes(@NotNull String quotedString) {
+        if (quotedString.startsWith(QUOTE) && quotedString.endsWith(QUOTE)) {
+            return quotedString.substring(1, quotedString.length() - 1);
+        }
+        return quotedString;
+    }
+
+    /**
      * @param o list of key value strings key1=value1,key2=value2,...
      * @return String [] key1,value1,key2,value2,... corresponding to the pipe builder API
      */
@@ -132,8 +145,8 @@ public class CommandUtil {
             for (String pair : o) {
                 Matcher matcher = CONFIGURATION_PATTERN.matcher(pair.trim());
                 if (matcher.matches()) {
-                    args.add(matcher.group(FIRST_KEY));
-                    args.add(matcher.group(SECOND_KEY));
+                    args.add(trimQuotes(matcher.group(FIRST_KEY)));
+                    args.add(trimQuotes(matcher.group(SECOND_KEY)));
                 }
             }
         }
