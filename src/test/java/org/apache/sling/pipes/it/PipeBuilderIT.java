@@ -39,7 +39,7 @@ import static org.junit.Assert.assertTrue;
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
 public class PipeBuilderIT extends PipesTestSupport {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PlumberTestIT.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(PipeBuilderIT.class);
 
     @Test
     public void traverseTest() throws Exception {
