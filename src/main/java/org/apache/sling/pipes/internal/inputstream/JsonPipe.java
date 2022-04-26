@@ -16,7 +16,7 @@
  */
 package org.apache.sling.pipes.internal.inputstream;
 
-import org.apache.commons.collections.keyvalue.DefaultKeyValue;
+import org.apache.commons.collections4.keyvalue.DefaultKeyValue;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
