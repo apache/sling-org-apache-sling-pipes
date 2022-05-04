@@ -16,7 +16,7 @@
  */
 package org.apache.sling.pipes.internal.inputstream;
 
-import org.apache.commons.collections.keyvalue.DefaultKeyValue;
+import org.apache.commons.collections4.keyvalue.DefaultKeyValue;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
@@ -93,6 +93,7 @@ public class JsonPipe extends AbstractInputStreamPipe {
      * @return input resource of the pipe, can be reouputed N times in case output json binding is an array of
      * N element (output binding would be here each time the Nth element of the array)
      */
+    @Override
     public Iterator<Resource> getOutput(InputStream is) {
         Iterator<Resource> output = EMPTY_ITERATOR;
         Iterator<Resource> inputSingletonIterator = Collections.singleton(getInput()).iterator();
@@ -134,7 +135,7 @@ public class JsonPipe extends AbstractInputStreamPipe {
             jsonValues = json.getValueType() == ValueType.ARRAY ?
                     ((JsonArray) json).stream().map(JsonUtil::unbox).collect(Collectors.toList()):
                     ((JsonObject) json).entrySet().stream()
-                            .map(e -> new DefaultKeyValue(e.getKey(),
+                            .map(e -> new DefaultKeyValue<String,Collection<Object>>(e.getKey(),
                                     JsonUtil.unbox(e.getValue()))).collect(Collectors.toList());
             internal = jsonValues.iterator();
             this.inputResource = inputResource;

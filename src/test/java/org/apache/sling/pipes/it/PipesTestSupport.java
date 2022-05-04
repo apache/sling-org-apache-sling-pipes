@@ -97,6 +97,9 @@ public abstract class PipesTestSupport extends TestSupport {
             mavenBundle().groupId("com.google.code.gson").artifactId("gson").versionAsInProject(),
             mavenBundle().groupId("org.jsoup").artifactId("jsoup").versionAsInProject(),
             mavenBundle().groupId("org.apache.servicemix.bundles").artifactId("org.apache.servicemix.bundles.hamcrest").versionAsInProject(),
+            mavenBundle().groupId("org.apache.commons").artifactId("commons-collections4").versionAsInProject(),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.caconfig.api").versionAsInProject(),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.caconfig.impl").versionAsInProject(),
             junitBundles()
         );
     }
