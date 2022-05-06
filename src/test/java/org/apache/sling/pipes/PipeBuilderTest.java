@@ -23,7 +23,6 @@ import org.junit.Test;
 import javax.json.JsonObject;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;

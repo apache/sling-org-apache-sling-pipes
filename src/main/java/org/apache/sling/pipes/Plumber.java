@@ -27,6 +27,8 @@ import org.osgi.annotation.versioning.ProviderType;
 import java.io.IOException;
 import java.util.Map;
 
+import javax.script.Bindings;
+
 /**
  * Plumber is an osgi service aiming to make pipes available to the sling system, in order to
  */
@@ -180,6 +182,14 @@ public interface Plumber {
      * Generates unique pipe path for persistence sake
      */
     String generateUniquePath();
+
+    /**
+     * evaluates a given expression with internal embedded engine
+     * @param expr expression to evaluate
+     * @param bindings context bindings
+     * @return evaluation result
+     */
+    Object evaluate(String expr, Bindings bindings);
 
     /**
      * @return flag indicating wether additional scripts can be executed

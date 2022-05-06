@@ -29,6 +29,7 @@ import org.apache.sling.pipes.OutputWriter;
 import org.apache.sling.pipes.Pipe;
 import org.apache.sling.pipes.PipeBindings;
 import org.apache.sling.pipes.PipeBuilder;
+import org.apache.sling.pipes.PipeExecutor;
 import org.apache.sling.pipes.Plumber;
 import org.apache.sling.pipes.internal.inputstream.CsvPipe;
 import org.apache.sling.pipes.internal.inputstream.JsonPipe;
@@ -53,8 +54,8 @@ import static org.apache.sling.jcr.resource.JcrResourceConstants.NT_SLING_FOLDER
 import static org.apache.sling.jcr.resource.JcrResourceConstants.NT_SLING_ORDERED_FOLDER;
 import static org.apache.sling.jcr.resource.JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY;
 import static org.apache.sling.pipes.BasePipe.SLASH;
-import static org.apache.sling.pipes.internal.CommandUtil.checkArguments;
-import static org.apache.sling.pipes.internal.CommandUtil.writeToMap;
+import static org.apache.sling.pipes.CommandUtil.checkArguments;
+import static org.apache.sling.pipes.CommandUtil.writeToMap;
 import static org.apache.sling.pipes.internal.ManifoldPipe.PN_NUM_THREADS;
 /**
  * Implementation of the PipeBuilder interface
@@ -114,11 +115,15 @@ public class PipeBuilderImpl implements PipeBuilder {
     }
 
     @Override
+    @PipeExecutor(command = "mv", resourceType = MovePipe.RESOURCE_TYPE, pipeClass = MovePipe.class,
+            description = "move current resource to expr (more on https://sling.apache.org/documentation/bundles/sling-pipes/writers.html)")
     public PipeBuilder mv(String expr) {
         return pipeWithExpr(MovePipe.RESOURCE_TYPE, expr);
     }
 
     @Override
+    @PipeExecutor(command = "write", resourceType = WritePipe.RESOURCE_TYPE, pipeClass = WritePipe.class,
+            description = "write following key=value pairs to the current resource")
     public PipeBuilder write(Object... conf) throws IllegalAccessException {
         PipeBuilder instance = pipe(WritePipe.RESOURCE_TYPE);
         if (conf.length > 0) {
@@ -128,57 +133,79 @@ public class PipeBuilderImpl implements PipeBuilder {
     }
 
     @Override
+    @PipeExecutor(command = "grep", resourceType = FilterPipe.RESOURCE_TYPE, pipeClass = FilterPipe.class,
+            description = "filter current resources with following key=value pairs")
     public PipeBuilder grep(Object... conf) throws IllegalAccessException {
         return pipe(FilterPipe.RESOURCE_TYPE).conf(conf);
     }
 
     @Override
+    @PipeExecutor(command = "auth", resourceType = AuthorizablePipe.RESOURCE_TYPE, pipeClass = AuthorizablePipe.class,
+            description = "convert current resource as authorizable")
     public PipeBuilder auth(Object... conf) throws IllegalAccessException {
         return pipe(AuthorizablePipe.RESOURCE_TYPE).conf(conf);
     }
 
     @Override
+    @PipeExecutor(command = "xpath", resourceType = XPathPipe.RESOURCE_TYPE, pipeClass = XPathPipe.class,
+            description = "create following xpath query's result as output resources")
     public PipeBuilder xpath(String expr) {
         return pipeWithExpr(XPathPipe.RESOURCE_TYPE, expr);
     }
 
     @Override
+    @PipeExecutor(command = "children", resourceType = ChildrenPipe.RESOURCE_TYPE, pipeClass = ChildrenPipe.class,
+            description = "list current resource's immediate children")
     public PipeBuilder children(String expr) {
         return pipeWithExpr(ChildrenPipe.RESOURCE_TYPE, expr);
     }
 
     @Override
+    @PipeExecutor(command = "rm", resourceType = RemovePipe.RESOURCE_TYPE, pipeClass =  RemovePipe.class,
+            description = "remove current resource")
     public PipeBuilder rm() {
         return pipe(RemovePipe.RESOURCE_TYPE);
     }
 
     @Override
+    @PipeExecutor(command = "traverse", resourceType = TraversePipe.RESOURCE_TYPE, pipeClass = TraversePipe.class,
+            description = "traverse current resource")
     public PipeBuilder traverse() {
         return pipe(TraversePipe.RESOURCE_TYPE);
     }
 
 
     @Override
+    @PipeExecutor(command = "csv", resourceType = CsvPipe.RESOURCE_TYPE, pipeClass = CsvPipe.class,
+            description = "read expr's csv and output each line in the bindings")
     public PipeBuilder csv(String expr) {
         return pipeWithExpr(CsvPipe.RESOURCE_TYPE, expr);
     }
 
     @Override
+    @PipeExecutor(command = "json", resourceType = JsonPipe.RESOURCE_TYPE, pipeClass = JsonPipe.class,
+            description = "read expr's json array and output each object in the bindings")
     public PipeBuilder json(String expr) {
         return pipeWithExpr(JsonPipe.RESOURCE_TYPE, expr);
     }
 
     @Override
+    @PipeExecutor(command = "egrep", resourceType = RegexpPipe.RESOURCE_TYPE, pipeClass = RegexpPipe.class,
+            description = "read expr's txt and output each found pattern in the binding")
     public PipeBuilder egrep(String expr) {
         return pipeWithExpr(RegexpPipe.RESOURCE_TYPE, expr);
     }
 
     @Override
+    @PipeExecutor(command = "mkdir", resourceType = PathPipe.RESOURCE_TYPE, pipeClass = PathPipe.class,
+            description = "create expr path")
     public PipeBuilder mkdir(String expr) {
         return pipeWithExpr(PathPipe.RESOURCE_TYPE, expr);
     }
 
     @Override
+    @PipeExecutor(command = "echo", resourceType = BasePipe.RESOURCE_TYPE, pipeClass = BasePipe.class,
+            description = "output input's path")
     public PipeBuilder echo(String path) {
         try {
             pipe(BasePipe.RESOURCE_TYPE).path(path);
@@ -189,46 +216,64 @@ public class PipeBuilderImpl implements PipeBuilder {
     }
 
     @Override
+    @PipeExecutor(command = "parent", resourceType = ParentPipe.RESOURCE_TYPE, pipeClass = ParentPipe.class,
+            description = "return current's resource parent")
     public PipeBuilder parent() {
         return pipe(ParentPipe.RESOURCE_TYPE);
     }
 
     @Override
+    @PipeExecutor(command = "parents", resourceType = ParentsPipe.RESOURCE_TYPE, pipeClass = ParentsPipe.class,
+            description = "return current's resource parents")
     public PipeBuilder parents(String expr) {
         return pipeWithExpr(ParentsPipe.RESOURCE_TYPE, expr);
     }
 
     @Override
+    @PipeExecutor(command = "siblings", resourceType = SiblingsPipe.RESOURCE_TYPE, pipeClass = SiblingsPipe.class,
+            description = "list current resource's siblings")
     public PipeBuilder siblings(String expr) {
         return pipeWithExpr(SiblingsPipe.RESOURCE_TYPE, expr);
     }
 
     @Override
+    @PipeExecutor(command = "closest", resourceType = ClosestPipe.RESOURCE_TYPE, pipeClass = ClosestPipe.class,
+            description = "return closest resource of the current")
     public PipeBuilder closest(String expr) {
         return pipeWithExpr(ClosestPipe.RESOURCE_TYPE, expr);
     }
 
     @Override
+    @PipeExecutor(command = "$", resourceType = FindPipe.RESOURCE_TYPE, pipeClass = FindPipe.class,
+            description = "find resource from the current, with the given expression as a parameter")
     public PipeBuilder $(String expr) {
         return pipeWithExpr(FindPipe.RESOURCE_TYPE, expr);
     }
 
     @Override
+    @PipeExecutor(command = "ref", resourceType = ReferencePipe.RESOURCE_TYPE, pipeClass = ReferencePipe.class,
+            description = "reference passed pipe")
     public PipeBuilder ref(String expr) {
         return pipeWithExpr(ReferencePipe.RESOURCE_TYPE, expr);
     }
 
     @Override
+    @PipeExecutor(command = "shallowRef", resourceType = ShallowReferencePipe.RESOURCE_TYPE, pipeClass = ShallowReferencePipe.class,
+            description = "shallow reference passed pipe, to be used for recursive usage")
     public PipeBuilder shallowRef(String expr) {
         return pipeWithExpr(ShallowReferencePipe.RESOURCE_TYPE, expr);
     }
 
     @Override
+    @PipeExecutor(command = "mp", resourceType = MultiPropertyPipe.RESOURCE_TYPE, pipeClass = MultiPropertyPipe.class,
+            description = "read MULTI property, and output each value in the bindings")
     public PipeBuilder mp() {
         return pipe(MultiPropertyPipe.RESOURCE_TYPE);
     }
 
     @Override
+    @PipeExecutor(command = "pkg", resourceType = PackagePipe.RESOURCE_TYPE, pipeClass = PackagePipe.class,
+            description = "package up current resource in given package")
     public PipeBuilder pkg(String expr) {
         try {
             pipeWithExpr(PackagePipe.RESOURCE_TYPE, expr).with(PackagePipe.PN_FILTERCOLLECTIONMODE, true);
@@ -239,6 +284,8 @@ public class PipeBuilderImpl implements PipeBuilder {
     }
 
     @Override
+    @PipeExecutor(command = "not", resourceType = NotPipe.RESOURCE_TYPE, pipeClass = NotPipe.class,
+            description = "invert output: if input, return nothing, if no input, return single resource")
     public PipeBuilder not(String expr) {
         return pipeWithExpr(NotPipe.RESOURCE_TYPE, expr);
     }
@@ -264,16 +311,22 @@ public class PipeBuilderImpl implements PipeBuilder {
     }
 
     @Override
+    @PipeExecutor(command = "acls", resourceType = ACLPipe.RESOURCE_TYPE, pipeClass = ACLPipe.class,
+            description = "output each acls on the resource or  acls for authorizable in repository in bindings")
     public PipeBuilder acls() {
         return pipe(ACLPipe.RESOURCE_TYPE);
     }
 
     @Override
+    @PipeExecutor(command = "allow", resourceType = ACLPipe.RESOURCE_TYPE, pipeClass = ACLPipe.class,
+            description = "sets allow acls on the resource")
     public PipeBuilder allow(String expr) throws IllegalAccessException{
         return pipeWithExpr(ACLPipe.RESOURCE_TYPE, expr).with("allow","true");
     }
 
     @Override
+    @PipeExecutor(command = "deny", resourceType = ACLPipe.RESOURCE_TYPE, pipeClass = ACLPipe.class,
+            description = "sets deny acls on the resource")
     public PipeBuilder deny(String expr) throws IllegalAccessException{
         return pipeWithExpr(ACLPipe.RESOURCE_TYPE, expr).with("deny","true");
     }

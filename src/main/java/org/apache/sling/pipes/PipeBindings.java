@@ -21,7 +21,6 @@ import org.apache.commons.jexl3.JexlException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.pipes.internal.bindings.JxltEngine;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -246,7 +245,8 @@ public class PipeBindings {
         try {
             String computed = computeTemplateExpression(expr);
             if (computed != null) {
-                return getEngine() != null ? engine.eval(computed, scriptContext) : internalEvaluate(computed);
+                return getEngine() != null ? engine.eval(computed, scriptContext) :
+                        plumber.evaluate(computed, getBindings());
             }
         } catch (ScriptException | JexlException e) {
             throw new IllegalArgumentException(e);
@@ -263,11 +263,6 @@ public class PipeBindings {
         return evaluate(expr);
     }
 
-    private Object internalEvaluate(String expr) {
-        JxltEngine internalEngine = new JxltEngine(getBindings());
-        return internalEngine.parse(expr);
-    }
-
     /**
      * return registered bindings
      * @return bindings
@@ -277,7 +272,7 @@ public class PipeBindings {
     }
     
     /**
-     * return Pipe <code>name</code>'s output binding
+     * return Pipe <code>name</code>'s F binding
      * @param name name of the pipe
      * @return resource corresponding to that pipe output
      */

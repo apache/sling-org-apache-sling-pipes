@@ -44,6 +44,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.ServletResolverConstants;
 import org.apache.sling.pipes.CommandExecutor;
+import org.apache.sling.pipes.CommandUtil;
 import org.apache.sling.pipes.ExecutionResult;
 import org.apache.sling.pipes.OutputWriter;
 import org.apache.sling.pipes.Pipe;
@@ -67,8 +68,8 @@ import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 import static javax.servlet.http.HttpServletResponse.SC_NOT_ACCEPTABLE;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.apache.sling.pipes.internal.CommandUtil.keyValuesToArray;
-import static org.apache.sling.pipes.internal.CommandUtil.writeToMap;
+import static org.apache.sling.pipes.CommandUtil.keyValuesToArray;
+import static org.apache.sling.pipes.CommandUtil.writeToMap;
 
 import javax.json.JsonException;
 import javax.servlet.Servlet;
@@ -514,7 +515,7 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
     protected void computeMaps(){
         executorMap = new HashMap<>();
         methodMap = new HashMap<>();
-        for (Method method : PipeBuilder.class.getDeclaredMethods()) {
+        for (Method method : PipeBuilderImpl.class.getDeclaredMethods()) {
             PipeExecutor executor = method.getAnnotation(PipeExecutor.class);
             if (executor != null) {
                 methodMap.put(executor.command(), method);

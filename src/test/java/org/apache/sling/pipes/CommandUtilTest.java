@@ -14,11 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.pipes.internal;
+package org.apache.sling.pipes;
 
-import static org.apache.sling.pipes.internal.CommandUtil.CONFIGURATION_PATTERN;
-import static org.apache.sling.pipes.internal.CommandUtil.FIRST_KEY;
-import static org.apache.sling.pipes.internal.CommandUtil.SECOND_KEY;
+import static org.apache.sling.pipes.CommandUtil.CONFIGURATION_PATTERN;
+import static org.apache.sling.pipes.CommandUtil.FIRST_KEY;
+import static org.apache.sling.pipes.CommandUtil.SECOND_KEY;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -30,6 +30,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.sling.pipes.AbstractPipeTest;
+import org.apache.sling.pipes.CommandUtil;
 import org.junit.Assert;
 import org.junit.Test;
 

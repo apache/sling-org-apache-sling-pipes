@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.apache.sling.pipes.internal.CommandUtil.stringToMap;
+import static org.apache.sling.pipes.CommandUtil.stringToMap;
 
 /**
  * defines how pipe's output get written to a servlet response or output stream

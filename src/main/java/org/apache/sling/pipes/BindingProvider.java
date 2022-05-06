@@ -14,11 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.pipes.internal.bindings;
+package org.apache.sling.pipes;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.pipes.Pipe;
 
 import java.util.Iterator;
 import java.util.concurrent.Callable;

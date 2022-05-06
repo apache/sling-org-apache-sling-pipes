@@ -49,7 +49,9 @@ public class PipeBindingsTest extends AbstractPipeTest {
 
     private PipeBindings getDummyTreeBinding() throws Exception{
         Resource resource = context.resourceResolver().getResource(PATH_PIPE + "/" + ContainerPipeTest.NN_DUMMYTREE);
-        return new PipeBindings(resource, true);
+        PipeBindings bindings = new PipeBindings(resource, true);
+        bindings.plumber = plumber;
+        return bindings;
     }
 
     @Test

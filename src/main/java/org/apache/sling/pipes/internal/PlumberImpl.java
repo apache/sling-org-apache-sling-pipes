@@ -48,6 +48,7 @@ import org.apache.sling.pipes.PipeExecutor;
 import org.apache.sling.pipes.Plumber;
 import org.apache.sling.pipes.PlumberMXBean;
 import org.apache.sling.pipes.internal.bindings.ConfigurationMap;
+import org.apache.sling.pipes.internal.bindings.JxltEngine;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.osgi.service.component.annotations.Activate;
@@ -66,6 +67,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.query.Query;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
+import javax.script.Bindings;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -200,7 +202,7 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
     void registerPipes(){
         registerPipe(ContainerPipe.RESOURCE_TYPE, ContainerPipe.class);
         registerPipe(ManifoldPipe.RESOURCE_TYPE, ManifoldPipe.class);
-        for (Method method : PipeBuilder.class.getDeclaredMethods()){
+        for (Method method : PipeBuilderImpl.class.getDeclaredMethods()){
             PipeExecutor executor = method.getAnnotation(PipeExecutor.class);
             if (executor != null){
                 registerPipe(executor.resourceType(), executor.pipeClass());
@@ -651,5 +653,11 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
                 log.error("unable purge {}", PIPES_REPOSITORY_PATH, e);
             }
         }
+    }
+
+    @Override
+    public Object evaluate(String expr, Bindings bindings) {
+        JxltEngine internalEngine = new JxltEngine(bindings);
+        return internalEngine.parse(expr);
     }
 }

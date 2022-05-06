@@ -14,9 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.pipes.internal;
+package org.apache.sling.pipes;
 
-import org.apache.sling.pipes.PipeBindings;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
