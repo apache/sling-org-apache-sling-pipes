@@ -73,7 +73,7 @@ public class BasePipe implements Pipe {
     // used by pipes using complex JCR configurations
     protected static final List<String> IGNORED_PROPERTIES = Arrays.asList("jcr:lastModified", "jcr:primaryType",
         "jcr:created", "jcr:createdBy", "jcr:versionHistory", "jcr:predecessors", "jcr:baseVersion", "jcr:uuid",
-        "jcr:isCheckedOut");
+        "jcr:isCheckedOut", "jcr:lockIsDeep", "jcr:lockOwner");
 
     Boolean dryRunObject = null;
 
