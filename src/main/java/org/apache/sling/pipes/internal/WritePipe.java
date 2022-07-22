@@ -220,7 +220,10 @@ public class WritePipe extends BasePipe {
         if (childrenConf.hasNext() && targetNode != null) {
             logger.info("dubbing {} at {}", conf.getPath(), target.getPath());
             while (childrenConf.hasNext()) {
-                copyNode(childrenConf.nextNode(), targetNode);
+                Node node = childrenConf.nextNode();
+                if (!IGNORED_NODES.contains(node.getName())) {
+                    copyNode(node, targetNode);
+                }
             }
         }
     }

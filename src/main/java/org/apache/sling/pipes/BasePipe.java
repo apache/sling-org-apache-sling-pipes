@@ -75,6 +75,8 @@ public class BasePipe implements Pipe {
         "jcr:created", "jcr:createdBy", "jcr:versionHistory", "jcr:predecessors", "jcr:baseVersion", "jcr:uuid",
         "jcr:isCheckedOut", "jcr:lockIsDeep", "jcr:lockOwner");
 
+    protected static final List<String> IGNORED_NODES = Arrays.asList("rep:policy");
+
     Boolean dryRunObject = null;
 
     protected Plumber plumber;
