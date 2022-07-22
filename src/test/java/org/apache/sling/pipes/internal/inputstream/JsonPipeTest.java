@@ -32,7 +32,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
 import java.util.List;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aMultipart;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.matching;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static org.junit.Assert.assertArrayEquals;
@@ -116,6 +120,32 @@ public class JsonPipeTest extends AbstractPipeTest {
                 "| mkdir ${data.args.foo1}");
         assertEquals(1, results.size());
         assertEquals("/content/bar", results.getCurrentPathSet().iterator().next());
+    }
+
+    @Test
+    public void testPostJsonFormUrlEncoded() throws InvocationTargetException, IllegalAccessException {
+        http.givenThat(post(urlEqualTo("/post/foo.json"))
+                .withHeader("x-header", equalTo("bar"))
+                .withRequestBody(matching("(.*&|^)foo=1($|&.*)"))
+                .willReturn(aResponse().withStatus(201).withBody("{\"created\":\"true\"}")));
+        ExecutionResult results = execute("echo /content " +
+                "| json "  + baseUrl + "/post/foo.json?foo=1 @ name data @ with raw=true POST=true header_x-header=bar" +
+                "| write created=${data.created}");
+        assertEquals(1, results.size());
+        assertEquals("true", context.resourceResolver().getResource("/content").getValueMap().get("created"));
+    }
+
+    @Test
+    public void testPostJsonRawBody() throws InvocationTargetException, IllegalAccessException {
+        http.givenThat(post(urlEqualTo("/post/foo.json"))
+                .withHeader("x-header", equalTo("bar"))
+                .withRequestBody(matching("(.*&|^)\\{foo:1\\}($|&.*)"))
+                .willReturn(aResponse().withStatus(201).withBody("{\"created\":\"true\"}")));
+        ExecutionResult results = execute("echo /content " +
+                "| json "  + baseUrl + "/post/foo.json @ name data @ with raw=true POST={foo:1} header_x-header=bar" +
+                "| write created=${data.created}");
+        assertEquals(1, results.size());
+        assertEquals("true", context.resourceResolver().getResource("/content").getValueMap().get("created"));
     }
 
     @Test

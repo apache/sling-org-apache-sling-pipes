@@ -16,6 +16,8 @@
  */
 package org.apache.sling.pipes;
 
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
@@ -23,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -30,8 +33,10 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Input Stream based pipe, coming from web, from request, resource tree, web
@@ -48,12 +53,20 @@ public abstract class AbstractInputStreamPipe extends BasePipe {
 
     private static final String BASIC_AUTH_BINDINGS = "basicAuth";
 
+    private static final String HEADER_PREFIX = "header_";
     private static final String AUTH_HEADER = "Authentication";
-
     private static final String BASIC_PREFIX = "Basic ";
     private static final String PN_URL_MODE = "url_mode";
     private static final String URL_MODE_FETCH = "FETCH";
     private static final String URL_MODE_AS_IS = "AS_IS";
+
+    private static final String METHOD_POST = "POST";
+
+    private static final String HEADER_TYPE ="Content-Type";
+
+    private static final String HEADER_LENGTH ="Content-Length";
+
+    private static final String QUERY_CHAR = "?";
 
     protected Object binding;
 
@@ -72,22 +85,76 @@ public abstract class AbstractInputStreamPipe extends BasePipe {
         return null;
     }
 
-    InputStream getInputStream() throws IOException {
-        String expr = getExpr();
-        if (expr.startsWith(REMOTE_START) && !properties.get(PN_URL_MODE, URL_MODE_FETCH).equalsIgnoreCase(URL_MODE_AS_IS)) {
-            //first look at
-            String urlExpression = getExpr();
-            if (StringUtils.isNotBlank(urlExpression)) {
-                URL url = new URL(urlExpression);
-                URLConnection urlConnection = url.openConnection();
-                String basicAuth = (String)getBindings().getBindings().get(BASIC_AUTH_BINDINGS);
-                if (StringUtils.isNotBlank(basicAuth)) {
-                    LOGGER.debug("Configuring basic authentication for {}", urlConnection);
-                    HttpURLConnection connection = (HttpURLConnection) urlConnection;
+    void addHeaders(URLConnection connection) {
+        connection.setRequestProperty( "charset", "utf-8");
+        Collection<String> headers = properties.keySet().stream()
+                .filter(k -> k.startsWith(HEADER_PREFIX))
+                .map(s -> StringUtils.substringAfter(s, HEADER_PREFIX))
+                .collect(Collectors.toList());
+        if (!headers.isEmpty()) {
+            for (String k : headers) {
+                String value = getBindings().instantiateExpression(properties.get(HEADER_PREFIX + k, String.class));
+                connection.setRequestProperty(k, value);
+            }
+            String basicAuth = (String)getBindings().getBindings().get(BASIC_AUTH_BINDINGS);
+            if (StringUtils.isNotBlank(basicAuth)) {
+                if (headers.contains(AUTH_HEADER)) {
+                    LOGGER.warn("both authentication header & basic auth are set, ignoring basic auth");
+                } else {
                     String encoded = Base64.getEncoder().encodeToString(basicAuth.getBytes(StandardCharsets.UTF_8));
                     connection.setRequestProperty(AUTH_HEADER, BASIC_PREFIX + encoded);
                 }
-                LOGGER.debug("Executing GET {}", url);
+            }
+        }
+    }
+
+    private URLConnection preparePost(String expr) throws IOException {
+        HttpURLConnection connection;
+        String url = expr;
+        String data = EMPTY;
+        byte[] postData;
+        if (expr.contains(QUERY_CHAR)) {
+            data = StringUtils.substringAfter(expr, QUERY_CHAR);
+            url = StringUtils.substringBefore(expr, QUERY_CHAR);
+        } else {
+            //we consider POST property value to be the request body
+            data = getBindings().instantiateExpression(properties.get(METHOD_POST, String.class));
+        }
+        connection = (HttpURLConnection) new URL(url).openConnection();
+        connection.setRequestMethod(METHOD_POST);
+        postData = data.getBytes(StandardCharsets.UTF_8);
+        int postDataLength = postData.length;
+        if (expr.contains(QUERY_CHAR)) {
+            connection.setRequestProperty(HEADER_TYPE, "application/x-www-form-urlencoded");
+        }
+        connection.setRequestProperty( HEADER_LENGTH, Integer.toString( postDataLength ));
+        connection.setDoOutput( true );
+        connection.setInstanceFollowRedirects( false );
+        addHeaders(connection);
+        try( DataOutputStream wr = new DataOutputStream( connection.getOutputStream())) {
+            wr.write( postData );
+        }
+        return connection;
+    }
+
+    InputStream getInputStream() throws IOException {
+        String expr = getExpr();
+        if (expr.startsWith(REMOTE_START) && !properties.get(PN_URL_MODE, URL_MODE_FETCH).equalsIgnoreCase(URL_MODE_AS_IS)) {
+            if (StringUtils.isNotBlank(expr)) {
+                boolean usePost = properties.containsKey(METHOD_POST);
+                LOGGER.debug("Accessing {} (POST={})", expr, usePost);
+                URLConnection urlConnection;
+                if (usePost) {
+                    if (isDryRun()) {
+                        LOGGER.debug("we won't execute a POST request in a dry run");
+                        return null;
+                    }
+                    urlConnection = preparePost(expr);
+                } else {
+                    URL url = new URL(expr);
+                    urlConnection = url.openConnection();
+                    addHeaders(urlConnection);
+                }
                 return urlConnection.getInputStream();
             }
         }
