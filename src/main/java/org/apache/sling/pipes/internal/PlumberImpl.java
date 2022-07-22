@@ -63,6 +63,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.query.Query;
 import javax.management.MBeanServer;
@@ -295,12 +296,16 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
     @Override
     public void markWithJcrLastModified(@NotNull Pipe pipe, @NotNull Resource resource) {
         if (!pipe.isDryRun()) {
-            ModifiableValueMap mvm = resource.adaptTo(ModifiableValueMap.class);
-            if (mvm != null) {
-                mvm.put(JCR_LASTMODIFIED, Calendar.getInstance());
-                mvm.put(JCR_LAST_MODIFIED_BY, resource.getResourceResolver().getUserID());
-                if (configuration.mark_pipe_path()) {
-                    mvm.put(JCR_LAST_MODIFIED_BY_PIPE, pipe.getResource().getPath());
+            Node node = resource.adaptTo(Node.class);
+            if (node != null) {
+                try {
+                    node.setProperty(JCR_LASTMODIFIED, Calendar.getInstance());
+                    node.setProperty(JCR_LAST_MODIFIED_BY, resource.getResourceResolver().getUserID());
+                    if (configuration.mark_pipe_path()) {
+                        node.setProperty(JCR_LAST_MODIFIED_BY_PIPE, pipe.getResource().getPath());
+                    }
+                } catch (RepositoryException e) {
+                    log.debug("There is probably no way to mark that node, which we can't do much about", e);
                 }
             }
         }
