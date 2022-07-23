@@ -74,6 +74,7 @@ public class PipeBindingsTest extends AbstractPipeTest {
         expressions.put("+[${blah}]", "'+[' + blah + ']'");
         expressions.put("${(new Regexp('.{3}').test(path)}","(new Regexp('.{3}').test(path)");
         expressions.put("${(new Regexp('.{3,5}').test(path)}","(new Regexp('.{3,5}').test(path)");
+        expressions.put("${some {{other templating}} can exist}", "some {{other templating}} can exist");
         for (Map.Entry<String,String> test : expressions.entrySet()){
             assertEquals(test.getKey() + " should be transformed in " + test.getValue(), test.getValue(), bindings.computeTemplateExpression(test.getKey()));
         }

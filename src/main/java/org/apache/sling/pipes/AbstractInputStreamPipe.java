@@ -29,6 +29,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
@@ -137,25 +138,29 @@ public abstract class AbstractInputStreamPipe extends BasePipe {
         return connection;
     }
 
+    URLConnection getConnection(String expr) throws IOException {
+        boolean usePost = properties.containsKey(METHOD_POST);
+        LOGGER.debug("Accessing {} (POST={})", expr, usePost);
+        URLConnection urlConnection;
+        if (usePost) {
+            if (isDryRun()) {
+                LOGGER.debug("we won't execute a POST request in a dry run");
+                return null;
+            }
+            urlConnection = preparePost(expr);
+        } else {
+            URL url = new URL(expr);
+            urlConnection = url.openConnection();
+            addHeaders(urlConnection);
+        }
+        return urlConnection;
+    }
+
     InputStream getInputStream() throws IOException {
         String expr = getExpr();
         if (expr.startsWith(REMOTE_START) && !properties.get(PN_URL_MODE, URL_MODE_FETCH).equalsIgnoreCase(URL_MODE_AS_IS)) {
             if (StringUtils.isNotBlank(expr)) {
-                boolean usePost = properties.containsKey(METHOD_POST);
-                LOGGER.debug("Accessing {} (POST={})", expr, usePost);
-                URLConnection urlConnection;
-                if (usePost) {
-                    if (isDryRun()) {
-                        LOGGER.debug("we won't execute a POST request in a dry run");
-                        return null;
-                    }
-                    urlConnection = preparePost(expr);
-                } else {
-                    URL url = new URL(expr);
-                    urlConnection = url.openConnection();
-                    addHeaders(urlConnection);
-                }
-                return urlConnection.getInputStream();
+                return getConnection(expr).getInputStream();
             }
         }
         if (VALID_PATH.matcher(expr).find()) {
