@@ -19,6 +19,7 @@ package org.apache.sling.pipes;
 import static org.apache.sling.pipes.CommandUtil.CONFIGURATION_PATTERN;
 import static org.apache.sling.pipes.CommandUtil.FIRST_KEY;
 import static org.apache.sling.pipes.CommandUtil.SECOND_KEY;
+import static org.apache.sling.pipes.CommandUtil.keyValuesToArray;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -95,7 +96,15 @@ public class CommandUtilTest extends AbstractPipeTest {
 
     @Test
     public void testKeyValuesToArray() {
-        assertArrayEquals(new String[] {"foo","bar","another","with spaces "},
-                CommandUtil.keyValuesToArray(Arrays.asList("foo=bar","another=\"with spaces \"")));
+        assertArrayEquals(new String[] {"foo","bar","another","with spaces "}, keyValuesToArray(Arrays.asList("foo=bar","another=\"with spaces \"")));
+        assertArrayEquals("1", new String[]{"one","two","three","four"}, keyValuesToArray(Arrays.asList("one=two","three=four")));
+        assertArrayEquals("2", new String[]{"one","two","three","${four}"}, keyValuesToArray(Arrays.asList("one=two","three=${four}")));
+        assertArrayEquals("3", new String[]{"${one == 'check'? 'three':'four'}","two"}, keyValuesToArray((Arrays.asList("${one == 'check'? 'three':'four'}=two"))));
+        assertArrayEquals("4", new String[]{"a_b-c","two"}, keyValuesToArray((Arrays.asList("a_b-c=two"))));
+        assertArrayEquals("5", new String[]{"one","two","three","${four == 'blah' ? 'five' : 'six'}"},
+                keyValuesToArray(Arrays.asList("one=two","three=${four == 'blah' ? 'five' : 'six'}")));
+        assertArrayEquals("6", new String[]{"jcr:content/singer","${'ringo' == one ? false : true}"}, keyValuesToArray(Arrays.asList("jcr:content/singer=${'ringo' == one ? false : true}")));
+        assertArrayEquals("7", new String[]{"jcr:content/tag","${text.replaceAll('foo','<div class=\"foo\">foo</div>'}"}, keyValuesToArray(Arrays.asList("jcr:content/tag=\"${text.replaceAll('foo','<div class_EQ_\"foo\">foo</div>'}\"")));
     }
+
 }

@@ -54,6 +54,7 @@ public class CommandUtil {
             + "\\s*(?<" + SECOND_KEY + ">(" + EXPR_TOKEN + ")+)\\s*";
     public static final Pattern CONFIGURATION_PATTERN = Pattern.compile(CONFIGURATION_TOKEN);
 
+    private static final String ESCAPED_EQ = "_EQ_";
     private CommandUtil() {
     }
 
@@ -145,7 +146,7 @@ public class CommandUtil {
                 Matcher matcher = CONFIGURATION_PATTERN.matcher(pair.trim());
                 if (matcher.matches()) {
                     args.add(trimQuotes(matcher.group(FIRST_KEY)));
-                    args.add(trimQuotes(matcher.group(SECOND_KEY)));
+                    args.add(trimQuotes(matcher.group(SECOND_KEY)).replaceAll(ESCAPED_EQ, "="));
                 }
             }
         }
