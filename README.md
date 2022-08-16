@@ -6,4 +6,10 @@
 
 This module is part of the [Apache Sling](https://sling.apache.org) project.
 
-Please go to [Apache Sling Pipes](https://sling.apache.org/documentation/bundles/sling-pipes.html) for a complete documentation on sling pipes.
+
+Please go to [Apache Sling Pipes](https://sling.apache.org/documentation/bundles/sling-pipes.html) for a complete documentation on sling pipes, among which:
+1. how to execute pipes https://sling.apache.org/documentation/bundles/sling-pipes/execution-monitoring.html,
+2. reader pipes https://sling.apache.org/documentation/bundles/sling-pipes/readers.html,
+3. logical pipes https://sling.apache.org/documentation/bundles/sling-pipes/logical.html,
+4. writer pipes https://sling.apache.org/documentation/bundles/sling-pipes/writers.html,
+5. bindings https://sling.apache.org/documentation/bundles/sling-pipes/bindings.html
