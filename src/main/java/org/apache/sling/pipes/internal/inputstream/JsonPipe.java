@@ -135,7 +135,7 @@ public class JsonPipe extends AbstractInputStreamPipe {
             jsonValues = json.getValueType() == ValueType.ARRAY ?
                     ((JsonArray) json).stream().map(JsonUtil::unbox).collect(Collectors.toList()):
                     ((JsonObject) json).entrySet().stream()
-                            .map(e -> new DefaultKeyValue<String,Collection<Object>>(e.getKey(),
+                            .map(e -> new DefaultKeyValue<String,Object>(e.getKey(),
                                     JsonUtil.unbox(e.getValue()))).collect(Collectors.toList());
             internal = jsonValues.iterator();
             this.inputResource = inputResource;
