@@ -28,7 +28,6 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.auth.core.AuthenticationSupport;
 import org.apache.sling.pipes.Plumber;
 import org.apache.sling.resource.presence.ResourcePresence;
-import org.apache.sling.testing.paxexam.SlingVersionResolver;
 import org.apache.sling.testing.paxexam.TestSupport;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
@@ -44,6 +43,7 @@ import static org.apache.sling.testing.paxexam.SlingOptions.slingQuery;
 import static org.apache.sling.testing.paxexam.SlingOptions.slingQuickstartOakTar;
 import static org.apache.sling.testing.paxexam.SlingOptions.slingResourcePresence;
 import static org.apache.sling.testing.paxexam.SlingOptions.slingScriptingSightly;
+import static org.apache.sling.testing.paxexam.SlingOptions.versionResolver;
 import static org.ops4j.pax.exam.CoreOptions.composite;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
@@ -78,7 +78,8 @@ public abstract class PipesTestSupport extends TestSupport {
 
     @Configuration
     public Option[] configuration() {
-        SlingVersionResolver versionResolver = new SlingVersionResolver();
+        versionResolver.setVersion("org.apache.commons", "commons-lang3", "3.18.0");
+
         return options(
             baseConfiguration(),
             quickstart(),
