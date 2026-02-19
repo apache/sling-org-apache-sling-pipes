@@ -16,6 +16,21 @@
  */
 package org.apache.sling.pipes.internal;
 
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.sling.jcr.resource.api.JcrResourceConstants.NT_SLING_FOLDER;
+import static org.apache.sling.jcr.resource.api.JcrResourceConstants.NT_SLING_ORDERED_FOLDER;
+import static org.apache.sling.jcr.resource.api.JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY;
+import static org.apache.sling.pipes.BasePipe.SLASH;
+import static org.apache.sling.pipes.CommandUtil.checkArguments;
+import static org.apache.sling.pipes.CommandUtil.writeToMap;
+import static org.apache.sling.pipes.internal.ManifoldPipe.PN_NUM_THREADS;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
@@ -42,21 +57,6 @@ import org.apache.sling.pipes.internal.slingquery.ParentsPipe;
 import org.apache.sling.pipes.internal.slingquery.SiblingsPipe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.apache.sling.jcr.resource.JcrResourceConstants.NT_SLING_FOLDER;
-import static org.apache.sling.jcr.resource.JcrResourceConstants.NT_SLING_ORDERED_FOLDER;
-import static org.apache.sling.jcr.resource.JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY;
-import static org.apache.sling.pipes.BasePipe.SLASH;
-import static org.apache.sling.pipes.CommandUtil.checkArguments;
-import static org.apache.sling.pipes.CommandUtil.writeToMap;
-import static org.apache.sling.pipes.internal.ManifoldPipe.PN_NUM_THREADS;
 /**
  * Implementation of the PipeBuilder interface
  */
