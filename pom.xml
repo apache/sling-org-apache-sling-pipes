@@ -29,13 +29,13 @@
   </parent>
 
   <artifactId>org.apache.sling.pipes</artifactId>
-  <version>4.5.1-SNAPSHOT</version>
+  <version>4.5.3-SNAPSHOT</version>
 
   <name>Apache Sling Pipes</name>
   <description>bulk content changes tool</description>
 
   <properties>
-    <project.build.outputTimestamp>1660725790</project.build.outputTimestamp>
+    <project.build.outputTimestamp>1771500593</project.build.outputTimestamp>
     <sling.java.version>11</sling.java.version>
     <org.ops4j.pax.exam.version>4.14.0</org.ops4j.pax.exam.version>
     <oak.version>1.48.0</oak.version>
