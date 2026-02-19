@@ -29,7 +29,7 @@
   </parent>
 
   <artifactId>org.apache.sling.pipes</artifactId>
-  <version>4.5.2</version>
+  <version>4.5.3-SNAPSHOT</version>
 
   <name>Apache Sling Pipes</name>
   <description>bulk content changes tool</description>
@@ -37,7 +37,7 @@
   <properties>
     <sling.java.version>8</sling.java.version>
     <org.ops4j.pax.exam.version>4.13.3</org.ops4j.pax.exam.version>
-    <project.build.outputTimestamp>1771500444</project.build.outputTimestamp>
+    <project.build.outputTimestamp>1771500593</project.build.outputTimestamp>
     <maven.compiler.source>8</maven.compiler.source>
     <maven.compiler.target>8</maven.compiler.target>
   </properties>
