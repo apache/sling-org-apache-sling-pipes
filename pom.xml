@@ -381,7 +381,7 @@
     <dependency>
       <groupId>org.jsoup</groupId>
       <artifactId>jsoup</artifactId>
-      <version>1.15.3</version>
+      <version>1.22.1</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -424,7 +424,7 @@
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.testing.caconfig-mock-plugin</artifactId>
       <scope>test</scope>
-      <version>1.4.0</version>
+      <version>1.5.4</version>
     </dependency>
   </dependencies>
 </project>
