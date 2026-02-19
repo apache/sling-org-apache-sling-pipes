@@ -18,6 +18,22 @@
  */
 package org.apache.sling.pipes.it;
 
+import static org.apache.sling.testing.paxexam.SlingOptions.slingCaconfig;
+import static org.apache.sling.testing.paxexam.SlingOptions.slingCommonsHtml;
+import static org.apache.sling.testing.paxexam.SlingOptions.slingDistribution;
+import static org.apache.sling.testing.paxexam.SlingOptions.slingEvent;
+import static org.apache.sling.testing.paxexam.SlingOptions.slingQuery;
+import static org.apache.sling.testing.paxexam.SlingOptions.slingQuickstartOakTar;
+import static org.apache.sling.testing.paxexam.SlingOptions.slingResourcePresence;
+import static org.apache.sling.testing.paxexam.SlingOptions.slingScriptingHtl;
+import static org.apache.sling.testing.paxexam.SlingOptions.versionResolver;
+import static org.ops4j.pax.exam.CoreOptions.composite;
+import static org.ops4j.pax.exam.CoreOptions.junitBundles;
+import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
+import static org.ops4j.pax.exam.CoreOptions.options;
+import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.factoryConfiguration;
+import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
+
 import javax.inject.Inject;
 import javax.servlet.Servlet;
 
@@ -34,22 +50,6 @@ import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.ProbeBuilder;
 import org.ops4j.pax.exam.TestProbeBuilder;
 import org.ops4j.pax.exam.util.Filter;
-
-import static org.apache.sling.testing.paxexam.SlingOptions.slingCaconfig;
-import static org.apache.sling.testing.paxexam.SlingOptions.slingCommonsHtml;
-import static org.apache.sling.testing.paxexam.SlingOptions.slingDistribution;
-import static org.apache.sling.testing.paxexam.SlingOptions.slingEvent;
-import static org.apache.sling.testing.paxexam.SlingOptions.slingQuery;
-import static org.apache.sling.testing.paxexam.SlingOptions.slingQuickstartOakTar;
-import static org.apache.sling.testing.paxexam.SlingOptions.slingResourcePresence;
-import static org.apache.sling.testing.paxexam.SlingOptions.slingScriptingSightly;
-import static org.apache.sling.testing.paxexam.SlingOptions.versionResolver;
-import static org.ops4j.pax.exam.CoreOptions.composite;
-import static org.ops4j.pax.exam.CoreOptions.junitBundles;
-import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
-import static org.ops4j.pax.exam.CoreOptions.options;
-import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.factoryConfiguration;
-import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
 
 public abstract class PipesTestSupport extends TestSupport {
 
@@ -88,7 +88,8 @@ public abstract class PipesTestSupport extends TestSupport {
             factoryConfiguration("org.apache.sling.resource.presence.internal.ResourcePresenter")
                 .put("path", "/etc/pipes-it/fruit-list")
                 .asOption(),
-            mavenBundle().groupId("org.apache.geronimo.bundles").artifactId("commons-httpclient").version(versionResolver),
+             // TODO: still required?
+            // mavenBundle().groupId("org.apache.geronimo.bundles").artifactId("commons-httpclient").version(versionResolver),
             // testing
             slingResourcePresence(),
             slingCaconfig(),
@@ -121,7 +122,7 @@ public abstract class PipesTestSupport extends TestSupport {
             slingDistribution(),
             slingQuery(),
             slingCommonsHtml(),
-            slingScriptingSightly()
+            slingScriptingHtl()
         );
     }
 
