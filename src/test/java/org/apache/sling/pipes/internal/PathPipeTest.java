@@ -16,17 +16,7 @@
  */
 package org.apache.sling.pipes.internal;
 
-import org.apache.sling.api.resource.PersistenceException;
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.pipes.AbstractPipeTest;
-import org.apache.sling.pipes.Pipe;
-import org.junit.Test;
-
-import javax.jcr.Node;
-
-import static org.apache.sling.jcr.resource.JcrResourceConstants.NT_SLING_FOLDER;
+import static org.apache.sling.jcr.resource.api.JcrResourceConstants.NT_SLING_FOLDER;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -34,6 +24,16 @@ import static org.junit.Assert.assertTrue;
 import java.lang.reflect.InvocationTargetException;
 import java.time.Instant;
 import java.util.Calendar;
+
+import javax.jcr.Node;
+
+import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.pipes.AbstractPipeTest;
+import org.apache.sling.pipes.Pipe;
+import org.junit.Test;
 
 /**
  * Testing path pipe using pipe builder
@@ -93,5 +93,5 @@ public class PathPipeTest extends AbstractPipeTest {
         Instant modifiedAgain = Instant.ofEpochMilli(fruits.get("jcr:lastModified", Calendar.class).getTimeInMillis());
         assertEquals("path should not mark *again* a path already created", modified, modifiedAgain);
     }
-    
+
 }

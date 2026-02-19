@@ -16,6 +16,14 @@
  */
 package org.apache.sling.pipes.internal;
 
+import static org.apache.sling.jcr.resource.api.JcrResourceConstants.NT_SLING_FOLDER;
+
+import java.util.Collections;
+import java.util.Iterator;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.sling.api.resource.PersistenceException;
@@ -26,13 +34,6 @@ import org.apache.sling.pipes.PipeBindings;
 import org.apache.sling.pipes.Plumber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import java.util.Collections;
-import java.util.Iterator;
-
-import static org.apache.sling.jcr.resource.JcrResourceConstants.NT_SLING_FOLDER;
 
 /**
  * creates or get given expression's path and returns corresponding resource

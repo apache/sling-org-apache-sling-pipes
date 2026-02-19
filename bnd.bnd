@@ -19,7 +19,8 @@ Sling-Model-Packages:\
 
 -includeresource:\
   @org.apache.sling.jcr.contentparser-*.jar!/org/apache/sling/jcr/contentparser/impl/JsonTicksConverter.*,\
-  @target/dependency/commons-jexl3-3.0.jar
+  @target/dependency/commons-jexl3-3.0.jar,\
+  @target/dependency/nashorn-core-15.7.jar
 
 -removeheaders:\
   Include-Resource,\

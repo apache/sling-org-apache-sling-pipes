@@ -16,6 +16,15 @@
  */
 package org.apache.sling.pipes.internal;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.apache.commons.collections4.IteratorUtils;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
@@ -23,15 +32,6 @@ import org.apache.sling.pipes.AbstractPipeTest;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.mockito.cglib.core.CollectionUtils;
-
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Testing traverse pipes and its different configurations on the same resource tree
@@ -40,6 +40,7 @@ public class TraversePipeTest extends AbstractPipeTest {
     public static final String ROOT = "/content/traverse";
     public static final String CONF_ROOT = ROOT + "/pipes/";
 
+    @Override
     @Before
     public void setup() throws PersistenceException {
         super.setup();
@@ -74,7 +75,7 @@ public class TraversePipeTest extends AbstractPipeTest {
     @Test
     @Ignore //for now nameGlobs is not implemented (see SLING-7089)
     public void testWhiteListProperties() throws Exception {
-        List<String> colorList = CollectionUtils.transform(getResourceList("whiteListProperties"), o -> ((Resource)o).adaptTo(String.class));
+        List<String> colorList = getResourceList("whiteListProperties").stream().map(o -> o.adaptTo(String.class)).collect(Collectors.toList());
         assertListEquals(colorList, "green", "yellow", "green", "orange");
     }
 
@@ -88,7 +89,7 @@ public class TraversePipeTest extends AbstractPipeTest {
         return IteratorUtils.toList(output);
     }
     List<String> getResourceNameList(String pipeName){
-        return CollectionUtils.transform(getResourceList(pipeName), o -> ((Resource)o).getName());
+        return getResourceList(pipeName).stream().map(o -> o.getName()).collect(Collectors.toList());
     }
 
     private void assertListEquals(List<String> tested, String... expected){
