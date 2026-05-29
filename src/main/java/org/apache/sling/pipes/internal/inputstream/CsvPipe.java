@@ -1,28 +1,22 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.pipes.internal.inputstream;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.pipes.AbstractInputStreamPipe;
-import org.apache.sling.pipes.PipeBindings;
-import org.apache.sling.pipes.Plumber;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -33,6 +27,14 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.pipes.AbstractInputStreamPipe;
+import org.apache.sling.pipes.PipeBindings;
+import org.apache.sling.pipes.Plumber;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Csv input stream pipe, similar at what
@@ -63,7 +65,7 @@ public class CsvPipe extends AbstractInputStreamPipe {
         try {
             String headersLine = reader.readLine();
             final String[] headers = headersLine.split(separator);
-            if (headers.length > 0){
+            if (headers.length > 0) {
                 nextLine = reader.readLine();
                 final Resource inputResource = getInput();
                 output = new Iterator<Resource>() {
@@ -71,15 +73,17 @@ public class CsvPipe extends AbstractInputStreamPipe {
                     public boolean hasNext() {
                         return StringUtils.isNotBlank(nextLine);
                     }
+
                     @Override
                     public Resource next() {
                         try {
                             String[] values = nextLine.split(separator);
-                            if (values.length < headers.length){
-                                throw new IllegalArgumentException("wrong format line " + index + " should have at least the same number of columns than the headers");
+                            if (values.length < headers.length) {
+                                throw new IllegalArgumentException("wrong format line " + index
+                                        + " should have at least the same number of columns than the headers");
                             }
                             Map<String, String> map = new HashMap<>();
-                            for (int i = 0; i < headers.length; i ++){
+                            for (int i = 0; i < headers.length; i++) {
                                 map.put(headers[i], values[i]);
                             }
                             binding = map;

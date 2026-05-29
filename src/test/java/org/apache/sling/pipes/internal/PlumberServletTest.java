@@ -1,20 +1,32 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.pipes.internal;
+
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import javax.servlet.ServletException;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringReader;
+import java.io.StringWriter;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -30,15 +42,6 @@ import org.apache.sling.pipes.ContainerPipeTest;
 import org.apache.sling.pipes.OutputWriter;
 import org.junit.Before;
 import org.junit.Test;
-
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonObject;
-import javax.servlet.ServletException;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringReader;
-import java.io.StringWriter;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -79,7 +82,7 @@ public class PlumberServletTest extends AbstractPipeTest {
         stringResponse = new StringWriter();
         try {
             response = mockPlumberServletResponse(stringResponse);
-        } catch (Exception e){
+        } catch (Exception e) {
 
         }
     }
@@ -88,35 +91,46 @@ public class PlumberServletTest extends AbstractPipeTest {
         String finalResponse = stringResponse.toString();
         assertFalse("There should be a response", StringUtils.isBlank(finalResponse));
         JsonObject object = Json.createReader(new StringReader(finalResponse)).readObject();
-        assertEquals("response should be an obj with size value equals to " + DUMMYTREE_TEST_SIZE, object.getInt(OutputWriter.KEY_SIZE), DUMMYTREE_TEST_SIZE);
-        assertEquals("response should be an obj with items value equals to a " + size + " valued array", object.getJsonArray(OutputWriter.KEY_ITEMS).size(), size);
+        assertEquals(
+                "response should be an obj with size value equals to " + DUMMYTREE_TEST_SIZE,
+                object.getInt(OutputWriter.KEY_SIZE),
+                DUMMYTREE_TEST_SIZE);
+        assertEquals(
+                "response should be an obj with items value equals to a " + size + " valued array",
+                object.getJsonArray(OutputWriter.KEY_ITEMS).size(),
+                size);
     }
 
-    private void assertDummyTree()  {
+    private void assertDummyTree() {
         assertDummyTree(DUMMYTREE_TEST_SIZE);
     }
 
     @Test
     public void testDummyTreeThroughRT() throws Exception {
-        SlingHttpServletRequest request = mockPlumberServletRequest(context.resourceResolver(), "json", dummyTreePath, null, null, null, null, null);
+        SlingHttpServletRequest request = mockPlumberServletRequest(
+                context.resourceResolver(), "json", dummyTreePath, null, null, null, null, null);
         servlet.execute(request, response, false);
         assertDummyTree();
     }
 
     @Test
     public void testDummyTreeThroughPlumber() throws Exception {
-        SlingHttpServletRequest request = mockPlumberServletRequest(context.resourceResolver(), "json", PATH_PIPE, dummyTreePath, null, null, null, null);
+        SlingHttpServletRequest request = mockPlumberServletRequest(
+                context.resourceResolver(), "json", PATH_PIPE, dummyTreePath, null, null, null, null);
         servlet.execute(request, response, false);
         assertDummyTree();
     }
 
     @Test
     public void testWriteExecute() throws ServletException {
-        SlingHttpServletRequest request = mockPlumberServletRequest(context.resourceResolver(), "json", pipedWritePath, null, null, null, null, null);
+        SlingHttpServletRequest request = mockPlumberServletRequest(
+                context.resourceResolver(), "json", pipedWritePath, null, null, null, null, null);
         servlet.execute(request, response, true);
         String finalResponse = stringResponse.toString();
         assertFalse("There should be a response", StringUtils.isBlank(finalResponse));
-        assertFalse("There should be no more pending changes", context.resourceResolver().hasChanges());
+        assertFalse(
+                "There should be no more pending changes",
+                context.resourceResolver().hasChanges());
     }
 
     /**
@@ -125,12 +139,13 @@ public class PlumberServletTest extends AbstractPipeTest {
      */
     @Test
     public void testGetOnWriteExecute() {
-        SlingHttpServletRequest request = mockPlumberServletRequest(context.resourceResolver(), "json", pipedWritePath, null, null, null, null, null);
+        SlingHttpServletRequest request = mockPlumberServletRequest(
+                context.resourceResolver(), "json", pipedWritePath, null, null, null, null, null);
         boolean hasFailed = true;
         try {
             servlet.execute(request, response, false);
             hasFailed = false;
-        } catch (Exception e){
+        } catch (Exception e) {
 
         }
         assertTrue("Execution should have failed", hasFailed);
@@ -142,24 +157,27 @@ public class PlumberServletTest extends AbstractPipeTest {
      */
     @Test
     public void testGetOnOnDryRUnWriteExecute() {
-        SlingHttpServletRequest request = mockPlumberServletRequest(context.resourceResolver(), "json", pipedWritePath, null, null, null, "true", "-1");
+        SlingHttpServletRequest request = mockPlumberServletRequest(
+                context.resourceResolver(), "json", pipedWritePath, null, null, null, "true", "-1");
         boolean hasFailed = true;
         try {
             servlet.execute(request, response, false);
             hasFailed = false;
-        } catch (Exception e){}
+        } catch (Exception e) {
+        }
         assertFalse("Execution should not have failed", hasFailed);
     }
 
     @Test
     public void testAdditionalBindingsAndWriter() throws Exception {
         String bindings = "{\"testBinding\":\"testBindingValue\"}";
-        String respObject =  "pathLength=path.get(\"dummyGrandChild\").length(),testBindingValue=testBinding.length()";
-        SlingHttpServletRequest request =
-                mockPlumberServletRequest(context.resourceResolver(), "json", dummyTreePath, null, bindings, respObject, null, null);
+        String respObject = "pathLength=path.get(\"dummyGrandChild\").length(),testBindingValue=testBinding.length()";
+        SlingHttpServletRequest request = mockPlumberServletRequest(
+                context.resourceResolver(), "json", dummyTreePath, null, bindings, respObject, null, null);
         servlet.execute(request, response, false);
         assertDummyTree();
-        JsonObject response = Json.createReader(new StringReader(stringResponse.toString())).readObject();
+        JsonObject response =
+                Json.createReader(new StringReader(stringResponse.toString())).readObject();
         JsonArray array = response.getJsonArray(OutputWriter.KEY_ITEMS);
         for (int i = 0; i < array.size(); i++) {
             JsonObject object = array.getJsonObject(i);
@@ -168,50 +186,58 @@ public class PlumberServletTest extends AbstractPipeTest {
             assertNotNull("the string path should be returned for each item, containing the path of the resource");
             String pathLength = object.getString("pathLength");
             assertNotNull("there should be a pathLength param, as specified in the writer", pathLength);
-            assertEquals("Pathlength should be the string representation of the path length", path.length() + "", pathLength);
+            assertEquals(
+                    "Pathlength should be the string representation of the path length",
+                    path.length() + "",
+                    pathLength);
             String testBindingLengthValue = object.getString("testBindingValue", null);
             assertNotNull("testBindingLength should be there", testBindingLengthValue);
-            assertEquals("testBindingLength should be the string representation of the additional binding length",
-                    "testBindingValue".length() + "", testBindingLengthValue);
+            assertEquals(
+                    "testBindingLength should be the string representation of the additional binding length",
+                    "testBindingValue".length() + "",
+                    testBindingLengthValue);
         }
     }
 
     @Test
     public void testDryRun() throws Exception {
-        SlingHttpServletRequest dryRunRequest =
-                mockPlumberServletRequest(context.resourceResolver(), "json", pipedWritePath, null, null, null, "true", null);
+        SlingHttpServletRequest dryRunRequest = mockPlumberServletRequest(
+                context.resourceResolver(), "json", pipedWritePath, null, null, null, "true", null);
         servlet.execute(dryRunRequest, response, true);
         Resource resource = context.resourceResolver().getResource("/content/fruits");
         ValueMap properties = resource.adaptTo(ValueMap.class);
         assertFalse("property fruits shouldn't have been written", properties.containsKey("fruits"));
-        SlingHttpServletRequest request =
-                mockPlumberServletRequest(context.resourceResolver(), "json", pipedWritePath, null, null, null, "false", null);
+        SlingHttpServletRequest request = mockPlumberServletRequest(
+                context.resourceResolver(), "json", pipedWritePath, null, null, null, "false", null);
         servlet.execute(request, response, true);
         WritePipeTest.assertPiped(resource);
     }
-    
+
     @Test
     public void testDummyTreeSizeLimit() throws Exception {
-        SlingHttpServletRequest request = mockPlumberServletRequest(context.resourceResolver(), "json", dummyTreePath, null, null, null, null, "2");
+        SlingHttpServletRequest request = mockPlumberServletRequest(
+                context.resourceResolver(), "json", dummyTreePath, null, null, null, null, "2");
         servlet.execute(request, response, false);
         assertDummyTree(2);
     }
 
     @Test
     public void testDummyTreeInfiniteSize() throws Exception {
-        SlingHttpServletRequest request = mockPlumberServletRequest(context.resourceResolver(), "json", dummyTreePath, null, null, null, null, "-1");
+        SlingHttpServletRequest request = mockPlumberServletRequest(
+                context.resourceResolver(), "json", dummyTreePath, null, null, null, null, "-1");
         servlet.execute(request, response, false);
         assertDummyTree(DUMMYTREE_TEST_SIZE);
     }
 
-    public static SlingHttpServletRequest mockPlumberServletRequest(ResourceResolver resolver,
-                                                                    String extension,
-                                                                    String path,
-                                                                    String pathParam,
-                                                                    String bindings,
-                                                                    String writer,
-                                                                    String dryRun,
-                                                                    String size) {
+    public static SlingHttpServletRequest mockPlumberServletRequest(
+            ResourceResolver resolver,
+            String extension,
+            String path,
+            String pathParam,
+            String bindings,
+            String writer,
+            String dryRun,
+            String size) {
         SlingHttpServletRequest request = mock(SlingHttpServletRequest.class);
         RequestPathInfo pathInfo = mock(RequestPathInfo.class);
         when(pathInfo.getExtension()).thenReturn(extension);

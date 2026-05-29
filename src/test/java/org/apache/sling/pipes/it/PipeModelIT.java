@@ -1,18 +1,20 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.pipes.it;
 
@@ -40,7 +42,8 @@ import static org.junit.Assert.assertEquals;
 @ExamReactorStrategy(PerClass.class)
 public class PipeModelIT extends PipesTestSupport {
 
-    private static final String AUTH_HEADER = String.format("Basic %s", Base64.getEncoder().encodeToString("admin:admin".getBytes(StandardCharsets.ISO_8859_1)));
+    private static final String AUTH_HEADER = String.format(
+            "Basic %s", Base64.getEncoder().encodeToString("admin:admin".getBytes(StandardCharsets.ISO_8859_1)));
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PipeModelIT.class);
 
@@ -48,10 +51,10 @@ public class PipeModelIT extends PipesTestSupport {
     public void testListComponent() throws IOException {
         final String url = String.format("http://localhost:%s/content/list-component.html", httpPort());
         LOGGER.info("fetching {}", url);
-        Document document = Jsoup.connect(url).header("Authorization", AUTH_HEADER).get();
+        Document document =
+                Jsoup.connect(url).header("Authorization", AUTH_HEADER).get();
         LOGGER.info("retrieved following response {}", document.toString());
         Elements elements = document.getElementsByClass("fruit");
         assertEquals("there should be 2 elements", 2, elements.size());
     }
-
 }

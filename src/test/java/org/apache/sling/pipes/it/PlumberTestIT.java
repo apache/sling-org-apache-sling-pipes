@@ -35,17 +35,14 @@ public class PlumberTestIT extends PipesTestSupport {
 
     public static final String ROOT = "/content/my";
     public static final String TEST_PATH = ROOT + "/" + NN_TEST;
+
     @Test
     public void simpleTest() throws Exception {
         try (ResourceResolver resolver = resolver()) {
-            plumber.newPipe(resolver)
-                .mkdir(ROOT)
-                .write(NN_TEST, true)
-                .run();
+            plumber.newPipe(resolver).mkdir(ROOT).write(NN_TEST, true).run();
             Resource test = resolver.getResource(TEST_PATH);
             assertNotNull("there should be a resource", test);
             assertTrue("should be a boolean equals to true", test.adaptTo(Boolean.class));
         }
     }
-
 }

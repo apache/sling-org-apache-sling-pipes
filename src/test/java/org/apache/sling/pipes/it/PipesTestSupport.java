@@ -42,12 +42,13 @@ import static org.apache.sling.testing.paxexam.SlingOptions.slingEvent;
 import static org.apache.sling.testing.paxexam.SlingOptions.slingQuery;
 import static org.apache.sling.testing.paxexam.SlingOptions.slingQuickstartOakTar;
 import static org.apache.sling.testing.paxexam.SlingOptions.slingResourcePresence;
-import static org.apache.sling.testing.paxexam.SlingOptions.slingScriptingSightly;
+import static org.apache.sling.testing.paxexam.SlingOptions.slingScriptingHtl;
 import static org.apache.sling.testing.paxexam.SlingOptions.versionResolver;
 import static org.ops4j.pax.exam.CoreOptions.composite;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
+import static org.ops4j.pax.exam.CoreOptions.vmOption;
 import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.factoryConfiguration;
 import static org.ops4j.pax.exam.cm.ConfigurationAdminOptions.newConfiguration;
 
@@ -70,7 +71,7 @@ public abstract class PipesTestSupport extends TestSupport {
     @Inject
     private ResourceResolverFactory resourceResolverFactory;
 
-    final protected int httpPort = findFreePort();
+    protected final int httpPort = findFreePort();
 
     @Inject
     @Filter(value = "(path=/etc/pipes-it/fruit-list)")
@@ -81,28 +82,43 @@ public abstract class PipesTestSupport extends TestSupport {
         versionResolver.setVersion("org.apache.commons", "commons-lang3", "3.18.0");
 
         return options(
-            baseConfiguration(),
-            quickstart(),
-            // Sling Pipes
-            testBundle("bundle.filename"),
-            factoryConfiguration("org.apache.sling.resource.presence.internal.ResourcePresenter")
-                .put("path", "/etc/pipes-it/fruit-list")
-                .asOption(),
-            mavenBundle().groupId("org.apache.geronimo.bundles").artifactId("commons-httpclient").version(versionResolver),
-            // testing
-            slingResourcePresence(),
-            slingCaconfig(),
-            newConfiguration("org.apache.sling.jcr.base.internal.LoginAdminWhitelist")
-                .put("whitelist.bundles.regexp", "^PAXEXAM.*$")
-                .asOption(),
-            mavenBundle().groupId("com.google.code.gson").artifactId("gson").versionAsInProject(),
-            mavenBundle().groupId("org.jsoup").artifactId("jsoup").versionAsInProject(),
-            mavenBundle().groupId("org.apache.servicemix.bundles").artifactId("org.apache.servicemix.bundles.hamcrest").versionAsInProject(),
-            mavenBundle().groupId("org.apache.commons").artifactId("commons-collections4").versionAsInProject(),
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.caconfig.api").versionAsInProject(),
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.caconfig.impl").versionAsInProject(),
-            junitBundles()
-        );
+                vmOption("--add-opens=java.base/java.lang=ALL-UNNAMED"),
+                baseConfiguration(),
+                quickstart(),
+                // Sling Pipes
+                testBundle("bundle.filename"),
+                factoryConfiguration("org.apache.sling.resource.presence.internal.ResourcePresenter")
+                        .put("path", "/etc/pipes-it/fruit-list")
+                        .asOption(),
+                mavenBundle()
+                        .groupId("org.apache.geronimo.bundles")
+                        .artifactId("commons-httpclient")
+                        .version("3.1_2"),
+                // testing
+                slingResourcePresence(),
+                slingCaconfig(),
+                newConfiguration("org.apache.sling.jcr.base.internal.LoginAdminWhitelist")
+                        .put("whitelist.bundles.regexp", "^PAXEXAM.*$")
+                        .asOption(),
+                mavenBundle().groupId("com.google.code.gson").artifactId("gson").versionAsInProject(),
+                mavenBundle().groupId("org.jsoup").artifactId("jsoup").versionAsInProject(),
+                mavenBundle()
+                        .groupId("org.apache.servicemix.bundles")
+                        .artifactId("org.apache.servicemix.bundles.hamcrest")
+                        .versionAsInProject(),
+                mavenBundle()
+                        .groupId("org.apache.commons")
+                        .artifactId("commons-collections4")
+                        .versionAsInProject(),
+                mavenBundle()
+                        .groupId("org.apache.sling")
+                        .artifactId("org.apache.sling.caconfig.api")
+                        .versionAsInProject(),
+                mavenBundle()
+                        .groupId("org.apache.sling")
+                        .artifactId("org.apache.sling.caconfig.impl")
+                        .versionAsInProject(),
+                junitBundles());
     }
 
     protected String basicAuthorizationHeader(final String credentials) {
@@ -116,24 +132,21 @@ public abstract class PipesTestSupport extends TestSupport {
     protected Option quickstart() {
         final String workingDirectory = workingDirectory();
         return composite(
-            slingQuickstartOakTar(workingDirectory, httpPort),
-            slingEvent(),
-            slingDistribution(),
-            slingQuery(),
-            slingCommonsHtml(),
-            slingScriptingSightly()
-        );
+                slingQuickstartOakTar(workingDirectory, httpPort),
+                slingEvent(),
+                slingDistribution(),
+                slingQuery(),
+                slingCommonsHtml(),
+                slingScriptingHtl());
     }
 
     @ProbeBuilder
     public TestProbeBuilder probeConfiguration(final TestProbeBuilder testProbeBuilder) {
-        testProbeBuilder.setHeader("Sling-Initial-Content","initial-content"
-        );
+        testProbeBuilder.setHeader("Sling-Initial-Content", "initial-content");
         return testProbeBuilder;
     }
 
     ResourceResolver resolver() throws LoginException {
         return resourceResolverFactory.getAdministrativeResourceResolver(null);
     }
-
 }

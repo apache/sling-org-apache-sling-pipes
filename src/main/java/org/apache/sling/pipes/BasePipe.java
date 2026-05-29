@@ -1,29 +1,22 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.pipes;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ValueMap;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,6 +27,15 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ValueMap;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.sling.pipes.PipeBindings.NN_ADDITIONALBINDINGS;
@@ -71,9 +73,18 @@ public class BasePipe implements Pipe {
     protected String afterHook;
 
     // used by pipes using complex JCR configurations
-    protected static final List<String> IGNORED_PROPERTIES = Arrays.asList("jcr:lastModified", "jcr:primaryType",
-        "jcr:created", "jcr:createdBy", "jcr:versionHistory", "jcr:predecessors", "jcr:baseVersion", "jcr:uuid",
-        "jcr:isCheckedOut", "jcr:lockIsDeep", "jcr:lockOwner");
+    protected static final List<String> IGNORED_PROPERTIES = Arrays.asList(
+            "jcr:lastModified",
+            "jcr:primaryType",
+            "jcr:created",
+            "jcr:createdBy",
+            "jcr:versionHistory",
+            "jcr:predecessors",
+            "jcr:baseVersion",
+            "jcr:uuid",
+            "jcr:isCheckedOut",
+            "jcr:lockIsDeep",
+            "jcr:lockOwner");
 
     protected static final List<String> IGNORED_NODES = Arrays.asList("rep:policy");
 
@@ -118,10 +129,10 @@ public class BasePipe implements Pipe {
 
     private void fillInProviders(@NotNull Resource additionalBindings) {
         Resource providers = additionalBindings.getChild(NN_PROVIDERS);
-        if (providers != null){
+        if (providers != null) {
             logger.debug("bindings provider are detected");
             bindingProviders = new ArrayList<>();
-            for (Resource provider : providers.getChildren()){
+            for (Resource provider : providers.getChildren()) {
                 Pipe pipe = plumber.getPipe(provider, bindings);
                 if (pipe == null) {
                     logger.error("pipe provided in {} is not correct", provider.getPath());
@@ -141,13 +152,13 @@ public class BasePipe implements Pipe {
      */
     private void extractAdditionalBindings(@NotNull Resource resource, @Nullable PipeBindings upperBindings) {
         bindings = upperBindings == null ? new PipeBindings(plumber, resource) : upperBindings;
-        //additional bindings (global variables to use in child pipes expressions)
+        // additional bindings (global variables to use in child pipes expressions)
         Resource additionalBindings = resource.getChild(NN_ADDITIONALBINDINGS);
         if (additionalBindings != null) {
             logger.debug("additional bindings are detected");
             ValueMap additionalMap = additionalBindings.adaptTo(ValueMap.class);
             bindings.addBindings(additionalMap);
-            for (String ignoredProperty : BasePipe.IGNORED_PROPERTIES){
+            for (String ignoredProperty : BasePipe.IGNORED_PROPERTIES) {
                 bindings.getBindings().remove(ignoredProperty);
             }
             fillInProviders(additionalBindings);
@@ -156,7 +167,7 @@ public class BasePipe implements Pipe {
         if (scriptsResource != null) {
             String[] scripts = scriptsResource.adaptTo(String[].class);
             if (scripts != null) {
-                for (String script : scripts){
+                for (String script : scripts) {
                     bindings.addScript(resource.getResourceResolver(), script);
                 }
             }
@@ -168,12 +179,13 @@ public class BasePipe implements Pipe {
     public boolean isDryRun() {
         if (dryRunObject == null) {
             dryRunObject = false;
-            if ( bindings.isBindingDefined(DRYRUN_KEY)) {
+            if (bindings.isBindingDefined(DRYRUN_KEY)) {
                 Object run = bindings.instantiateObject(DRYRUN_EXPR);
                 dryRunObject = true;
                 if (run instanceof Boolean) {
                     dryRunObject = (Boolean) run;
-                } else if (run == null || (run instanceof String && Boolean.FALSE.toString().equals(run))) {
+                } else if (run == null
+                        || (run instanceof String && Boolean.FALSE.toString().equals(run))) {
                     dryRunObject = false;
                 }
             }
@@ -184,7 +196,8 @@ public class BasePipe implements Pipe {
 
     @Override
     public String toString() {
-        return name + " " + "(path: " + resource.getPath() + ", dryRun: " + isDryRun() + ", modifiesContent: " + modifiesContent() + ")";
+        return name + " " + "(path: " + resource.getPath() + ", dryRun: " + isDryRun() + ", modifiesContent: "
+                + modifiesContent() + ")";
     }
 
     @Override
@@ -193,7 +206,7 @@ public class BasePipe implements Pipe {
     }
 
     @Override
-    public String getName(){
+    public String getName() {
         return name;
     }
 
@@ -243,7 +256,7 @@ public class BasePipe implements Pipe {
      * @param path path to be checked
      * @return true if path is root (aka not relative)
      */
-    protected boolean isRootPath(String path){
+    protected boolean isRootPath(String path) {
         return path.startsWith(SLASH);
     }
 
@@ -251,15 +264,15 @@ public class BasePipe implements Pipe {
      * Retrieves previous pipe if contained by a parent, or referrer's
      * @return pipe before this one or the referrer's can be null in case there is no parent
      */
-    protected Pipe getPreviousPipe(){
+    protected Pipe getPreviousPipe() {
         return parent != null ? parent.getPreviousPipe(this) : null;
     }
 
     /**
      * @return previous pipe's output if in a container, null otherwise
      */
-    protected Resource getPreviousResource(){
-        if (parent != null){
+    protected Resource getPreviousResource() {
+        if (parent != null) {
             Pipe previousPipe = getPreviousPipe();
             if (previousPipe != null) {
                 return bindings.getExecutedResource(previousPipe.getName());
@@ -272,17 +285,18 @@ public class BasePipe implements Pipe {
     public @Nullable Resource getInput() {
         String path = getComputedPath();
         Resource input = null;
-        if (StringUtils.isNotBlank(path)){
+        if (StringUtils.isNotBlank(path)) {
             input = resolver.getResource(path);
             if (input == null) {
                 logger.warn("configured path {} for {} is not found, expect some troubles...", path, getName());
             }
         } else {
-            //no input has been configured: we explicitly expect input to come from previous resource
+            // no input has been configured: we explicitly expect input to come from previous resource
             input = getPreviousResource();
             if (input == null) {
-                logger.warn("no valid path has been configured for {}, and no previous resource to bind on, expect some troubles...",
-                    getName());
+                logger.warn(
+                        "no valid path has been configured for {}, and no previous resource to bind on, expect some troubles...",
+                        getName());
             }
         }
         logger.debug("input for this pipe is {}", input != null ? input.getPath() : null);
@@ -291,7 +305,7 @@ public class BasePipe implements Pipe {
 
     @Override
     public Object getOutputBinding() {
-        if (parent != null){
+        if (parent != null) {
             Resource output = bindings.getExecutedResource(getName());
             if (output != null) {
                 return output.adaptTo(ValueMap.class);
@@ -311,14 +325,15 @@ public class BasePipe implements Pipe {
      * @throws ExecutionException can happen when a binding provider is executed
      */
     protected void provideAdditionalBindings() throws InterruptedException, ExecutionException {
-        if (bindingProviders != null && !bindingProviders.isEmpty()){
+        if (bindingProviders != null && !bindingProviders.isEmpty()) {
             ExecutorService executor = Executors.newWorkStealingPool();
             List<Future<ValueMap>> additionalBindings = executor.invokeAll(bindingProviders);
-            for (Future<ValueMap> additionalBinding : additionalBindings){
+            for (Future<ValueMap> additionalBinding : additionalBindings) {
                 ValueMap binding = additionalBinding.get();
-                Pipe pipe = bindingProviders.get(additionalBindings.indexOf(additionalBinding)).getPipe();
-                logger.debug("adding binding " +
-                        "{}={}", pipe.getName(), binding);
+                Pipe pipe = bindingProviders
+                        .get(additionalBindings.indexOf(additionalBinding))
+                        .getPipe();
+                logger.debug("adding binding " + "{}={}", pipe.getName(), binding);
                 bindings.addBinding(pipe.getName(), binding);
             }
         }
@@ -332,11 +347,11 @@ public class BasePipe implements Pipe {
         try {
             provideAdditionalBindings();
             return computeOutput();
-        } catch (Exception e){
+        } catch (Exception e) {
             String path = getRawPath();
-            if (StringUtils.isBlank(path)){
+            if (StringUtils.isBlank(path)) {
                 Resource input = getPreviousResource();
-                if (input != null){
+                if (input != null) {
                     path = input.getPath();
                 }
             }
@@ -348,14 +363,14 @@ public class BasePipe implements Pipe {
 
     @Override
     public void before() {
-        if (StringUtils.isNotBlank(beforeHook)){
+        if (StringUtils.isNotBlank(beforeHook)) {
             plumber.newPipe(resolver).ref(beforeHook).run();
         }
     }
 
     @Override
     public void after() {
-        if (StringUtils.isNotBlank(afterHook)){
+        if (StringUtils.isNotBlank(afterHook)) {
             plumber.newPipe(resolver).ref(afterHook).run();
         }
     }

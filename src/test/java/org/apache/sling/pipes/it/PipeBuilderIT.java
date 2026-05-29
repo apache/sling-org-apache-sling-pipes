@@ -18,6 +18,8 @@
  */
 package org.apache.sling.pipes.it;
 
+import java.util.Collection;
+
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.pipes.Pipe;
 import org.junit.Test;
@@ -27,8 +29,6 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Collection;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -46,7 +46,8 @@ public class PipeBuilderIT extends PipesTestSupport {
         final String CONTENT = "/content/traverse/test";
         try (ResourceResolver resolver = resolver()) {
             mkdir(resolver, CONTENT);
-            Collection<String> results = plumber.newPipe(resolver).echo(CONTENT).traverse().run().getCurrentPathSet();
+            Collection<String> results =
+                    plumber.newPipe(resolver).echo(CONTENT).traverse().run().getCurrentPathSet();
             LOGGER.info("Following results are found {}", results);
             assertTrue("should contain former test", results.contains(CONTENT));
         }
@@ -60,7 +61,11 @@ public class PipeBuilderIT extends PipesTestSupport {
         try (ResourceResolver resolver = resolver()) {
             mkdir(resolver, CONTENT);
             mkdir(resolver, TARGET);
-            Collection<String> results = plumber.newPipe(resolver).echo(CONTENT).mv(TARGET_PATH).run().getCurrentPathSet();
+            Collection<String> results = plumber.newPipe(resolver)
+                    .echo(CONTENT)
+                    .mv(TARGET_PATH)
+                    .run()
+                    .getCurrentPathSet();
             LOGGER.info("Following results are found {}", results);
             assertTrue("mv return should be the moved item", results.contains(TARGET_PATH));
         }
@@ -73,12 +78,20 @@ public class PipeBuilderIT extends PipesTestSupport {
         try (final ResourceResolver resolver = resolver()) {
             for (int i = 0; i < NB_ITEMS; i++) {
                 final String path = String.format("%s/%s/%s", ROOT, i, NN_TEST);
-                plumber.newPipe(resolver).mkdir(path).write("xpathTestStatus", "testing").run();
+                plumber.newPipe(resolver)
+                        .mkdir(path)
+                        .write("xpathTestStatus", "testing")
+                        .run();
             }
             final String query = String.format("/jcr:root%s//element(*,nt:base)[@xpathTestStatus]", ROOT);
-            Collection<String> results = plumber.newPipe(resolver).xpath(query).run().getCurrentPathSet();
+            Collection<String> results =
+                    plumber.newPipe(resolver).xpath(query).run().getCurrentPathSet();
             assertEquals("xpath query should return as many items as we wrote", NB_ITEMS, results.size());
-            results = plumber.newPipe(resolver).echo(ROOT).$("nt:base[xpathTestStatus=testing]").run().getCurrentPathSet();
+            results = plumber.newPipe(resolver)
+                    .echo(ROOT)
+                    .$("nt:base[xpathTestStatus=testing]")
+                    .run()
+                    .getCurrentPathSet();
             assertEquals("sling query should return as many items as we wrote", NB_ITEMS, results.size());
         }
     }
@@ -87,11 +100,15 @@ public class PipeBuilderIT extends PipesTestSupport {
     public void referenceWithBindings() throws Exception {
         final String ROOT = "/content/reference";
         try (ResourceResolver resolver = resolver()) {
-            Pipe pipe = plumber.newPipe(resolver).mkdir(ROOT + "/test-${testedBinding}").write("jcr:title","${testedBinding}").build();
-            for (int i = 0; i < 10; i ++) {
+            Pipe pipe = plumber.newPipe(resolver)
+                    .mkdir(ROOT + "/test-${testedBinding}")
+                    .write("jcr:title", "${testedBinding}")
+                    .build();
+            for (int i = 0; i < 10; i++) {
                 plumber.newPipe(resolver).ref(pipe.getResource().getPath()).runWith("testedBinding", i);
             }
-            Collection<String> results = plumber.newPipe(resolver).echo(ROOT).traverse().run().getCurrentPathSet();
+            Collection<String> results =
+                    plumber.newPipe(resolver).echo(ROOT).traverse().run().getCurrentPathSet();
             LOGGER.info("Following results are found {}", results);
             assertEquals("we should have root and implemented subpipes", 11, results.size());
         }

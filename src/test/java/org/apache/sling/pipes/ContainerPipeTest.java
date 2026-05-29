@@ -1,20 +1,25 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.pipes;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.Iterator;
 
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
@@ -22,9 +27,6 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.internal.ContainerPipe;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.lang.reflect.InvocationTargetException;
-import java.util.Iterator;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -53,25 +55,29 @@ public class ContainerPipeTest extends AbstractPipeTest {
         assertTrue("There should be some results", resourceIterator.hasNext());
         Resource firstResource = resourceIterator.next();
         assertNotNull("First resource should not be null", firstResource);
-        assertEquals("First resource should be instantiated path with apple & pea",
+        assertEquals(
+                "First resource should be instantiated path with apple & pea",
                 PATH_FRUITS + "/apple/isnota/pea/buttheyhavesamecolor",
                 firstResource.getPath());
         assertTrue("There should still be another item", resourceIterator.hasNext());
         Resource secondResource = resourceIterator.next();
         assertNotNull("Second resource should not be null", secondResource);
-        assertEquals("Second resource should be instantiated path with apple & carrot",
+        assertEquals(
+                "Second resource should be instantiated path with apple & carrot",
                 PATH_FRUITS + "/apple/isnota/carrot/andtheircolorisdifferent",
                 secondResource.getPath());
         assertTrue("There should still be another item", resourceIterator.hasNext());
         Resource thirdResource = resourceIterator.next();
         assertNotNull("Third resource should not be null", thirdResource);
-        assertEquals("Third resource should be instantiated path with banana & pea",
+        assertEquals(
+                "Third resource should be instantiated path with banana & pea",
                 PATH_FRUITS + "/banana/isnota/pea/andtheircolorisdifferent",
                 thirdResource.getPath());
         assertTrue("There should still be another item", resourceIterator.hasNext());
         Resource fourthResource = resourceIterator.next();
         assertNotNull("Fourth resource should not be null", fourthResource);
-        assertEquals("fourthResource resource should be instantiated path with banana & carrot",
+        assertEquals(
+                "fourthResource resource should be instantiated path with banana & carrot",
                 PATH_FRUITS + "/banana/isnota/carrot/andtheircolorisdifferent",
                 fourthResource.getPath());
         assertFalse("There should be no more items", resourceIterator.hasNext());
@@ -83,13 +89,15 @@ public class ContainerPipeTest extends AbstractPipeTest {
         assertTrue("There should be some results", resourceIterator.hasNext());
         Resource firstResource = resourceIterator.next();
         assertNotNull("First resource should not be null", firstResource);
-        assertEquals("First resource should be instantiated path with apple & pea",
+        assertEquals(
+                "First resource should be instantiated path with apple & pea",
                 PATH_FRUITS + "/apple/isnota/pea/buttheyhavesamecolor",
                 firstResource.getPath());
         assertTrue("There should still be another item", resourceIterator.hasNext());
         Resource secondResource = resourceIterator.next();
         assertNotNull("Second resource should not be null", secondResource);
-        assertEquals("Second resource should be instantiated path with banana & pea",
+        assertEquals(
+                "Second resource should be instantiated path with banana & pea",
                 PATH_FRUITS + "/banana/isnota/pea/andtheircolorisdifferent",
                 secondResource.getPath());
         assertFalse("There should be no more items", resourceIterator.hasNext());
@@ -97,12 +105,16 @@ public class ContainerPipeTest extends AbstractPipeTest {
 
     @Test
     public void testRottenTree() throws Exception {
-        assertFalse("There shouldn't be any resource", getOutput(PATH_PIPE + "/" + NN_ROTTENTREE).hasNext());
+        assertFalse(
+                "There shouldn't be any resource",
+                getOutput(PATH_PIPE + "/" + NN_ROTTENTREE).hasNext());
     }
 
     @Test
     public void testOnePipe() throws Exception {
-        assertTrue("There should be subpipes", getOutput(PATH_PIPE + "/" + NN_ONEPIPE).hasNext());
+        assertTrue(
+                "There should be subpipes",
+                getOutput(PATH_PIPE + "/" + NN_ONEPIPE).hasNext());
     }
 
     /**
@@ -111,15 +123,18 @@ public class ContainerPipeTest extends AbstractPipeTest {
     @Test
     public void testContainerCut() throws PersistenceException, InvocationTargetException, IllegalAccessException {
         ExecutionResult result = execute("echo /content/fruits | echo nonexisting | echo /content/fruits/apple");
-        assertEquals("there should be no output to that pipe because some empty pipe is in the middle",
-                0, result.size());
+        assertEquals(
+                "there should be no output to that pipe because some empty pipe is in the middle", 0, result.size());
     }
 
     @Test
     public void testSleep() throws Exception {
         long interval = 30L;
         String path = PATH_PIPE + "/" + NN_DUMMYTREE;
-        context.resourceResolver().getResource(path).adaptTo(ModifiableValueMap.class).put(ContainerPipe.PN_SLEEP, interval + 1);
+        context.resourceResolver()
+                .getResource(path)
+                .adaptTo(ModifiableValueMap.class)
+                .put(ContainerPipe.PN_SLEEP, interval + 1);
         context.resourceResolver().commit();
         Iterator<Resource> outputs = getOutput(path);
         long start = System.currentTimeMillis();
@@ -129,8 +144,14 @@ public class ContainerPipeTest extends AbstractPipeTest {
 
     @Test
     public void testNested() throws Exception {
-        Pipe firstPipe = plumber.newPipe(context.resourceResolver()).echo(ROOT).echo(NN_FRUITS).build();
-        Pipe superPipe = plumber.newPipe(context.resourceResolver()).ref(firstPipe.getResource().getPath()).echo("apple").build();
+        Pipe firstPipe = plumber.newPipe(context.resourceResolver())
+                .echo(ROOT)
+                .echo(NN_FRUITS)
+                .build();
+        Pipe superPipe = plumber.newPipe(context.resourceResolver())
+                .ref(firstPipe.getResource().getPath())
+                .echo("apple")
+                .build();
         testOneResource(superPipe.getResource().getPath(), PATH_APPLE);
     }
 }

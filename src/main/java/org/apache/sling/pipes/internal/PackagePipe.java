@@ -1,20 +1,29 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.pipes.internal;
+
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+
+import java.io.IOException;
+import java.util.Iterator;
 
 import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -32,12 +41,6 @@ import org.apache.sling.pipes.PipeBindings;
 import org.apache.sling.pipes.Plumber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import java.io.IOException;
-import java.util.Iterator;
 
 /**
  * Package pipe, creates or read vault package
@@ -91,8 +94,8 @@ public class PackagePipe extends BasePipe {
             if (filters == null) {
                 filters = new DefaultWorkspaceFilter();
             }
-            //we take as a filter either computed resource, either configured path, as if resource,
-            //is null, check existence has been configured to be false
+            // we take as a filter either computed resource, either configured path, as if resource,
+            // is null, check existence has been configured to be false
             String filter = filterResource != null ? filterResource.getPath() : getComputedPath();
             filters.add(new PathFilterSet(filter));
             JcrPackageDefinition definition = jcrPackage.getDefinition();
@@ -116,7 +119,6 @@ public class PackagePipe extends BasePipe {
         }
     }
 
-
     /**
      * computes configured package based on expression configuration (either existing or creating it)
      * @throws IOException problem with binary
@@ -124,7 +126,7 @@ public class PackagePipe extends BasePipe {
      * @throws IOException problem with package build
      */
     protected void init() throws IOException, RepositoryException {
-        if (jcrPackage == null){
+        if (jcrPackage == null) {
             String packagePath = getExpr();
             Session session = resolver.adaptTo(Session.class);
             if (StringUtils.isNotBlank(packagePath) && session != null) {

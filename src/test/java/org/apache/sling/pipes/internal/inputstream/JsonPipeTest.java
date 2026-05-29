@@ -1,20 +1,26 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.pipes.internal.inputstream;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.Iterator;
+import java.util.List;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import org.apache.commons.collections4.IteratorUtils;
@@ -28,17 +34,12 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.Iterator;
-import java.util.List;
-
-import static com.github.tomakehurst.wiremock.client.WireMock.aMultipart;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.matching;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -61,9 +62,8 @@ public class JsonPipeTest extends AbstractPipeTest {
     @Rule
     public WireMockRule http = new WireMockRule(PORT);
 
-
     @Test
-    public void testPipedJson() throws Exception{
+    public void testPipedJson() throws Exception {
         Iterator<Resource> outputs = getOutput(CONF);
         outputs.next();
         Resource result = outputs.next();
@@ -73,7 +73,7 @@ public class JsonPipeTest extends AbstractPipeTest {
         assertTrue("There should be a Bucharest property", properties.containsKey("Bucharest"));
     }
 
-    protected void testArray(Iterator<Resource> outputs){
+    protected void testArray(Iterator<Resource> outputs) {
         Resource first = outputs.next();
         Resource second = outputs.next();
         Resource third = outputs.next();
@@ -87,12 +87,19 @@ public class JsonPipeTest extends AbstractPipeTest {
     public void testPipedArray() throws Exception {
         testArray(getOutput(ARRAY));
     }
+
     protected void testJsonPath(String json, String valuePath) throws Exception {
-        assertEquals("there should be 2 results for valuePath " + valuePath, 2, plumber.newPipe(context.resourceResolver())
-                .echo("/content/fruits")
-                .json(json).with("valuePath", valuePath).name("json")
-                .echo("/content/json/array/${json.test}")
-                .run().size());
+        assertEquals(
+                "there should be 2 results for valuePath " + valuePath,
+                2,
+                plumber.newPipe(context.resourceResolver())
+                        .echo("/content/fruits")
+                        .json(json)
+                        .with("valuePath", valuePath)
+                        .name("json")
+                        .echo("/content/json/array/${json.test}")
+                        .run()
+                        .size());
     }
 
     @Test
@@ -100,8 +107,9 @@ public class JsonPipeTest extends AbstractPipeTest {
         testJsonPath("{'size':2, 'items':[{'test':'one'}, {'test':'two'}]}", "$.items");
         testJsonPath("[['foo','bar'],[{'test':'one'}, {'test':'two'}]]", "$[1]");
     }
+
     @Test
-    public void testNestedJsonPath()  throws Exception {
+    public void testNestedJsonPath() throws Exception {
         testJsonPath("{'arrays':[['foo','bar'],[{'test':'one'}, {'test':'two'}]]}", "$.arrays[1]");
         testJsonPath("{'objects':{'items':[{'test':'one'}, {'test':'two'}]}}", "$.objects.items");
     }
@@ -115,9 +123,8 @@ public class JsonPipeTest extends AbstractPipeTest {
     public void testSimpleRemoteJson() throws InvocationTargetException, IllegalAccessException {
         http.givenThat(get(urlEqualTo("/get/foo.json"))
                 .willReturn(aResponse().withStatus(200).withBody("{\"args\":{\"foo1\":\"bar\"}}")));
-        ExecutionResult results = execute("echo /content " +
-                "| json "  + baseUrl + "/get/foo.json @ name data @ with raw=true " +
-                "| mkdir ${data.args.foo1}");
+        ExecutionResult results = execute("echo /content " + "| json " + baseUrl
+                + "/get/foo.json @ name data @ with raw=true " + "| mkdir ${data.args.foo1}");
         assertEquals(1, results.size());
         assertEquals("/content/bar", results.getCurrentPathSet().iterator().next());
     }
@@ -128,11 +135,13 @@ public class JsonPipeTest extends AbstractPipeTest {
                 .withHeader("x-header", equalTo("bar"))
                 .withRequestBody(matching("(.*&|^)foo=1($|&.*)"))
                 .willReturn(aResponse().withStatus(201).withBody("{\"created\":\"true\"}")));
-        ExecutionResult results = execute("echo /content " +
-                "| json "  + baseUrl + "/post/foo.json?foo=1 @ name data @ with raw=true POST=true header_x-header=bar" +
-                "| write created=${data.created}");
+        ExecutionResult results = execute("echo /content " + "| json "
+                + baseUrl + "/post/foo.json?foo=1 @ name data @ with raw=true POST=true header_x-header=bar"
+                + "| write created=${data.created}");
         assertEquals(1, results.size());
-        assertEquals("true", context.resourceResolver().getResource("/content").getValueMap().get("created"));
+        assertEquals(
+                "true",
+                context.resourceResolver().getResource("/content").getValueMap().get("created"));
     }
 
     @Test
@@ -141,18 +150,19 @@ public class JsonPipeTest extends AbstractPipeTest {
                 .withHeader("x-header", equalTo("bar"))
                 .withRequestBody(matching("(.*&|^)\\{foo:1\\}($|&.*)"))
                 .willReturn(aResponse().withStatus(201).withBody("{\"created\":\"true\"}")));
-        ExecutionResult results = execute("echo /content " +
-                "| json "  + baseUrl + "/post/foo.json @ name data @ with raw=true POST={foo:1} header_x-header=bar" +
-                "| write created=${data.created}");
+        ExecutionResult results = execute("echo /content " + "| json "
+                + baseUrl + "/post/foo.json @ name data @ with raw=true POST={foo:1} header_x-header=bar"
+                + "| write created=${data.created}");
         assertEquals(1, results.size());
-        assertEquals("true", context.resourceResolver().getResource("/content").getValueMap().get("created"));
+        assertEquals(
+                "true",
+                context.resourceResolver().getResource("/content").getValueMap().get("created"));
     }
 
     @Test
     public void testLoopOverObject() throws InvocationTargetException, IllegalAccessException {
-        ExecutionResult results = execute("echo /content " +
-                "| json {'k1':'v1','k2':'v2'} @ name j" +
-                "| mkdir ${j.key}/${j.value}");
+        ExecutionResult results =
+                execute("echo /content " + "| json {'k1':'v1','k2':'v2'} @ name j" + "| mkdir ${j.key}/${j.value}");
         assertEquals(2, results.size());
         List<String> array = IteratorUtils.toList(results.getCurrentPathSet().iterator());
         assertArrayEquals(new String[] {"/content/k2/v2", "/content/k1/v1"}, array.toArray());
@@ -160,34 +170,36 @@ public class JsonPipeTest extends AbstractPipeTest {
 
     @Test
     public void testRaw() throws InvocationTargetException, IllegalAccessException {
-        ExecutionResult results = execute("echo /content " +
-                "| json {'k1':'v1','k2':'v2'} @ name j @ with raw=true" +
-                "| write test=${j.k2}");
+        ExecutionResult results = execute(
+                "echo /content " + "| json {'k1':'v1','k2':'v2'} @ name j @ with raw=true" + "| write test=${j.k2}");
         assertEquals(1, results.size());
-        assertEquals("v2", context.resourceResolver().getResource("/content").getValueMap().get("test", String.class));
+        assertEquals(
+                "v2",
+                context.resourceResolver().getResource("/content").getValueMap().get("test", String.class));
     }
 
     @Test
     public void testIndex() throws InvocationTargetException, IllegalAccessException {
-        ExecutionResult results = execute("echo /content " +
-                "| json [\"blah\",\"blah\"] @ name dumbArray " +
-                "| json {\"foo\":\"blah\",\"bar\":\"blah\"} @ name dumbObject" +
-                "| mkdir /content/o_${dumbObject_index}/a_${dumbArray_index}");
+        ExecutionResult results = execute("echo /content " + "| json [\"blah\",\"blah\"] @ name dumbArray "
+                + "| json {\"foo\":\"blah\",\"bar\":\"blah\"} @ name dumbObject"
+                + "| mkdir /content/o_${dumbObject_index}/a_${dumbArray_index}");
         assertEquals(4, results.size());
-        assertTrue(results.toString().contains("[\"/content/o_0/a_0\",\"/content/o_1/a_0\",\"/content/o_0/a_1\",\"/content/o_1/a_1\"]"));
+        assertTrue(results.toString()
+                .contains("[\"/content/o_0/a_0\",\"/content/o_1/a_0\",\"/content/o_0/a_1\",\"/content/o_1/a_1\"]"));
     }
 
     @Test
     @Ignore
     public void testAuthentifiedRemoteJson() throws InvocationTargetException, IllegalAccessException {
-        http.givenThat(get(urlEqualTo("/get/profile.json")).withBasicAuth("jdoe","jdoe")
+        http.givenThat(get(urlEqualTo("/get/profile.json"))
+                .withBasicAuth("jdoe", "jdoe")
                 .willReturn(aResponse().withStatus(200).withBody("{\"firstName\":\"John\"}")));
         ExecutionResult results = plumber.newPipe(context.resourceResolver())
-                .json(baseUrl + "/get/profile.json").name("profile")
-                .mkdir("/home/${profile.firstName}").runWith("basicAuth", "jdoe:jdoe");
+                .json(baseUrl + "/get/profile.json")
+                .name("profile")
+                .mkdir("/home/${profile.firstName}")
+                .runWith("basicAuth", "jdoe:jdoe");
         assertEquals(1, results.size());
         assertEquals("/home/John", results.getCurrentPathSet().iterator().next());
     }
-
-
 }

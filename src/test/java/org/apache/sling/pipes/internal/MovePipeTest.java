@@ -1,23 +1,27 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.pipes.internal;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import javax.jcr.Session;
+
+import java.util.Iterator;
+import java.util.List;
 
 import org.apache.commons.collections4.IteratorUtils;
 import org.apache.sling.api.resource.PersistenceException;
@@ -32,9 +36,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import javax.jcr.Session;
-import java.util.Iterator;
-import java.util.List;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * testing moving nodes & properties
@@ -61,7 +64,8 @@ public class MovePipeTest extends AbstractPipeTest {
 
     @Test
     public void modifiesContent() {
-        assertTrue(plumber.getPipe(oak.resourceResolver().getResource(PATH_PIPE + MOVEPROPERTY_PIPE)).modifiesContent());
+        assertTrue(plumber.getPipe(oak.resourceResolver().getResource(PATH_PIPE + MOVEPROPERTY_PIPE))
+                .modifiesContent());
     }
 
     @Test
@@ -80,12 +84,15 @@ public class MovePipeTest extends AbstractPipeTest {
         String bananaPath = PATH_FRUITS + BANANA_NODE_PATH;
         String applePath = PATH_FRUITS + APPLE_NODE_PATH;
         ExecutionResult result = plumber.newPipe(oak.resourceResolver())
-            .echo(applePath)
-            .mv(bananaPath).run();
+                .echo(applePath)
+                .mv(bananaPath)
+                .run();
         assertEquals("there should be no overwrite if not specified", 0, result.size());
         result = plumber.newPipe(oak.resourceResolver())
-            .echo(applePath)
-            .mv(bananaPath).with("overwriteTarget", true).run();
+                .echo(applePath)
+                .mv(bananaPath)
+                .with("overwriteTarget", true)
+                .run();
         assertEquals("there should be no overwrite if not specified", 1, result.size());
         Session session = oak.resourceResolver().adaptTo(Session.class);
         assertTrue("target node path should exist", session.nodeExists(bananaPath));
@@ -104,8 +111,10 @@ public class MovePipeTest extends AbstractPipeTest {
         session.save();
         assertTrue("target node path should exist", session.nodeExists(PATH_FRUITS + APPLE_NODE_PATH));
         assertTrue("source node path also should exist", session.nodeExists(resource.getPath()));
-        Assert.assertEquals("banana should be at first position", allFruits.get(0).getName(), resource.getName());
-        Assert.assertEquals("apple should be at first position", allFruits.get(1).getName(), "apple");
+        Assert.assertEquals(
+                "banana should be at first position", allFruits.get(0).getName(), resource.getName());
+        Assert.assertEquals(
+                "apple should be at first position", allFruits.get(1).getName(), "apple");
     }
 
     @Test
@@ -123,7 +132,7 @@ public class MovePipeTest extends AbstractPipeTest {
     @Test
     public void testRelativeMove() throws Exception {
         ExecutionResult results = execute(oak.resourceResolver(), "mkdir /content/foo | mv bar");
-        assertEquals("there should be 1 result", 1 , results.size());
+        assertEquals("there should be 1 result", 1, results.size());
         assertEquals(results.getCurrentPathSet().iterator().next(), "/content/bar");
     }
 }

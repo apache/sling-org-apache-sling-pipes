@@ -1,20 +1,30 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.pipes.internal;
+
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.Property;
+import javax.jcr.RepositoryException;
+
+import java.util.Collections;
+import java.util.Iterator;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
@@ -24,14 +34,6 @@ import org.apache.sling.pipes.Plumber;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.Node;
-import javax.jcr.NodeIterator;
-import javax.jcr.Property;
-import javax.jcr.RepositoryException;
-
-import java.util.Collections;
-import java.util.Iterator;
 
 /**
  * this pipe tries to remove the input resource, abstracting its type,
@@ -66,12 +68,12 @@ public class RemovePipe extends BasePipe {
                 parentPath = removeTree(resource, filter);
             } else {
                 Property property = resource.adaptTo(Property.class);
-                if (property != null){
+                if (property != null) {
                     Node parent = property.getParent();
                     if (parent != null) {
                         parentPath = parent.getPath();
                         logger.info("removing property {}", property.getPath());
-                        if (!isDryRun()){
+                        if (!isDryRun()) {
                             property.remove();
                         }
                     }
@@ -87,9 +89,9 @@ public class RemovePipe extends BasePipe {
     }
 
     private boolean removeProperty(@NotNull Node node, String key) throws RepositoryException {
-        if (! IGNORED_PROPERTIES.contains(key) && node.hasProperty(key)){
+        if (!IGNORED_PROPERTIES.contains(key) && node.hasProperty(key)) {
             logger.info("removing property {}", node.getProperty(key).getPath());
-            if (!isDryRun()){
+            if (!isDryRun()) {
                 node.getProperty(key).remove();
                 return true;
             }
@@ -106,9 +108,9 @@ public class RemovePipe extends BasePipe {
             Node node = resource.adaptTo(Node.class);
             if (node != null) {
                 ValueMap configuredProperties = configuration.getValueMap();
-                for (String key : configuredProperties.keySet()){
+                for (String key : configuredProperties.keySet()) {
                     if (removeProperty(node, key)) {
-                        count ++;
+                        count++;
                     }
                 }
             }
@@ -117,10 +119,10 @@ public class RemovePipe extends BasePipe {
     }
 
     private String removeNode(Resource resource) throws RepositoryException {
-        //explicit configuration to remove the node altogether
+        // explicit configuration to remove the node altogether
         logger.info("removing node {}", resource.getPath());
         Resource parent = resource.getParent();
-        if (parent != null && !isDryRun()){
+        if (parent != null && !isDryRun()) {
             Node node = resource.adaptTo(Node.class);
             if (node != null) {
                 node.remove();
@@ -136,13 +138,13 @@ public class RemovePipe extends BasePipe {
         int configuredProperties = removeProperties(resource, configuration);
         Node configuredNode = configuration != null ? configuration.adaptTo(Node.class) : null;
         NodeIterator childConf = configuredNode != null ? configuredNode.getNodes() : null;
-        if (childConf == null || (! childConf.hasNext() && configuredProperties == 0)){
+        if (childConf == null || (!childConf.hasNext() && configuredProperties == 0)) {
             remainingPath = removeNode(resource);
         } else {
             while (childConf.hasNext()) {
                 Node childToRemove = childConf.nextNode();
                 Resource child = resource.getChild(childToRemove.getName());
-                if (child != null){
+                if (child != null) {
                     removeTree(child, configuration.getChild(childToRemove.getName()));
                 }
             }

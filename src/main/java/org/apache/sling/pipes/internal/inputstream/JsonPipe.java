@@ -1,31 +1,22 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.pipes.internal.inputstream;
-
-import org.apache.commons.collections4.keyvalue.DefaultKeyValue;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.pipes.AbstractInputStreamPipe;
-import org.apache.sling.pipes.PipeBindings;
-import org.apache.sling.pipes.Plumber;
-import org.apache.sling.pipes.internal.JsonUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.json.JsonArray;
 import javax.json.JsonObject;
@@ -42,6 +33,17 @@ import java.util.NoSuchElementException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import org.apache.commons.collections4.keyvalue.DefaultKeyValue;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.pipes.AbstractInputStreamPipe;
+import org.apache.sling.pipes.PipeBindings;
+import org.apache.sling.pipes.Plumber;
+import org.apache.sling.pipes.internal.JsonUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Pipe outputting binding related to a json stream: either an object
@@ -69,7 +71,8 @@ public class JsonPipe extends AbstractInputStreamPipe {
 
     protected static final String INDEX_SUFFIX = "_index";
 
-    protected static final Pattern JSONPATH_FIRSTTOKEN = Pattern.compile("^\\" + JSONPATH_ROOT + "([\\" + OBJ_START + "\\" + ARRAY_START + "])([^\\" + OBJ_START + "\\]\\" + ARRAY_START + "]+)\\]?");
+    protected static final Pattern JSONPATH_FIRSTTOKEN = Pattern.compile("^\\" + JSONPATH_ROOT + "([\\" + OBJ_START
+            + "\\" + ARRAY_START + "])([^\\" + OBJ_START + "\\]\\" + ARRAY_START + "]+)\\]?");
 
     JsonBindingIterator internalIterator;
 
@@ -83,7 +86,7 @@ public class JsonPipe extends AbstractInputStreamPipe {
             if (raw instanceof Boolean) {
                 return (Boolean) raw;
             }
-            return Boolean.parseBoolean((String)raw);
+            return Boolean.parseBoolean((String) raw);
         }
         return false;
     }
@@ -96,7 +99,8 @@ public class JsonPipe extends AbstractInputStreamPipe {
     @Override
     public Iterator<Resource> getOutput(InputStream is) {
         Iterator<Resource> output = EMPTY_ITERATOR;
-        Iterator<Resource> inputSingletonIterator = Collections.singleton(getInput()).iterator();
+        Iterator<Resource> inputSingletonIterator =
+                Collections.singleton(getInput()).iterator();
         try {
             String jsonString = IOUtils.toString(is, StandardCharsets.UTF_8);
             if (StringUtils.isNotBlank(jsonString)) {
@@ -110,7 +114,8 @@ public class JsonPipe extends AbstractInputStreamPipe {
                     if (StringUtils.isNotBlank(valuePath)) {
                         json = getValue(json, bindings.instantiateExpression(valuePath));
                     }
-                    if (isRaw() || !(json.getValueType() == ValueType.ARRAY || json.getValueType() == ValueType.OBJECT)) {
+                    if (isRaw()
+                            || !(json.getValueType() == ValueType.ARRAY || json.getValueType() == ValueType.OBJECT)) {
                         binding = JsonUtil.unbox(json);
                         output = inputSingletonIterator;
                     } else {
@@ -132,11 +137,13 @@ public class JsonPipe extends AbstractInputStreamPipe {
         int index = 0;
 
         JsonBindingIterator(JsonStructure json, Resource inputResource) {
-            jsonValues = json.getValueType() == ValueType.ARRAY ?
-                    ((JsonArray) json).stream().map(JsonUtil::unbox).collect(Collectors.toList()):
-                    ((JsonObject) json).entrySet().stream()
-                            .map(e -> new DefaultKeyValue<String,Object>(e.getKey(),
-                                    JsonUtil.unbox(e.getValue()))).collect(Collectors.toList());
+            jsonValues = json.getValueType() == ValueType.ARRAY
+                    ? ((JsonArray) json).stream().map(JsonUtil::unbox).collect(Collectors.toList())
+                    : ((JsonObject) json)
+                            .entrySet().stream()
+                                    .map(e -> new DefaultKeyValue<String, Object>(
+                                            e.getKey(), JsonUtil.unbox(e.getValue())))
+                                    .collect(Collectors.toList());
             internal = jsonValues.iterator();
             this.inputResource = inputResource;
         }
@@ -148,11 +155,11 @@ public class JsonPipe extends AbstractInputStreamPipe {
 
         @Override
         public Resource next() {
-            if (! internal.hasNext()) {
+            if (!internal.hasNext()) {
                 throw new NoSuchElementException();
             }
             binding = internal.next();
-            getBindings().addBinding(getName() + INDEX_SUFFIX, index ++);
+            getBindings().addBinding(getName() + INDEX_SUFFIX, index++);
             return inputResource;
         }
     }
@@ -163,27 +170,26 @@ public class JsonPipe extends AbstractInputStreamPipe {
      * @param valuePath path to follow
      * @return value fetched after following the path
      */
-    protected JsonStructure getValue(JsonStructure json, String valuePath){
+    protected JsonStructure getValue(JsonStructure json, String valuePath) {
         Matcher matcher = JSONPATH_FIRSTTOKEN.matcher(valuePath);
-        if (matcher.find()){
+        if (matcher.find()) {
             String firstChar = matcher.group(1);
             String content = matcher.group(2);
             logger.trace("first char is {}, content is {}", firstChar, content);
-            if (ARRAY_START.equals(firstChar)){
-                JsonArray array = (JsonArray)json;
+            if (ARRAY_START.equals(firstChar)) {
+                JsonArray array = (JsonArray) json;
                 int index = Integer.parseInt(content);
-                json = (JsonStructure)array.get(index);
-            } else if (OBJ_START.equals(firstChar)){
-                JsonObject object = (JsonObject)json;
-                json = (JsonStructure)object.get(content);
+                json = (JsonStructure) array.get(index);
+            } else if (OBJ_START.equals(firstChar)) {
+                JsonObject object = (JsonObject) json;
+                json = (JsonStructure) object.get(content);
             }
             valuePath = StringUtils.removeStart(valuePath, matcher.group(0));
-            if (StringUtils.isNotBlank(valuePath)){
+            if (StringUtils.isNotBlank(valuePath)) {
                 valuePath = JSONPATH_ROOT + valuePath;
                 return getValue(json, valuePath);
             }
         }
         return json;
     }
-
 }

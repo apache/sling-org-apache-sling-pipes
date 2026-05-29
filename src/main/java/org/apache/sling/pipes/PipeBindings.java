@@ -1,20 +1,37 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.pipes;
+
+import javax.script.Bindings;
+import javax.script.ScriptContext;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
+import javax.script.SimpleScriptContext;
+
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.jexl3.JexlException;
@@ -24,20 +41,6 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.script.Bindings;
-import javax.script.ScriptContext;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
-import javax.script.SimpleScriptContext;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Execution bindings of a pipe, and all expression related
@@ -71,10 +74,10 @@ public class PipeBindings {
     public static final String INJECTED_SCRIPT_REGEXP = "\\$\\{(([^\\{^\\}]+(\\{\\{)?(\\}\\})?(\\{[0-9,]+\\})?)+)\\}";
     private static final Pattern INJECTED_SCRIPT = Pattern.compile(INJECTED_SCRIPT_REGEXP);
     protected static final String IF_PREFIX = "$if";
-    protected static final Pattern CONDITIONAL_STRING =  Pattern.compile("^\\" + IF_PREFIX + INJECTED_SCRIPT_REGEXP);
+    protected static final Pattern CONDITIONAL_STRING = Pattern.compile("^\\" + IF_PREFIX + INJECTED_SCRIPT_REGEXP);
 
     ScriptEngine engine;
-    
+
     ScriptContext scriptContext = new SimpleScriptContext();
 
     Map<String, String> pathBindings = new HashMap<>();
@@ -111,19 +114,19 @@ public class PipeBindings {
      */
     public PipeBindings(@NotNull Resource resource, boolean allowAdditionalScripts) {
         this.allowAdditionalScripts = allowAdditionalScripts;
-    	//Setup script engines
+        // Setup script engines
         String engineName = resource.getValueMap().get(PN_ENGINE, String.class);
         if (StringUtils.isNotBlank(engineName)) {
             initializeScriptEngine(engineName);
         }
-    	
-        //add path bindings where path.MyPipe will give MyPipe current resource path
+
+        // add path bindings where path.MyPipe will give MyPipe current resource path
         getBindings().put(PATH_BINDING, pathBindings);
 
-        //add name bindings where name.MyPipe will give MyPipe current resource name
+        // add name bindings where name.MyPipe will give MyPipe current resource name
         getBindings().put(NAME_BINDING, nameBindings);
 
-        //add caconfig bindings where caconfig.MyPipe will give MyPipe current ca configuration
+        // add caconfig bindings where caconfig.MyPipe will give MyPipe current ca configuration
         getBindings().put(CACONFIG_BINDING, caconfigBindings);
     }
 
@@ -140,7 +143,7 @@ public class PipeBindings {
      * @param name binding's name
      * @param value binding's value
      */
-    public void addBinding(String name, Object value){
+    public void addBinding(String name, Object value) {
         log.debug("Adding binding {}={}", name, value);
         getBindings().put(name, value);
     }
@@ -230,7 +233,7 @@ public class PipeBindings {
     }
 
     private ScriptEngine getEngine() {
-        if (engine == null && getBindings().containsKey(PN_ENGINE)){
+        if (engine == null && getBindings().containsKey(PN_ENGINE)) {
             initializeScriptEngine((String) getBindings().get(PN_ENGINE));
         }
         return engine;
@@ -245,8 +248,9 @@ public class PipeBindings {
         try {
             String computed = computeTemplateExpression(expr);
             if (computed != null) {
-                return getEngine() != null ? engine.eval(computed, scriptContext) :
-                        plumber.evaluate(computed, getBindings());
+                return getEngine() != null
+                        ? engine.eval(computed, scriptContext)
+                        : plumber.evaluate(computed, getBindings());
             }
         } catch (ScriptException | JexlException e) {
             throw new IllegalArgumentException(e);
@@ -270,7 +274,7 @@ public class PipeBindings {
     public Bindings getBindings() {
         return scriptContext.getBindings(ScriptContext.ENGINE_SCOPE);
     }
-    
+
     /**
      * return Pipe <code>name</code>'s F binding
      * @param name name of the pipe
@@ -287,12 +291,13 @@ public class PipeBindings {
      */
     public void initializeScriptEngine(String engineName) {
         engine = new ScriptEngineManager().getEngineByName(engineName);
-        if(engine == null){
-            //Fallback to system classloader
+        if (engine == null) {
+            // Fallback to system classloader
             engine = new ScriptEngineManager(null).getEngineByName(engineName);
-            //Check if engine can still not be instantiated
-            if(engine == null){
-                throw new IllegalArgumentException("Can not instantiate " + engineName + " scriptengine. Check JVM version & capabilities.");
+            // Check if engine can still not be instantiated
+            if (engine == null) {
+                throw new IllegalArgumentException(
+                        "Can not instantiate " + engineName + " scriptengine. Check JVM version & capabilities.");
             }
         }
         engine.setContext(scriptContext);
@@ -306,12 +311,13 @@ public class PipeBindings {
      */
     public String conditionalString(String conditionalExpression) {
         Matcher matcher = CONDITIONAL_STRING.matcher(conditionalExpression);
-        if (matcher.find()){
+        if (matcher.find()) {
             Object output = evaluate(StringUtils.substringAfter(matcher.group(0), IF_PREFIX));
-            if (output != null){
+            if (output != null) {
                 String s = output.toString().toLowerCase().trim();
-                if(StringUtils.isNotEmpty(s) && !"false".equals(s) && !"undefined".equals(s)){
-                    return instantiateExpression(conditionalExpression.substring(matcher.group(0).length()));
+                if (StringUtils.isNotEmpty(s) && !"false".equals(s) && !"undefined".equals(s)) {
+                    return instantiateExpression(
+                            conditionalExpression.substring(matcher.group(0).length()));
                 }
             }
         } else {
@@ -336,7 +342,7 @@ public class PipeBindings {
      * @param name name of the binding
      * @return true if <code>name</code> is registered
      */
-    public boolean isBindingDefined(String name){
+    public boolean isBindingDefined(String name) {
         return getBindings().containsKey(name);
     }
 
@@ -356,7 +362,7 @@ public class PipeBindings {
      * @param name name under which static bindings should be recorded
      * @param resource resource from which static bindings will be built
      */
-    public void updateStaticBindings(String name, Resource resource){
+    public void updateStaticBindings(String name, Resource resource) {
         if (resource != null) {
             pathBindings.put(name, resource.getPath());
             nameBindings.put(name, resource.getName());

@@ -1,20 +1,34 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.pipes.internal;
+
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.RepositoryException;
+
+import java.lang.reflect.InvocationTargetException;
+import java.time.Instant;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.Iterator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.IteratorUtils;
 import org.apache.sling.api.resource.PersistenceException;
@@ -26,17 +40,6 @@ import org.apache.sling.pipes.ExecutionResult;
 import org.apache.sling.pipes.Pipe;
 import org.junit.Before;
 import org.junit.Test;
-
-import javax.jcr.Node;
-import javax.jcr.NodeIterator;
-import javax.jcr.RepositoryException;
-import java.lang.reflect.InvocationTargetException;
-import java.time.Instant;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.Iterator;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -70,7 +73,10 @@ public class WritePipeTest extends AbstractPipeTest {
         context.resourceResolver().commit();
         ValueMap properties = context.resourceResolver().getResource(PATH_APPLE).adaptTo(ValueMap.class);
         assertTrue("There should be hasSeed set to true", properties.get("hasSeed", false));
-        assertArrayEquals("Colors should be correctly set", new String[]{"green", "red"}, properties.get("colors", String[].class));
+        assertArrayEquals(
+                "Colors should be correctly set",
+                new String[] {"green", "red"},
+                properties.get("colors", String[].class));
         assertFalse("worm property should be gone (${null} conf)", properties.get("worm", false));
     }
 
@@ -79,10 +85,14 @@ public class WritePipeTest extends AbstractPipeTest {
      */
     public static void assertPiped(Resource resource) {
         ValueMap properties = resource.adaptTo(ValueMap.class);
-        String[] array = new String[]{"cabbage", "carrot"};
-        assertArrayEquals("Second fruit should have been correctly instantiated & patched, added to the first", new String[]{"apple", "banana"}, properties.get("fruits", String[].class));
+        String[] array = new String[] {"cabbage", "carrot"};
+        assertArrayEquals(
+                "Second fruit should have been correctly instantiated & patched, added to the first",
+                new String[] {"apple", "banana"},
+                properties.get("fruits", String[].class));
         assertArrayEquals("Fixed mv should be there", array, properties.get("fixedVegetables", String[].class));
-        assertArrayEquals("Expr fixed mv should there and computed", array, properties.get("computedVegetables", String[].class));
+        assertArrayEquals(
+                "Expr fixed mv should there and computed", array, properties.get("computedVegetables", String[].class));
     }
 
     @Test
@@ -93,14 +103,23 @@ public class WritePipeTest extends AbstractPipeTest {
         assertTrue("There should be one result", it.hasNext());
         Resource resource = it.next();
         assertNotNull("The result should not be null", resource);
-        assertEquals("The result should be the configured one in the piped write pipe", "/content/fruits", resource.getPath());
+        assertEquals(
+                "The result should be the configured one in the piped write pipe",
+                "/content/fruits",
+                resource.getPath());
         context.resourceResolver().commit();
         ValueMap properties = resource.adaptTo(ValueMap.class);
-        assertArrayEquals("First fruit should have been correctly instantiated & patched from nothing", new String[]{"apple"}, properties.get("fruits", String[].class));
+        assertArrayEquals(
+                "First fruit should have been correctly instantiated & patched from nothing",
+                new String[] {"apple"},
+                properties.get("fruits", String[].class));
         assertTrue("There should be a second result awaiting", it.hasNext());
         resource = it.next();
         assertNotNull("The second result should not be null", resource);
-        assertEquals("The second result should be the configured one in the piped write pipe", "/content/fruits", resource.getPath());
+        assertEquals(
+                "The second result should be the configured one in the piped write pipe",
+                "/content/fruits",
+                resource.getPath());
         context.resourceResolver().commit();
         assertPiped(resource);
     }
@@ -109,10 +128,16 @@ public class WritePipeTest extends AbstractPipeTest {
     public void testVariablePiped() throws Exception {
         Iterator<Resource> it = getOutput(PATH_PIPE + "/" + NN_VARIABLE_PIPED);
         Resource resource = it.next();
-        assertEquals("path should be the one configured in first pipe", PATH_PIPE + "/" + NN_VARIABLE_PIPED + "/conf/fruit/conf/apple", resource.getPath());
+        assertEquals(
+                "path should be the one configured in first pipe",
+                PATH_PIPE + "/" + NN_VARIABLE_PIPED + "/conf/fruit/conf/apple",
+                resource.getPath());
         context.resourceResolver().commit();
         ValueMap properties = resource.adaptTo(ValueMap.class);
-        assertEquals("Configured value should be written", "apple is a fruit and its color is green", properties.get("jcr:description", ""));
+        assertEquals(
+                "Configured value should be written",
+                "apple is a fruit and its color is green",
+                properties.get("jcr:description", ""));
         assertEquals("Worm has been removed", "", properties.get("worm", ""));
         Resource archive = resource.getChild("archive/wasthereworm");
         assertNotNull("there is an archive of the worm value", archive);
@@ -129,7 +154,10 @@ public class WritePipeTest extends AbstractPipeTest {
         Resource appleResource = context.resourceResolver().getResource(PATH_APPLE);
         ValueMap properties = appleResource.adaptTo(ValueMap.class);
         assertTrue("There should be hasSeed set to true", properties.get("hasSeed", false));
-        assertArrayEquals("Colors should be correctly set", new String[]{"green", "red"}, properties.get("colors", String[].class));
+        assertArrayEquals(
+                "Colors should be correctly set",
+                new String[] {"green", "red"},
+                properties.get("colors", String[].class));
         Node appleNode = appleResource.adaptTo(Node.class);
         NodeIterator children = appleNode.getNodes();
         assertTrue("Apple node should have subpipes", children.hasNext());
@@ -145,7 +173,10 @@ public class WritePipeTest extends AbstractPipeTest {
         assertNotNull("target resource should be created", root);
         Resource property = root.getChild("index");
         assertNotNull("property should be here", property);
-        assertArrayEquals("index property should be the same", new String[]{"apple", "banana"}, property.adaptTo(String[].class));
+        assertArrayEquals(
+                "index property should be the same",
+                new String[] {"apple", "banana"},
+                property.adaptTo(String[].class));
         List<Resource> resources = IteratorUtils.toList(root.listChildren());
         List<String> children = resources.stream().map(r -> r.getPath()).collect(Collectors.toList());
         assertEquals("there should be 2 subpipes", 2, children.size());
@@ -158,11 +189,13 @@ public class WritePipeTest extends AbstractPipeTest {
         Iterator<Resource> it = getOutput(PATH_PIPE + "/expressionNode");
         it.next();
         context.resourceResolver().commit();
-        assertNotNull("there should be a node created", context.resourceResolver().getResource(PATH_APPLE + "/testExpression"));
+        assertNotNull(
+                "there should be a node created",
+                context.resourceResolver().getResource(PATH_APPLE + "/testExpression"));
     }
 
-
-    protected void testIfNode(Object bindingValue, boolean nodeExpected) throws PersistenceException, RepositoryException {
+    protected void testIfNode(Object bindingValue, boolean nodeExpected)
+            throws PersistenceException, RepositoryException {
         String expectedPath = PATH_APPLE + "/isTrue";
         Pipe pipe = getPipe(PATH_PIPE + "/ifNode");
         pipe.getBindings().addBinding("addedTest", bindingValue);
@@ -209,12 +242,14 @@ public class WritePipeTest extends AbstractPipeTest {
     public void testJcrMark() throws InvocationTargetException, IllegalAccessException {
         Instant now = Instant.now();
         execute("echo /content/fruits | write foo=bar");
-        ValueMap fruits = context.resourceResolver().getResource("/content/fruits").adaptTo(ValueMap.class);
+        ValueMap fruits =
+                context.resourceResolver().getResource("/content/fruits").adaptTo(ValueMap.class);
         assertNotNull(fruits.get("jcr:lastModified", Calendar.class));
-        Instant modified = Instant.ofEpochMilli(fruits.get("jcr:lastModified", Calendar.class).getTimeInMillis());
+        Instant modified = Instant.ofEpochMilli(
+                fruits.get("jcr:lastModified", Calendar.class).getTimeInMillis());
         assertTrue(modified.isAfter(now));
         assertNotNull(fruits.get("jcr:lastModifiedBy", String.class));
-        //we configured the plumber to mark pipe path
+        // we configured the plumber to mark pipe path
         assertNotNull(fruits.get("jcr:lastModifiedByPipe", String.class));
     }
 }
