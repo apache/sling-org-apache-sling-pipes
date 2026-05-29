@@ -1,20 +1,27 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.pipes;
+
+import javax.script.Bindings;
+
+import java.io.IOException;
+import java.util.Map;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
@@ -23,11 +30,6 @@ import org.apache.sling.event.jobs.Job;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.osgi.annotation.versioning.ProviderType;
-
-import java.io.IOException;
-import java.util.Map;
-
-import javax.script.Bindings;
 
 /**
  * Plumber is an osgi service aiming to make pipes available to the sling system, in order to
@@ -86,7 +88,8 @@ public interface Plumber {
      *
      * @return instance of <code>ExecutionResult</code>
      */
-    ExecutionResult execute(ResourceResolver resolver, String path, Map<String, Object> bindings, OutputWriter writer, boolean save);
+    ExecutionResult execute(
+            ResourceResolver resolver, String path, Map<String, Object> bindings, OutputWriter writer, boolean save);
 
     /**
      * Executes a given pipe
@@ -99,7 +102,8 @@ public interface Plumber {
      *
      * @return instance of <code>ExecutionResult</code>
      */
-    ExecutionResult execute(ResourceResolver resolver, Pipe pipe, Map<String, Object> bindings, OutputWriter writer, boolean save);
+    ExecutionResult execute(
+            ResourceResolver resolver, Pipe pipe, Map<String, Object> bindings, OutputWriter writer, boolean save);
 
     /**
      * Registers
@@ -152,7 +156,8 @@ public interface Plumber {
      * @return map of bindings
      * @throws IOException in case something turns wrong with an input stream
      */
-    Map<String, Object> getBindingsFromRequest(SlingHttpServletRequest request, boolean writeAllowed) throws IOException;
+    Map<String, Object> getBindingsFromRequest(SlingHttpServletRequest request, boolean writeAllowed)
+            throws IOException;
 
     /**
      * @return service user that has been configured for executing pipes;
@@ -170,7 +175,8 @@ public interface Plumber {
      * @param reference reference we are searching a resource for (assuming this is *not* a full path already)
      * @return referenced resource, null otherwise
      */
-    @Nullable Resource getReferencedResource(Resource referrer, String reference);
+    @Nullable
+    Resource getReferencedResource(Resource referrer, String reference);
 
     /**
      * marks a given resource as updated

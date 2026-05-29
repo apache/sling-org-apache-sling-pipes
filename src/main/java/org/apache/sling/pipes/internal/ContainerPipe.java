@@ -1,20 +1,26 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.pipes.internal;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.pipes.Pipe;
@@ -23,10 +29,6 @@ import org.apache.sling.pipes.Plumber;
 import org.apache.sling.pipes.SuperPipe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 
 /**
  * This pipe executes the pipes it has in its configuration, chaining their result, and
@@ -49,11 +51,14 @@ public class ContainerPipe extends SuperPipe {
 
     @Override
     public void buildChildren() {
-        for (Iterator<Resource> childPipeResources = getConfiguration().listChildren(); childPipeResources.hasNext();){
+        for (Iterator<Resource> childPipeResources = getConfiguration().listChildren();
+                childPipeResources.hasNext(); ) {
             Resource pipeResource = childPipeResources.next();
             Pipe pipe = plumber.getPipe(pipeResource, bindings);
             if (pipe == null) {
-                log.error("configured pipe {} is either not registered, or not computable by the plumber", pipeResource.getPath());
+                log.error(
+                        "configured pipe {} is either not registered, or not computable by the plumber",
+                        pipeResource.getPath());
             } else {
                 pipe.setParent(this);
                 subpipes.add(pipe);
@@ -101,7 +106,7 @@ public class ContainerPipe extends SuperPipe {
             iterators = new HashMap<>();
             Pipe firstPipe = container.getFirstPipe();
             this.sleep = container.sleep;
-            //we initialize the first iterator the only one not to be updated
+            // we initialize the first iterator the only one not to be updated
             iterators.put(firstPipe, firstPipe.getOutput());
         }
 
@@ -110,7 +115,7 @@ public class ContainerPipe extends SuperPipe {
          * more resources, or at length - 1 (last pipe) with a next one
          * @return true if cursor has been updated
          */
-        private boolean updateCursor(){
+        private boolean updateCursor() {
             Pipe currentPipe = container.subpipes.get(cursor);
             Iterator<Resource> it = iterators.get(currentPipe);
             do {
@@ -120,21 +125,21 @@ public class ContainerPipe extends SuperPipe {
                 while (it.hasNext() && cursor < container.subpipes.size() - 1) {
                     Resource resource = it.next();
                     bindings.updateBindings(currentPipe, resource);
-                    //now we update the following pipe output with that new context
+                    // now we update the following pipe output with that new context
                     Pipe nextPipe = container.subpipes.get(++cursor);
                     iterators.put(nextPipe, nextPipe.getOutput());
                     currentPipe = nextPipe;
                     log.debug("switching to {}", currentPipe);
                     it = iterators.get(currentPipe);
                 }
-                //go down (or stay) to the first pipe having a next item
+                // go down (or stay) to the first pipe having a next item
                 while (!it.hasNext() && cursor > 0) {
                     currentPipe = container.subpipes.get(--cursor);
                     log.debug("switching to {}", currentPipe);
                     it = iterators.get(currentPipe);
                 }
             } while (it.hasNext() && cursor < container.subpipes.size() - 1);
-            //2 choices here:
+            // 2 choices here:
             // either cursor is at 0 with no resource left: end,
             // either cursor is on last pipe with a resource left: hasNext
             // the second part is for the corner case with only one item
@@ -150,7 +155,7 @@ public class ContainerPipe extends SuperPipe {
          */
         @Override
         public boolean hasNext() {
-            if (! computedCursor) {
+            if (!computedCursor) {
                 hasNext = updateCursor();
             }
             return hasNext;
@@ -170,7 +175,7 @@ public class ContainerPipe extends SuperPipe {
                     }
                     return resource;
                 }
-            } catch (InterruptedException e){
+            } catch (InterruptedException e) {
                 log.error("interrupted while sleeping", e);
                 Thread.currentThread().interrupt();
             }

@@ -1,20 +1,32 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.pipes.internal;
+
+import javax.jcr.Item;
+import javax.jcr.Node;
+import javax.jcr.Property;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jackrabbit.api.JackrabbitNode;
@@ -26,16 +38,6 @@ import org.apache.sling.pipes.PipeBindings;
 import org.apache.sling.pipes.Plumber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.Item;
-import javax.jcr.Node;
-import javax.jcr.Property;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.UUID;
 
 /**
  * Does a JCR Move of a node, returns the resource corresponding to the moved node
@@ -86,7 +88,8 @@ public class MovePipe extends BasePipe {
                 session.removeItem(targetPath);
                 session.move(input.getPath(), targetPath);
                 if (parent != null) {
-                    return Collections.singleton(parent.getChild(input.getName())).iterator();
+                    return Collections.singleton(parent.getChild(input.getName()))
+                            .iterator();
                 }
             }
         }
@@ -108,7 +111,7 @@ public class MovePipe extends BasePipe {
                 Property sourceProperty = input.adaptTo(Property.class);
                 if (sourceProperty != null) {
                     Node destNode = session.getNode(parentPath);
-                    if (sourceProperty.isMultiple()){
+                    if (sourceProperty.isMultiple()) {
                         destNode.setProperty(name, sourceProperty.getValues(), sourceProperty.getType());
                     } else {
                         destNode.setProperty(name, sourceProperty.getValue(), sourceProperty.getType());
@@ -122,7 +125,8 @@ public class MovePipe extends BasePipe {
         return EMPTY_ITERATOR;
     }
 
-    private Iterator<Resource> reorder(Resource input, Resource target) throws RepositoryException, PersistenceException {
+    private Iterator<Resource> reorder(Resource input, Resource target)
+            throws RepositoryException, PersistenceException {
         if (target != null && !isDryRun()) {
             logger.info("ordering {} before {}", input.getPath(), target != null);
             Resource parent = target.getParent();
@@ -136,7 +140,8 @@ public class MovePipe extends BasePipe {
                     if (session != null) {
                         session.move(input.getPath(), targetNodePath);
                         targetParent.orderBefore(targetNodeName, oldNodeName);
-                        return Collections.singleton(parent.getChild(targetNodeName)).iterator();
+                        return Collections.singleton(parent.getChild(targetNodeName))
+                                .iterator();
                     }
                 } else {
                     logger.warn("parent resource {} doesn't support ordering", parent.getPath());
@@ -155,7 +160,7 @@ public class MovePipe extends BasePipe {
             return output;
         }
         String targetPath = getExpr();
-        if (! targetPath.startsWith(SLASH)) {
+        if (!targetPath.startsWith(SLASH)) {
             logger.debug("relative path requested as target path: we'll take current path's parent");
             targetPath = StringUtils.substringBeforeLast(input.getPath(), SLASH) + SLASH + targetPath;
         }
@@ -176,7 +181,7 @@ public class MovePipe extends BasePipe {
                     logger.warn("{} already exists, nothing will be done here, nothing outputed", targetPath);
                 }
             }
-        } catch (PersistenceException | RepositoryException e){
+        } catch (PersistenceException | RepositoryException e) {
             logger.error("unable to move the resource", e);
         }
         return output;

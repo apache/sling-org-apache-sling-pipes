@@ -1,20 +1,48 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.pipes.internal;
+
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.jcr.query.Query;
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+import javax.script.Bindings;
+
+import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.lang.reflect.Method;
+import java.security.AccessControlException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -63,32 +91,6 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.query.Query;
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
-import javax.script.Bindings;
-
-import java.io.IOException;
-import java.lang.management.ManagementFactory;
-import java.lang.reflect.Method;
-import java.security.AccessControlException;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
 import static org.apache.jackrabbit.JcrConstants.JCR_LASTMODIFIED;
 import static org.apache.sling.api.resource.ResourceResolverFactory.SUBSERVICE;
 import static org.apache.sling.pipes.BasePipe.PN_STATUS;
@@ -100,16 +102,17 @@ import static org.apache.sling.pipes.BasePipe.STATUS_STARTED;
 /**
  * implements plumber interface, registers default pipes, and provides execution facilities
  */
-@Component(service = {Plumber.class, JobConsumer.class, PlumberMXBean.class, Runnable.class}, property = {
-        JobConsumer.PROPERTY_TOPICS +"="+PlumberImpl.SLING_EVENT_TOPIC
-})
+@Component(
+        service = {Plumber.class, JobConsumer.class, PlumberMXBean.class, Runnable.class},
+        property = {JobConsumer.PROPERTY_TOPICS + "=" + PlumberImpl.SLING_EVENT_TOPIC})
 @Designate(ocd = PlumberImpl.Configuration.class)
 public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnable {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     public static final int DEFAULT_BUFFER_SIZE = 1000;
 
     static final String PN_MONITORED = "monitored";
-    static final String MONITORED_PIPES_QUERY = String.format("//element(*,nt:base)[@sling:resourceType='%s' and @%s]", ContainerPipe.RESOURCE_TYPE, PN_MONITORED);
+    static final String MONITORED_PIPES_QUERY = String.format(
+            "//element(*,nt:base)[@sling:resourceType='%s' and @%s]", ContainerPipe.RESOURCE_TYPE, PN_MONITORED);
 
     static final String MBEAN_NAME_FORMAT = "org.apache.sling.pipes:name=%s";
 
@@ -125,22 +128,23 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
 
     public static final String PIPES_REPOSITORY_PATH = "/var/pipes";
 
-    @ObjectClassDefinition(name="Apache Sling Pipes : Plumber configuration")
+    @ObjectClassDefinition(name = "Apache Sling Pipes : Plumber configuration")
     public @interface Configuration {
-        @AttributeDefinition(description="Number of iterations after which plumber should saves a pipe execution")
+        @AttributeDefinition(description = "Number of iterations after which plumber should saves a pipe execution")
         int bufferSize() default PlumberImpl.DEFAULT_BUFFER_SIZE;
 
-        @AttributeDefinition(description="Number of milliseconds of sleep after each persistence")
+        @AttributeDefinition(description = "Number of milliseconds of sleep after each persistence")
         long sleep() default 0L;
 
-        @AttributeDefinition(description="Name of service user, with appropriate rights, that will be used for async execution")
+        @AttributeDefinition(
+                description = "Name of service user, with appropriate rights, that will be used for async execution")
         String serviceUser();
 
-        @AttributeDefinition(description="Path of the permission resource for executing pipes")
+        @AttributeDefinition(description = "Path of the permission resource for executing pipes")
         String executionPermissionResource() default PERMISSION_EXECUTION;
 
-        @AttributeDefinition(description="Users allowed to register async pipes")
-        String[] authorizedUsers() default  {"admin"};
+        @AttributeDefinition(description = "Users allowed to register async pipes")
+        String[] authorizedUsers() default {"admin"};
 
         @AttributeDefinition(description = "Paths to search for references in")
         String[] referencesPaths() default {};
@@ -160,7 +164,7 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
         String scheduler_expression() default "0 0 12 */7 * ?";
     }
 
-    @Reference(policy= ReferencePolicy.DYNAMIC, cardinality= ReferenceCardinality.OPTIONAL)
+    @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL)
     volatile Distributor distributor = null;
 
     @Reference
@@ -187,9 +191,11 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
     public static final String PN_NBOUTPUTRESOURCES = "nbOutputResources";
 
     @Activate
-    public void activate(Configuration configuration){
+    public void activate(Configuration configuration) {
         this.configuration = configuration;
-        serviceUser = configuration.serviceUser() != null ? Collections.singletonMap(SUBSERVICE, configuration.serviceUser()) : null;
+        serviceUser = configuration.serviceUser() != null
+                ? Collections.singletonMap(SUBSERVICE, configuration.serviceUser())
+                : null;
         allowedUsers = Arrays.asList(configuration.authorizedUsers());
         registry = new HashMap<>();
         registerPipes();
@@ -200,12 +206,12 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
     /**
      * Register all pipes declared in pipe builder
      */
-    void registerPipes(){
+    void registerPipes() {
         registerPipe(ContainerPipe.RESOURCE_TYPE, ContainerPipe.class);
         registerPipe(ManifoldPipe.RESOURCE_TYPE, ManifoldPipe.class);
-        for (Method method : PipeBuilderImpl.class.getDeclaredMethods()){
+        for (Method method : PipeBuilderImpl.class.getDeclaredMethods()) {
             PipeExecutor executor = method.getAnnotation(PipeExecutor.class);
-            if (executor != null){
+            if (executor != null) {
                 registerPipe(executor.resourceType(), executor.pipeClass());
             }
         }
@@ -243,10 +249,10 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
     }
 
     @Deactivate
-    public void deactivate(){
+    public void deactivate() {
         toggleJmxRegistration(null, PlumberMXBean.class.getName(), false);
-        if (monitoredPipes != null){
-            for (String path : monitoredPipes.keySet()){
+        if (monitoredPipes != null) {
+            for (String path : monitoredPipes.keySet()) {
                 toggleJmxRegistration(null, path, false);
             }
         }
@@ -257,14 +263,14 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
      * @param name partial name that will be used for registration
      * @param register true to register, false to unregister
      */
-    private void toggleJmxRegistration(Object instance, String name, boolean register){
+    private void toggleJmxRegistration(Object instance, String name, boolean register) {
         try {
             MBeanServer server = ManagementFactory.getPlatformMBeanServer();
             ObjectName oName = ObjectName.getInstance(String.format(MBEAN_NAME_FORMAT, name));
             if (register && !server.isRegistered(oName)) {
                 server.registerMBean(instance, oName);
             }
-            if (!register && server.isRegistered(oName)){
+            if (!register && server.isRegistered(oName)) {
                 server.unregisterMBean(oName);
             }
         } catch (Exception e) {
@@ -284,7 +290,8 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
         } else {
             try {
                 Class<? extends Pipe> pipeClass = registry.get(resource.getResourceType());
-                return pipeClass.getDeclaredConstructor(Plumber.class, Resource.class, PipeBindings.class)
+                return pipeClass
+                        .getDeclaredConstructor(Plumber.class, Resource.class, PipeBindings.class)
                         .newInstance(this, resource, upperBindings);
             } catch (Exception e) {
                 log.error("Unable to properly instantiate the pipe configured in {}", resource.getPath(), e);
@@ -300,9 +307,11 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
             if (node != null) {
                 try {
                     node.setProperty(JCR_LASTMODIFIED, Calendar.getInstance());
-                    node.setProperty(JCR_LAST_MODIFIED_BY, resource.getResourceResolver().getUserID());
+                    node.setProperty(
+                            JCR_LAST_MODIFIED_BY, resource.getResourceResolver().getUserID());
                     if (configuration.mark_pipe_path()) {
-                        node.setProperty(JCR_LAST_MODIFIED_BY_PIPE, pipe.getResource().getPath());
+                        node.setProperty(
+                                JCR_LAST_MODIFIED_BY_PIPE, pipe.getResource().getPath());
                     }
                 } catch (RepositoryException e) {
                     log.debug("There is probably no way to mark that node, which we can't do much about", e);
@@ -312,22 +321,23 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
     }
 
     @Override
-    public Map<String, Object> getBindingsFromRequest(SlingHttpServletRequest request, boolean writeAllowed) throws IOException {
+    public Map<String, Object> getBindingsFromRequest(SlingHttpServletRequest request, boolean writeAllowed)
+            throws IOException {
         Map<String, Object> bindings = new HashMap<>();
         String dryRun = request.getParameter(BasePipe.DRYRUN_KEY);
         if (StringUtils.isNotBlank(dryRun) && !dryRun.equals(Boolean.FALSE.toString())) {
             bindings.put(BasePipe.DRYRUN_KEY, true);
         }
         String paramBindings = request.getParameter(PARAM_BINDINGS);
-        if (StringUtils.isNotBlank(paramBindings)){
+        if (StringUtils.isNotBlank(paramBindings)) {
             try {
                 bindings.putAll(JsonUtil.unbox(JsonUtil.parseObject(paramBindings)));
-            } catch (Exception e){
+            } catch (Exception e) {
                 log.error("Unable to retrieve bindings information", e);
             }
         }
         RequestParameter fileParameter = request.getRequestParameter(PARAM_FILE);
-        if (fileParameter != null){
+        if (fileParameter != null) {
             bindings.put(AbstractInputStreamPipe.BINDING_IS, fileParameter.getInputStream());
         }
 
@@ -345,7 +355,7 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
 
     @Override
     public Job executeAsync(String path, Map<String, Object> bindings) {
-        if (StringUtils.isBlank((String)serviceUser.get(SUBSERVICE))) {
+        if (StringUtils.isBlank((String) serviceUser.get(SUBSERVICE))) {
             log.error("please configure plumber service user");
         }
         final Map<String, Object> props = new HashMap<>();
@@ -355,7 +365,8 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
     }
 
     @Override
-    public ExecutionResult execute(ResourceResolver resolver, String path, Map additionalBindings, OutputWriter writer, boolean save) {
+    public ExecutionResult execute(
+            ResourceResolver resolver, String path, Map additionalBindings, OutputWriter writer, boolean save) {
         Resource pipeResource = resolver.getResource(path);
         Pipe pipe = getPipe(pipeResource);
         if (pipe == null) {
@@ -364,9 +375,10 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
         return execute(resolver, pipe, additionalBindings, writer, save);
     }
 
-    private ExecutionResult internalExecute(ResourceResolver resolver, OutputWriter writer, Pipe pipe) throws InterruptedException, PersistenceException {
+    private ExecutionResult internalExecute(ResourceResolver resolver, OutputWriter writer, Pipe pipe)
+            throws InterruptedException, PersistenceException {
         ExecutionResult result = new ExecutionResult(writer);
-        for (Iterator<Resource> it = pipe.getOutput(); it.hasNext();){
+        for (Iterator<Resource> it = pipe.getOutput(); it.hasNext(); ) {
             Resource resource = it.next();
             checkError(pipe, result);
             if (resource != null) {
@@ -380,7 +392,8 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
     }
 
     @Override
-    public ExecutionResult execute(ResourceResolver resolver, Pipe pipe, Map additionalBindings, OutputWriter writer, boolean save) {
+    public ExecutionResult execute(
+            ResourceResolver resolver, Pipe pipe, Map additionalBindings, OutputWriter writer, boolean save) {
         checkPermissions(resolver, configuration.executionPermissionResource());
         boolean success = false;
         PipeMonitor monitor = null;
@@ -388,12 +401,12 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
         long start = System.currentTimeMillis();
         try {
             boolean readOnly = false;
-            if (additionalBindings != null){
+            if (additionalBindings != null) {
                 pipe.getBindings().addBindings(additionalBindings);
-                readOnly = (Boolean)additionalBindings.getOrDefault(BasePipe.READ_ONLY, false);
+                readOnly = (Boolean) additionalBindings.getOrDefault(BasePipe.READ_ONLY, false);
             }
 
-            if (! pipe.isDryRun() && readOnly && pipe.modifiesContent()) {
+            if (!pipe.isDryRun() && readOnly && pipe.modifiesContent()) {
                 throw new IllegalArgumentException("This pipe modifies content, you should use a POST request");
             }
             log.debug("[{}] before execution hook is called", pipe);
@@ -401,13 +414,13 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
             log.info("[{}] execution starts, save ({})", pipe, save);
             Resource confResource = pipe.getResource();
             writer.setPipe(pipe);
-            if (isRunning(confResource)){
+            if (isRunning(confResource)) {
                 throw new IllegalStateException("Pipe is already running");
             }
             monitor = monitoredPipes.get(confResource.getPath());
             writeStatus(pipe, STATUS_STARTED, null);
             resolver.commit();
-            if (monitor != null){
+            if (monitor != null) {
                 monitor.starts();
             }
             result = internalExecute(resolver, writer, pipe);
@@ -417,7 +430,7 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
             if (writer.autoClose()) {
                 writer.ends();
             }
-            if (monitor != null){
+            if (monitor != null) {
                 monitor.ends();
                 monitor.setLastResult(result);
             }
@@ -440,11 +453,11 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
             log.info("[{}] done executing in {}.", pipe.getName(), time);
             log.debug("[{}] after execution hook is called", pipe);
             pipe.after();
-            if (!success && monitor != null){
+            if (!success && monitor != null) {
                 monitor.failed();
             }
         }
-        //returning void result if we get there
+        // returning void result if we get there
         return new ExecutionResult(writer);
     }
 
@@ -453,18 +466,18 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
      * @param pipe current pipe
      * @param result current result
      */
-    void checkError(Pipe pipe, ExecutionResult result){
+    void checkError(Pipe pipe, ExecutionResult result) {
         String error = pipe.getBindings().popCurrentError();
-        if (StringUtils.isNotBlank(error)){
+        if (StringUtils.isNotBlank(error)) {
             result.addError(error);
         }
     }
 
     private boolean shouldSave(ResourceResolver resolver, Pipe pipe, ExecutionResult result, Resource currentResource) {
-        return  pipe.modifiesContent()
-            && resolver.hasChanges()
-            && !pipe.isDryRun()
-            && (currentResource == null || result.size() % configuration.bufferSize() == 0);
+        return pipe.modifiesContent()
+                && resolver.hasChanges()
+                && !pipe.isDryRun()
+                && (currentResource == null || result.size() % configuration.bufferSize() == 0);
     }
 
     /**
@@ -475,19 +488,24 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
      * @param currentResource if running, null if ended
      * @throws PersistenceException in case save fails
      */
-    void persist(ResourceResolver resolver, Pipe pipe, ExecutionResult result, Resource currentResource) throws PersistenceException, InterruptedException {
+    void persist(ResourceResolver resolver, Pipe pipe, ExecutionResult result, Resource currentResource)
+            throws PersistenceException, InterruptedException {
         if (shouldSave(resolver, pipe, result, currentResource)) {
             log.info("[{}] saving changes...", pipe.getName());
             writeStatus(pipe, currentResource == null ? STATUS_FINISHED : currentResource.getPath(), result);
             resolver.commit();
             if (currentResource == null && distributor != null && StringUtils.isNotBlank(pipe.getDistributionAgent())) {
                 log.info("a distribution agent is configured, will try to distribute the changes");
-                DistributionRequest request = new SimpleDistributionRequest(DistributionRequestType.ADD, true, result.getCurrentPathSet().toArray(new String[result.getCurrentPathSet().size()]));
+                DistributionRequest request = new SimpleDistributionRequest(
+                        DistributionRequestType.ADD,
+                        true,
+                        result.getCurrentPathSet()
+                                .toArray(new String[result.getCurrentPathSet().size()]));
                 DistributionResponse response = distributor.distribute(pipe.getDistributionAgent(), resolver, request);
                 log.info("distribution response : {}", response);
             }
             if (result.size() > configuration.bufferSize()) {
-                //avoid too big foot print
+                // avoid too big foot print
                 result.emptyCurrentSet();
             }
             if (configuration.sleep() > 0) {
@@ -513,10 +531,10 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
      * @param status status to write
      * @throws RepositoryException in case write goes wrong
      */
-    void writeStatus(Pipe pipe, String status, ExecutionResult result){
-        if (StringUtils.isNotBlank(status)){
+    void writeStatus(Pipe pipe, String status, ExecutionResult result) {
+        if (StringUtils.isNotBlank(status)) {
             ModifiableValueMap vm = pipe.getResource().adaptTo(ModifiableValueMap.class);
-            if( vm != null) {
+            if (vm != null) {
                 vm.put(PN_STATUS, status);
                 vm.put(PN_NBOUTPUTRESOURCES, result != null ? result.size() : -1);
                 Calendar cal = new GregorianCalendar();
@@ -529,9 +547,9 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
     @Override
     public String getStatus(Resource pipeResource) {
         Resource statusResource = pipeResource.getChild(PN_STATUS);
-        if (statusResource != null){
+        if (statusResource != null) {
             String status = statusResource.adaptTo(String.class);
-            if (StringUtils.isNotBlank(status)){
+            if (StringUtils.isNotBlank(status)) {
                 return status;
             }
         }
@@ -550,9 +568,9 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
 
     @Override
     public JobResult process(Job job) {
-        try(ResourceResolver resolver = factory.getServiceResourceResolver(serviceUser)){
-            String path = (String)job.getProperty(SlingConstants.PROPERTY_PATH);
-            Map<String, Object> bindings = (Map)job.getProperty(PipeBindings.NN_ADDITIONALBINDINGS);
+        try (ResourceResolver resolver = factory.getServiceResourceResolver(serviceUser)) {
+            String path = (String) job.getProperty(SlingConstants.PROPERTY_PATH);
+            Map<String, Object> bindings = (Map) job.getProperty(PipeBindings.NN_ADDITIONALBINDINGS);
             OutputWriter writer = new JsonWriter();
             writer.starts();
             execute(resolver, path, bindings, writer, true);
@@ -571,12 +589,12 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
         getMonitoredPipes().stream().forEach(bean -> map.put(bean.getPath(), bean));
         if (monitoredPipes != null) {
             Collection<String> shouldBeRemoved = CollectionUtils.subtract(monitoredPipes.keySet(), map.keySet());
-            for (String path : shouldBeRemoved){
+            for (String path : shouldBeRemoved) {
                 toggleJmxRegistration(null, path, false);
             }
         }
         monitoredPipes = map;
-        for (Map.Entry<String, PipeMonitor> entry : monitoredPipes.entrySet()){
+        for (Map.Entry<String, PipeMonitor> entry : monitoredPipes.entrySet()) {
             toggleJmxRegistration(entry.getValue(), entry.getKey(), true);
         }
     }
@@ -585,7 +603,8 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
         Collection<PipeMonitor> beans = new ArrayList<>();
         if (serviceUser != null) {
             try (ResourceResolver resolver = factory.getServiceResourceResolver(serviceUser)) {
-                for (Iterator<Resource> resourceIterator = resolver.findResources(MONITORED_PIPES_QUERY, Query.XPATH); resourceIterator.hasNext(); ) {
+                for (Iterator<Resource> resourceIterator = resolver.findResources(MONITORED_PIPES_QUERY, Query.XPATH);
+                        resourceIterator.hasNext(); ) {
                     beans.add(new PipeMonitor(this, getPipe(resourceIterator.next())));
                 }
             } catch (LoginException e) {
@@ -605,8 +624,8 @@ public class PlumberImpl implements Plumber, JobConsumer, PlumberMXBean, Runnabl
      */
     public String generateUniquePath() {
         final Calendar now = Calendar.getInstance();
-        return PIPES_REPOSITORY_PATH + '/' + now.get(Calendar.YEAR) + '/' + now.get(Calendar.MONTH) + '/' + now.get(Calendar.DAY_OF_MONTH) + "/"
-                + UUID.randomUUID().toString();
+        return PIPES_REPOSITORY_PATH + '/' + now.get(Calendar.YEAR) + '/' + now.get(Calendar.MONTH) + '/'
+                + now.get(Calendar.DAY_OF_MONTH) + "/" + UUID.randomUUID().toString();
     }
 
     void cleanResourceAndEmptyParents(Resource resource) throws PersistenceException {

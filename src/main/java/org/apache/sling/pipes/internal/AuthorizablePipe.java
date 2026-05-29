@@ -1,20 +1,30 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.pipes.internal;
+
+import javax.jcr.RepositoryException;
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonArrayBuilder;
+
+import java.util.Collections;
+import java.util.Iterator;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jackrabbit.api.security.user.Authorizable;
@@ -27,13 +37,6 @@ import org.apache.sling.pipes.PipeBindings;
 import org.apache.sling.pipes.Plumber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.RepositoryException;
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonArrayBuilder;
-import java.util.Collections;
-import java.util.Iterator;
 
 /**
  * pipe that outputs an authorizable resource based on the id set in expr
@@ -123,7 +126,7 @@ public class AuthorizablePipe extends BasePipe {
             auth = userManager.getAuthorizable(authId);
             if (auth == null && createGroup) {
                 logger.info("authorizable {} does not exist, and createGroup flag is set, creating it", authId);
-                if (! isDryRun()) {
+                if (!isDryRun()) {
                     auth = userManager.createGroup(authId);
                 }
             }
@@ -140,19 +143,19 @@ public class AuthorizablePipe extends BasePipe {
      * Add current authorizable to configured addToGroup expression (should resolve as a group id)
      * @param auth authorizable to add to the group
      */
-    void addAuthorizableToGroup(Authorizable auth){
+    void addAuthorizableToGroup(Authorizable auth) {
         try {
-            //if addToGroup is set to true, we try to find the corresponding
-            //group and to add current auth to it as a member
+            // if addToGroup is set to true, we try to find the corresponding
+            // group and to add current auth to it as a member
             String groupId = bindings.instantiateExpression(addToGroup);
             Authorizable groupAuth = userManager.getAuthorizable(groupId);
             if (groupAuth != null && groupAuth.isGroup()) {
                 logger.info("adding {} to {}", auth.getID(), groupId);
-                if (! isDryRun()) {
+                if (!isDryRun()) {
                     ((Group) groupAuth).addMember(auth);
                 }
             }
-        } catch (Exception e){
+        } catch (Exception e) {
             logger.error("Unable to add current authorizable to group {}", addToGroup, e);
         }
     }
@@ -164,10 +167,10 @@ public class AuthorizablePipe extends BasePipe {
     void addMembersToAuthorizable(Authorizable auth) {
         try {
             if (auth.isGroup()) {
-                Group group = (Group)auth;
+                Group group = (Group) auth;
                 String uids = bindings.instantiateExpression(addMembers);
                 JsonArray array = JsonUtil.parseArray(uids);
-                for (int index = 0; index < array.size(); index ++){
+                for (int index = 0; index < array.size(); index++) {
                     String uid = array.getString(index);
                     Authorizable member = userManager.getAuthorizable(uid);
                     if (member != null) {
@@ -182,7 +185,7 @@ public class AuthorizablePipe extends BasePipe {
             } else {
                 logger.error("{} is not a group, can't add members", auth.getID());
             }
-        } catch (Exception e){
+        } catch (Exception e) {
             logger.error("unable to add members {}", addMembers, e);
         }
     }
@@ -191,20 +194,20 @@ public class AuthorizablePipe extends BasePipe {
      * add current group's members to the bindings
      * @param auth group whose members should be bound in the pipe bindings
      */
-    void bindMembersToAuthorizable(Authorizable auth){
+    void bindMembersToAuthorizable(Authorizable auth) {
         try {
-            if (auth.isGroup()){
-                Group group = (Group)auth;
+            if (auth.isGroup()) {
+                Group group = (Group) auth;
                 Iterator<Authorizable> memberIterator = group.getMembers();
                 JsonArrayBuilder array = Json.createArrayBuilder();
-                while (memberIterator.hasNext()){
+                while (memberIterator.hasNext()) {
                     array.add(memberIterator.next().getID());
                 }
                 outputBinding = JsonUtil.toString(array);
             } else {
                 logger.error("{} is not a group, unable to bind members", auth.getID());
             }
-        } catch (Exception e){
+        } catch (Exception e) {
             logger.error("unable to bind members");
         }
     }

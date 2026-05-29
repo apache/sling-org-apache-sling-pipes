@@ -1,20 +1,26 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.pipes.models;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
@@ -22,10 +28,6 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.pipes.AbstractPipeTest;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -43,8 +45,8 @@ public class PipeModelTest extends AbstractPipeTest {
     public void setup() throws PersistenceException {
         super.setup();
         Map map = new HashMap();
-        map.put("jcr:primaryType","sling:Folder");
-        map.put("test",PATH_APPLE);
+        map.put("jcr:primaryType", "sling:Folder");
+        map.put("test", PATH_APPLE);
         ResourceUtil.getOrCreateResource(context.resourceResolver(), COMPONENT, map, "sling:Folder", true);
         context.load().json("/container.json", COMPONENT + "/" + PipeModel.NN_PIPES);
         model = new PipeModel(context.resourceResolver().getResource(COMPONENT));
@@ -57,7 +59,7 @@ public class PipeModelTest extends AbstractPipeTest {
      * we've loaded under NN_PIPES all the pipes from container json (direct subpipes): all those pipes output should be mounted
      * as outputs of the model
      */
-    public void testInit(){
+    public void testInit() {
         assertTrue("there should be pipes outputs", model.getOutputs().size() > 0);
     }
 
@@ -72,7 +74,8 @@ public class PipeModelTest extends AbstractPipeTest {
     public void testCurrentResourceBindings() throws PersistenceException {
         Iterator<Resource> output = model.getOutputs().get(NN_CURRENTRESOURCEPIPE);
         assertTrue("resource binding pipe should have output", output.hasNext());
-        assertEquals("output should be apple's resource", PATH_APPLE, output.next().getPath());
+        assertEquals(
+                "output should be apple's resource", PATH_APPLE, output.next().getPath());
         assertFalse("there should be no other resource", output.hasNext());
     }
 }

@@ -1,20 +1,28 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.pipes.internal;
+
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.IteratorUtils;
 import org.apache.sling.api.resource.PersistenceException;
@@ -23,12 +31,6 @@ import org.apache.sling.pipes.AbstractPipeTest;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.mockito.cglib.core.CollectionUtils;
-
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertTrue;
@@ -47,51 +49,57 @@ public class TraversePipeTest extends AbstractPipeTest {
     }
 
     @Test
-    public void testDefault() throws Exception{
-        assertListEquals(getResourceNameList("default"), "tree", "fruits", "apple", "banana", "vegetables", "leek", "carrot");
+    public void testDefault() throws Exception {
+        assertListEquals(
+                getResourceNameList("default"), "tree", "fruits", "apple", "banana", "vegetables", "leek", "carrot");
     }
 
     @Test
-    public void testBreadth() throws Exception{
-        assertListEquals(getResourceNameList("breadth"), "tree", "fruits", "vegetables", "apple", "banana", "leek", "carrot");
+    public void testBreadth() throws Exception {
+        assertListEquals(
+                getResourceNameList("breadth"), "tree", "fruits", "vegetables", "apple", "banana", "leek", "carrot");
     }
 
     @Test
-    public void testProperties() throws Exception{
+    public void testProperties() throws Exception {
         Set<String> properties = new HashSet<String>(getResourceNameList("properties"));
-        assertTrue("should contains all properties ",
+        assertTrue(
+                "should contains all properties ",
                 properties.contains("jcr:primaryType")
-                && properties.contains("jcr:description")
-                && properties.contains("jcr:title")
-                && properties.contains("color"));
+                        && properties.contains("jcr:description")
+                        && properties.contains("jcr:title")
+                        && properties.contains("color"));
     }
 
     @Test
-    public void testSlim() throws Exception{
+    public void testSlim() throws Exception {
         assertListEquals(getResourceNameList("slim"), "slim", "tree", "test");
     }
 
     @Test
-    @Ignore //for now nameGlobs is not implemented (see SLING-7089)
+    @Ignore // for now nameGlobs is not implemented (see SLING-7089)
     public void testWhiteListProperties() throws Exception {
-        List<String> colorList = CollectionUtils.transform(getResourceList("whiteListProperties"), o -> ((Resource)o).adaptTo(String.class));
+        List<String> colorList = getResourceList("whiteListProperties").stream()
+                .map(resource -> resource.adaptTo(String.class))
+                .collect(Collectors.toList());
         assertListEquals(colorList, "green", "yellow", "green", "orange");
     }
 
     @Test
-    public void testDepthLimit() throws Exception{
+    public void testDepthLimit() throws Exception {
         assertListEquals(getResourceNameList("depthLimit"), "tree", "fruits", "vegetables");
     }
 
-    List<Resource> getResourceList(String pipeName){
+    List<Resource> getResourceList(String pipeName) {
         Iterator<Resource> output = getOutput(CONF_ROOT + pipeName);
         return IteratorUtils.toList(output);
     }
-    List<String> getResourceNameList(String pipeName){
-        return CollectionUtils.transform(getResourceList(pipeName), o -> ((Resource)o).getName());
+
+    List<String> getResourceNameList(String pipeName) {
+        return getResourceList(pipeName).stream().map(Resource::getName).collect(Collectors.toList());
     }
 
-    private void assertListEquals(List<String> tested, String... expected){
+    private void assertListEquals(List<String> tested, String... expected) {
         assertArrayEquals("arrays should be equals", expected, tested.toArray(new String[tested.size()]));
     }
 }

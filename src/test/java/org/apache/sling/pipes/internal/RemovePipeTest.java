@@ -1,20 +1,26 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.pipes.internal;
+
+import javax.jcr.Node;
+
+import java.util.Iterator;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -23,9 +29,6 @@ import org.apache.sling.pipes.AbstractPipeTest;
 import org.apache.sling.pipes.Pipe;
 import org.junit.Before;
 import org.junit.Test;
-
-import javax.jcr.Node;
-import java.util.Iterator;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -43,7 +46,7 @@ public class RemovePipeTest extends AbstractPipeTest {
     }
 
     @Test
-    public void testRemoveNode() throws Exception{
+    public void testRemoveNode() throws Exception {
         ResourceResolver resolver = context.resourceResolver();
         Resource resource = resolver.getResource(PATH_PIPE + "/" + NN_SIMPLE);
         resource.adaptTo(Node.class).setProperty(Pipe.PN_PATH, PATH_BANANA);
@@ -86,6 +89,8 @@ public class RemovePipeTest extends AbstractPipeTest {
         assertNull("isnota carrot should be removed", resolver.getResource(PATH_APPLE + "/isnota/carrot"));
         Resource isNotAPea = resolver.getResource(PATH_APPLE + "/isnota/pea");
         assertNotNull("isnota pea should not be removed", isNotAPea);
-        assertFalse("isnota pea color property should not be here", isNotAPea.adaptTo(ValueMap.class).containsKey("color"));
+        assertFalse(
+                "isnota pea color property should not be here",
+                isNotAPea.adaptTo(ValueMap.class).containsKey("color"));
     }
 }

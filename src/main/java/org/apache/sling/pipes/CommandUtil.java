@@ -1,22 +1,22 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.pipes;
-
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,6 +27,8 @@ import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import org.jetbrains.annotations.NotNull;
 
 import static org.apache.sling.pipes.PipeBindings.INJECTED_SCRIPT_REGEXP;
 
@@ -42,12 +44,17 @@ public class CommandUtil {
 
     static final String QUOTE = "\"";
     static final Pattern MIXINS_ARRAY_PATTERN = Pattern.compile("^\\s*\\[(.*)\\]\\s*$");
-    private static final Pattern UNEMBEDDEDSCRIPT_PATTERN = Pattern.compile("^(\\d+(\\.\\d+)?)|" + //21.42
-            "\\[.*]$|" + //['one','two']
-            "[\\w_\\-]+\\..+|" + //map.field...
-            "[\\w_\\-]+\\['.+']|" + //map['field']
-            "true$|false$|" + //boolean
-            "new .*|" + //instantiation
+    private static final Pattern UNEMBEDDEDSCRIPT_PATTERN = Pattern.compile("^(\\d+(\\.\\d+)?)|" + // 21.42
+            "\\[.*]$|"
+            + // ['one','two']
+            "[\\w_\\-]+\\..+|"
+            + // map.field...
+            "[\\w_\\-]+\\['.+']|"
+            + // map['field']
+            "true$|false$|"
+            + // boolean
+            "new .*|"
+            + // instantiation
             "(.*'$)"); // 'string'
     static final String EXPR_TOKEN = "([^=]+|" + INJECTED_SCRIPT_REGEXP + ")+";
     static final String CONFIGURATION_TOKEN = "\\s*(?<" + FIRST_KEY + ">" + EXPR_TOKEN + ")\\s*" + KEY_VALUE_SEP
@@ -55,8 +62,8 @@ public class CommandUtil {
     public static final Pattern CONFIGURATION_PATTERN = Pattern.compile(CONFIGURATION_TOKEN);
 
     private static final String ESCAPED_EQ = "_EQ_";
-    private CommandUtil() {
-    }
+
+    private CommandUtil() {}
 
     /**
      * Checks arguments and throws exception if there is an issue
@@ -64,7 +71,7 @@ public class CommandUtil {
      * @throws IllegalArgumentException exception thrown in case arguments are wrong
      */
     public static void checkArguments(Object... params) {
-        if (params.length % 2 > 0){
+        if (params.length % 2 > 0) {
             throw new IllegalArgumentException("there should be an even number of arguments");
         }
     }
@@ -89,11 +96,11 @@ public class CommandUtil {
      * @param embed flag indicating wether or not we should try to embed values in script tags,
      * @param params key/value pairs to write into the map
      */
-    public static void writeToMap(Map<String, Object> map, boolean embed, Object... params){
+    public static void writeToMap(Map<String, Object> map, boolean embed, Object... params) {
         for (int i = 0; i < params.length - 1; i += 2) {
             map.put(params[i].toString(), embed ? embedIfNeeded(params[i + 1]) : params[i + 1]);
             if (params[i].toString().equals(PN_JCR_MIXIN)) {
-                map.put(PN_JCR_MIXIN, handleMixins((String)params[i + 1]));
+                map.put(PN_JCR_MIXIN, handleMixins((String) params[i + 1]));
             }
         }
     }
@@ -103,9 +110,10 @@ public class CommandUtil {
         if (matcher.matches()) {
             return Arrays.stream(matcher.group(1).split(PAIR_SEP))
                     .map(String::trim)
-                    .collect(Collectors.toList()).toArray(new String[0]);
+                    .collect(Collectors.toList())
+                    .toArray(new String[0]);
         }
-        return new String[] { value };
+        return new String[] {value};
     }
 
     /**
@@ -115,7 +123,7 @@ public class CommandUtil {
      */
     public static Map<String, Object> stringToMap(@NotNull String input, UnaryOperator<String> valueTransformer) {
         Map<String, Object> map = new HashMap<>();
-        for (String pair : input.split(PAIR_SEP) ){
+        for (String pair : input.split(PAIR_SEP)) {
             Matcher matcher = CONFIGURATION_PATTERN.matcher(pair);
             if (matcher.find()) {
                 map.put(matcher.group(FIRST_KEY), valueTransformer.apply(matcher.group(SECOND_KEY)));
@@ -152,5 +160,4 @@ public class CommandUtil {
         }
         return args.toArray(new String[args.size()]);
     }
-
 }

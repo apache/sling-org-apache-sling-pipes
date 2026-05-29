@@ -1,21 +1,26 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-
 package org.apache.sling.pipes.internal;
+
+import javax.json.JsonException;
+import javax.servlet.Servlet;
+import javax.servlet.http.HttpServletResponse;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -71,16 +76,14 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.sling.pipes.CommandUtil.keyValuesToArray;
 import static org.apache.sling.pipes.CommandUtil.writeToMap;
 
-import javax.json.JsonException;
-import javax.servlet.Servlet;
-import javax.servlet.http.HttpServletResponse;
-
-@Component(service = {Servlet.class, CommandExecutor.class}, property= {
-    ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES + "=" + CommandExecutorImpl.RESOURCE_TYPE,
-    ServletResolverConstants.SLING_SERVLET_METHODS + "=POST",
-    ServletResolverConstants.SLING_SERVLET_EXTENSIONS + "=json",
-    ServletResolverConstants.SLING_SERVLET_EXTENSIONS + "=csv"
-})
+@Component(
+        service = {Servlet.class, CommandExecutor.class},
+        property = {
+            ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES + "=" + CommandExecutorImpl.RESOURCE_TYPE,
+            ServletResolverConstants.SLING_SERVLET_METHODS + "=POST",
+            ServletResolverConstants.SLING_SERVLET_EXTENSIONS + "=json",
+            ServletResolverConstants.SLING_SERVLET_EXTENSIONS + "=csv"
+        })
 @Designate(ocd = CommandExecutorImpl.Configuration.class)
 public class CommandExecutorImpl extends AbstractPlumberServlet implements CommandExecutor {
     final Logger log = LoggerFactory.getLogger(CommandExecutorImpl.class);
@@ -101,7 +104,7 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
     static final List<String> JSON_EXPR_KEYS = Arrays.asList(JsonPipe.JSON_KEY);
     static final String JSON_START = "\"[{";
     static final String PARAMS_SEPARATOR = WHITE_SPACE_SEPARATOR + "+" + PARAMS + WHITE_SPACE_SEPARATOR + "*";
-    static final Pattern SUB_TOKEN_PATTERN = Pattern.compile("\\s*(?<" + TOKEN + ">((\"[^\"]*\")|([^\\s\"]+))*)\\s*" );
+    static final Pattern SUB_TOKEN_PATTERN = Pattern.compile("\\s*(?<" + TOKEN + ">((\"[^\"]*\")|([^\\s\"]+))*)\\s*");
     static final String KEY_NAME = "name";
     static final String KEY_PATH = "path";
     static final String KEY_EXPR = "expr";
@@ -109,19 +112,18 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
     static final String DECL_BINDING_CONTENT = "declcontent";
     static final Pattern DECL_BINDING_PATTERN = Pattern.compile(DECL_BINDING + WHITE_SPACE_SEPARATOR + "*"
             + "(?<" + DECL_BINDING + ">[\\w_\\-\\d]+)"
-            + WHITE_SPACE_SEPARATOR + "*=" + WHITE_SPACE_SEPARATOR + "*" +
-            "(?<" +  DECL_BINDING_CONTENT + ">.*)");
+            + WHITE_SPACE_SEPARATOR + "*=" + WHITE_SPACE_SEPARATOR + "*" + "(?<"
+            + DECL_BINDING_CONTENT + ">.*)");
 
-    private static final String HELP_START =
-        "\n a <pipe token> is <pipe> <expr|conf>? (<options>)?" +
-        "\n <options> are (@ <option>)* form with <option> being either" +
-        "\n\t'name pipeName' (used in bindings), " +
-        "\n\t'expr pipeExpression' (when not directly as <args>)" +
-        "\n\t'path pipePath' (when not directly as <args>)" +
-        "\n\t'bindings key=value ...' (for setting pipe bindings) " +
-        "\n\t'with key=value ...' (for setting pipe specific properties)" +
-        "\n\t'outputs key=value ...' (for setting outputs)" +
-        "\n and <pipe> is one of the following :\n";
+    private static final String HELP_START = "\n a <pipe token> is <pipe> <expr|conf>? (<options>)?"
+            + "\n <options> are (@ <option>)* form with <option> being either"
+            + "\n\t'name pipeName' (used in bindings), "
+            + "\n\t'expr pipeExpression' (when not directly as <args>)"
+            + "\n\t'path pipePath' (when not directly as <args>)"
+            + "\n\t'bindings key=value ...' (for setting pipe bindings) "
+            + "\n\t'with key=value ...' (for setting pipe specific properties)"
+            + "\n\t'outputs key=value ...' (for setting outputs)"
+            + "\n and <pipe> is one of the following :\n";
 
     Map<String, Method> methodMap;
     Map<String, PipeExecutor> executorMap;
@@ -135,16 +137,16 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
 
     @Activate
     @Modified
-    public void activate(Configuration configuration){
+    public void activate(Configuration configuration) {
         enabled = configuration.enabled();
         methodMap = null;
         executorMap = null;
         help = null;
     }
 
-    @ObjectClassDefinition(name="Apache Sling Pipes : Command Executor Configuration")
+    @ObjectClassDefinition(name = "Apache Sling Pipes : Command Executor Configuration")
     public @interface Configuration {
-        @AttributeDefinition(description="Enable command executor to be executed from servlet, if not, sends 503")
+        @AttributeDefinition(description = "Enable command executor to be executed from servlet, if not, sends 503")
         boolean enabled() default true;
     }
 
@@ -156,7 +158,8 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
         return line.indexOf(DECL_BINDING) >= 0;
     }
 
-    private void handleInputEnd(StringBuilder builder, String currentBinding, List<String> cmds, Map<String, Object> bindings) {
+    private void handleInputEnd(
+            StringBuilder builder, String currentBinding, List<String> cmds, Map<String, Object> bindings) {
         if (StringUtils.isBlank(currentBinding) && builder.length() > 0) {
             cmds.add(builder.toString().trim());
         } else if (StringUtils.isNoneBlank(currentBinding, builder)) {
@@ -183,15 +186,17 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
                             readerBuilder = new StringBuilder();
                             currentBinding = null;
                         }
-                    }  else if (isJsonBinding(line)) {
+                    } else if (isJsonBinding(line)) {
                         Matcher matcher = DECL_BINDING_PATTERN.matcher(line);
                         if (matcher.find()) {
                             currentBinding = matcher.group(DECL_BINDING);
-                            readerBuilder.append(matcher.group(DECL_BINDING_CONTENT).trim());
+                            readerBuilder.append(
+                                    matcher.group(DECL_BINDING_CONTENT).trim());
                         }
                     } else {
-                        //depending on what we are appending, we keep lines return or not
-                        readerBuilder.append((StringUtils.isBlank(currentBinding) ? LINE_SEPARATOR : "\n") + line.trim());
+                        // depending on what we are appending, we keep lines return or not
+                        readerBuilder.append(
+                                (StringUtils.isBlank(currentBinding) ? LINE_SEPARATOR : "\n") + line.trim());
                     }
                 }
                 handleInputEnd(readerBuilder, currentBinding, cmds, bindings);
@@ -200,7 +205,8 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
         return cmds;
     }
 
-    protected void executeCommands(@NotNull SlingHttpServletRequest request, @NotNull SlingHttpServletResponse response) throws IOException {
+    protected void executeCommands(@NotNull SlingHttpServletRequest request, @NotNull SlingHttpServletResponse response)
+            throws IOException {
         PrintWriter writer = response.getWriter();
         String currentCommand = null;
         try {
@@ -232,15 +238,14 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
                 }
             }
             pipeWriter.ends();
-        }  catch (IllegalAccessException | InvocationTargetException e) {
+        } catch (IllegalAccessException | InvocationTargetException e) {
             writer.println("Error executing " + currentCommand);
             e.printStackTrace(writer);
             response.setStatus(SC_INTERNAL_SERVER_ERROR);
             response.sendError(SC_INTERNAL_SERVER_ERROR);
             writer.println(help());
-        }
-        catch (IllegalArgumentException | JsonException e) {
-            writer.println("Error executing " +  currentCommand);
+        } catch (IllegalArgumentException | JsonException e) {
+            writer.println("Error executing " + currentCommand);
             e.printStackTrace(writer);
             response.setStatus(SC_NOT_ACCEPTABLE);
             response.sendError(SC_NOT_ACCEPTABLE);
@@ -249,7 +254,8 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
     }
 
     @Override
-    protected void doPost(@NotNull SlingHttpServletRequest request, @NotNull SlingHttpServletResponse response) throws IOException {
+    protected void doPost(@NotNull SlingHttpServletRequest request, @NotNull SlingHttpServletResponse response)
+            throws IOException {
         if (enabled) {
             PrintWriter writer = response.getWriter();
             try {
@@ -260,11 +266,10 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
                 }
                 writer.println("");
                 response.setStatus(SC_OK);
-            }
-            catch (AccessControlException e) {
+            } catch (AccessControlException e) {
                 response.setStatus(SC_FORBIDDEN);
                 response.sendError(SC_FORBIDDEN);
-            }    
+            }
         } else {
             response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
             response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, "http service has been disabled");
@@ -274,7 +279,7 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
     @Override
     public ExecutionResult execute(ResourceResolver resolver, String path, String... optionTokens) {
         Resource resource = resolver.getResource(path);
-        if (resource == null){
+        if (resource == null) {
             throw new IllegalArgumentException(String.format("%s resource does not exist", path));
         }
         Options options = getOptions(optionTokens);
@@ -284,7 +289,7 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
             writeToMap(bMap, true, options.with);
         }
         OutputWriter writer = new NopWriter();
-        if (options.outputs != null){
+        if (options.outputs != null) {
             writer = new JsonWriter();
             Map<String, Object> outputs = new HashMap<>();
             CommandUtil.writeToMap(outputs, true, options.outputs);
@@ -295,34 +300,34 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
     }
 
     @Override
-    public PipeBuilder parse(ResourceResolver resolver, String...cmds) throws InvocationTargetException, IllegalAccessException {
+    public PipeBuilder parse(ResourceResolver resolver, String... cmds)
+            throws InvocationTargetException, IllegalAccessException {
         PipeBuilder builder = plumber.newPipe(resolver);
-        for (Token token : parseTokens(cmds)){
+        for (Token token : parseTokens(cmds)) {
             Method method = getMethodMap().get(token.pipeKey);
-            if (method == null){
+            if (method == null) {
                 throw new IllegalArgumentException(token.pipeKey + " is not a valid pipe");
             }
-            if (isExpressionExpected(method)){
+            if (isExpressionExpected(method)) {
                 method.invoke(builder, token.args.get(0));
-            } else if (isConfExpected(method)){
-                method.invoke(builder, (Object)keyValuesToArray(token.args));
-            } else if (isWithoutExpectedParameter(method)){
+            } else if (isConfExpected(method)) {
+                method.invoke(builder, (Object) keyValuesToArray(token.args));
+            } else if (isWithoutExpectedParameter(method)) {
                 method.invoke(builder);
             }
 
-            if (token.options != null){
+            if (token.options != null) {
                 token.options.writeToBuilder(builder);
             }
         }
         return builder;
-
     }
 
     /**
      * @param tokens array of tokens
      * @return options from array
      */
-    protected Options getOptions(String[] tokens){
+    protected Options getOptions(String[] tokens) {
         return getOptions(Arrays.asList(tokens));
     }
 
@@ -330,7 +335,7 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
      * @param tokens list of tokens
      * @return options from token list
      */
-    protected Options getOptions(List<String> tokens){
+    protected Options getOptions(List<String> tokens) {
         return new Options(tokens);
     }
 
@@ -347,14 +352,13 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
 
         @Override
         public String toString() {
-            return "Options{" +
-                "name='" + name + '\'' +
-                ", path='" + path + '\'' +
-                ", expr='" + expr + '\'' +
-                ", with=" + Arrays.toString(with) +
-                ", bindings=" + Arrays.toString(bindings) +
-                ", outputs=" + Arrays.toString(outputs) +
-                '}';
+            return "Options{" + "name='"
+                    + name + '\'' + ", path='"
+                    + path + '\'' + ", expr='"
+                    + expr + '\'' + ", with="
+                    + Arrays.toString(with) + ", bindings="
+                    + Arrays.toString(bindings) + ", outputs="
+                    + Arrays.toString(outputs) + '}';
         }
 
         void setOutputs(List<String> values) {
@@ -365,7 +369,7 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
          * Constructor
          * @param options string list from where options will be built
          */
-        protected Options(List<String> options){
+        protected Options(List<String> options) {
             Map<String, Object> optionMap = new HashMap<>();
             for (String optionToken : options) {
                 String currentKey = null;
@@ -379,25 +383,25 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
                 }
                 finishOption(currentKey, currentList, optionMap);
             }
-            for (Map.Entry<String, Object> entry : optionMap.entrySet()){
+            for (Map.Entry<String, Object> entry : optionMap.entrySet()) {
                 switch (entry.getKey()) {
-                    case Pipe.PN_NAME :
-                        this.name = (String)entry.getValue();
+                    case Pipe.PN_NAME:
+                        this.name = (String) entry.getValue();
                         break;
-                    case Pipe.PN_PATH :
-                        this.path = (String)entry.getValue();
+                    case Pipe.PN_PATH:
+                        this.path = (String) entry.getValue();
                         break;
-                    case Pipe.PN_EXPR :
-                        this.expr = (String)entry.getValue();
+                    case Pipe.PN_EXPR:
+                        this.expr = (String) entry.getValue();
                         break;
-                    case "with" :
-                        this.with = keyValuesToArray((List<String>)entry.getValue());
+                    case "with":
+                        this.with = keyValuesToArray((List<String>) entry.getValue());
                         break;
-                    case "bindings" :
+                    case "bindings":
                         this.bindings = keyValuesToArray((List<String>) entry.getValue());
                         break;
-                    case "outputs" :
-                        setOutputs((List<String>)entry.getValue());
+                    case "outputs":
+                        setOutputs((List<String>) entry.getValue());
                         break;
                     default:
                         throw new IllegalArgumentException(String.format("%s is an unknown option", entry.getKey()));
@@ -411,8 +415,8 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
          * @param currentList list being processed
          * @param optionMap option map
          */
-        protected void finishOption(String currentKey, List<String> currentList, Map<String, Object> optionMap){
-            if (currentList != null){
+        protected void finishOption(String currentKey, List<String> currentList, Map<String, Object> optionMap) {
+            if (currentList != null) {
                 if (currentKey.equals(KEY_NAME) || currentKey.equals(KEY_EXPR) || currentKey.equals(KEY_PATH)) {
                     optionMap.put(currentKey, currentList.get(0));
                 } else {
@@ -427,19 +431,19 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
          * @throws IllegalAccessException
          */
         void writeToBuilder(PipeBuilder builder) throws IllegalAccessException {
-            if (StringUtils.isNotBlank(name)){
+            if (StringUtils.isNotBlank(name)) {
                 builder.name(name);
             }
-            if (StringUtils.isNotBlank(path)){
+            if (StringUtils.isNotBlank(path)) {
                 builder.path(path);
             }
-            if (StringUtils.isNotBlank(expr)){
+            if (StringUtils.isNotBlank(expr)) {
                 builder.expr(expr);
             }
-            if (with != null){
+            if (with != null) {
                 builder.with(with);
             }
-            if (bindings != null){
+            if (bindings != null) {
                 builder.bindings(bindings);
             }
             if (outputs != null) {
@@ -458,18 +462,14 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
 
         @Override
         public String toString() {
-            return "Token{" +
-                "pipeKey='" + pipeKey + '\'' +
-                ", args=" + args +
-                ", options=" + options +
-                '}';
+            return "Token{" + "pipeKey='" + pipeKey + '\'' + ", args=" + args + ", options=" + options + '}';
         }
     }
 
     List<String> getSpaceSeparatedTokens(String token) {
         List<String> subTokens = new ArrayList<>();
         Matcher matcher = SUB_TOKEN_PATTERN.matcher(token);
-        while (matcher.find()){
+        while (matcher.find()) {
             String subToken = matcher.group(TOKEN);
             if (StringUtils.isNotBlank(subToken)) {
                 subTokens.add(CommandUtil.trimQuotes(subToken));
@@ -485,20 +485,20 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
     protected List<CommandExecutorImpl.Token> parseTokens(String... commands) {
         List<CommandExecutorImpl.Token> returnValue = new ArrayList<>();
         String cat = String.join(EMPTY, commands);
-        for (String token : cat.split(PIPE_SEPARATOR)){
+        for (String token : cat.split(PIPE_SEPARATOR)) {
             CommandExecutorImpl.Token currentToken = new CommandExecutorImpl.Token();
             String[] options = token.split(PARAMS_SEPARATOR);
             if (options.length > 1) {
                 currentToken.options = getOptions(Arrays.copyOfRange(options, 1, options.length));
             }
             List<String> subTokens = getSpaceSeparatedTokens(options[0]);
-            if (! subTokens.isEmpty()) {
+            if (!subTokens.isEmpty()) {
                 currentToken.pipeKey = subTokens.get(0);
                 if (subTokens.size() > 1) {
                     currentToken.args = subTokens.subList(1, subTokens.size());
-                    if (JSON_EXPR_KEYS.contains(currentToken.pipeKey) &&
-                            JSON_START.indexOf(currentToken.args.get(0).getBytes(StandardCharsets.UTF_8)[0]) > 0) {
-                        //in that case we want to concatenate all subsequent 'args' as it is a JSON expression
+                    if (JSON_EXPR_KEYS.contains(currentToken.pipeKey)
+                            && JSON_START.indexOf(currentToken.args.get(0).getBytes(StandardCharsets.UTF_8)[0]) > 0) {
+                        // in that case we want to concatenate all subsequent 'args' as it is a JSON expression
                         currentToken.args = Collections.singletonList(String.join(EMPTY, currentToken.args));
                     }
                 }
@@ -512,7 +512,7 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
     /**
      * builds utility maps
      */
-    protected void computeMaps(){
+    protected void computeMaps() {
         executorMap = new HashMap<>();
         methodMap = new HashMap<>();
         for (Method method : PipeBuilderImpl.class.getDeclaredMethods()) {
@@ -564,23 +564,23 @@ public class CommandExecutorImpl extends AbstractPlumberServlet implements Comma
      * @param method corresponding PB api
      * @return true if the api does not expect parameters
      */
-    protected boolean isWithoutExpectedParameter(Method method){
+    protected boolean isWithoutExpectedParameter(Method method) {
         return method.getParameterCount() == 0;
     }
 
     /**
      * help command handler
      */
-    public String help(){
+    public String help() {
         if (StringUtils.isBlank(help)) {
             StringBuilder builder = new StringBuilder();
             builder.append(HELP_START);
             for (Map.Entry<String, PipeExecutor> entry : getExecutorMap().entrySet()) {
-                builder.append(String.format("\t%s\t\t:\t%s%n", entry.getKey(), entry.getValue().description()));
+                builder.append(String.format(
+                        "\t%s\t\t:\t%s%n", entry.getKey(), entry.getValue().description()));
             }
             help = builder.toString();
         }
         return help;
     }
-
 }

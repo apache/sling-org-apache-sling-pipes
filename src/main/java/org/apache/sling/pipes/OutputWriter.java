@@ -1,27 +1,22 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.pipes;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.resource.Resource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -34,6 +29,13 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.Resource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.sling.pipes.CommandUtil.stringToMap;
@@ -96,7 +98,7 @@ public abstract class OutputWriter {
             setMax(Integer.parseInt(request.getParameter(PARAM_SIZE)));
         }
         String writerParam = request.getParameter(PARAM_WRITER);
-        if (StringUtils.isNotBlank(writerParam)){
+        if (StringUtils.isNotBlank(writerParam)) {
             customOutputs = stringToMap(writerParam, PipeBindings::embedAsScript);
         }
         setWriter(response.getWriter());
@@ -167,11 +169,9 @@ public abstract class OutputWriter {
      */
     protected abstract void writeItem(Resource resource);
 
-
     /**
      * writes the end of the output
      */
-
     public abstract void ends();
 
     /**
@@ -192,7 +192,7 @@ public abstract class OutputWriter {
     public void setPipe(Pipe pipe) {
         this.pipe = pipe;
         Resource outputs = pipe.getResource().getChild(PARAM_WRITER);
-        if (customOutputs == null && outputs != null ){
+        if (customOutputs == null && outputs != null) {
             customOutputs = new HashMap<>();
             customOutputs.putAll(outputs.getValueMap());
             for (String ignoredKey : BasePipe.IGNORED_PROPERTIES) {
@@ -207,8 +207,10 @@ public abstract class OutputWriter {
             Object o = pipe.getBindings().instantiateObject((String) customOutputs.get(key));
             if (o != null) {
                 if (o instanceof Calendar) {
-                    Instant i = ((Calendar)o).toInstant();
-                    value = DateTimeFormatter.ISO_LOCAL_DATE_TIME.withZone(ZoneId.from(ZoneOffset.UTC)).format(i);
+                    Instant i = ((Calendar) o).toInstant();
+                    value = DateTimeFormatter.ISO_LOCAL_DATE_TIME
+                            .withZone(ZoneId.from(ZoneOffset.UTC))
+                            .format(i);
                 } else {
                     value = o.toString();
                 }
